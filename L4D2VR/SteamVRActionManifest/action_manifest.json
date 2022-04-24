@@ -1,0 +1,98 @@
+{
+	"default_bindings": [
+		{
+			"controller_type": "oculus_touch",
+			"binding_url": "bindings_oculus_touch.json"
+		},
+		{
+			"controller_type": "knuckles",
+			"binding_url": "bindings_knuckles.json"
+		},
+		{
+			"controller_type": "vive_cosmos_controller",
+			"binding_url": "bindings_vive_cosmos_controller.json"
+		}
+	], 
+	
+	"actions": [
+
+		{
+			"name": "/actions/base/in/pose_lefthand",
+			"type": "pose"
+		},
+		{
+			"name": "/actions/base/in/pose_righthand",
+			"type": "pose"
+		},
+		{
+			"name": "/actions/base/out/vibration_left",
+			"type": "vibration"
+		},
+		{
+			"name": "/actions/base/out/vibration_right",
+			"type": "vibration"
+		},
+		{
+			"name": "/actions/main/in/PrimaryAttack",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/SecondaryAttack",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Jump",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Walk",
+			"type": "vector2"
+		},
+		{
+			"name": "/actions/main/in/Reload",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Use",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/NextItem",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/PrevItem",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/ResetPosition",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Crouch",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Flashlight",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/ActivateVR",
+			"type": "boolean"
+		}
+	],
+
+	"action_sets": [
+		{
+			"name": "/actions/main",
+			"usage": "leftright"
+		}
+	],
+
+	"localization" : [
+		{
+			"language_tag": "en_us",
+			"/actions/main" : "Main"
+		}
+	]
+}
