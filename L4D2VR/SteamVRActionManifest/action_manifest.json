@@ -49,6 +49,10 @@
 			"type": "vector2"
 		},
 		{
+			"name": "/actions/main/in/Turn",
+			"type": "vector2"
+		},
+		{
 			"name": "/actions/main/in/Reload",
 			"type": "boolean"
 		},

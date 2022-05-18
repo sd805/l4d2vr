@@ -2,6 +2,7 @@
 #include "openvr.h"
 #include "QAngle.h"
 #include "vector.h"
+#include <chrono>
 
 #define MAX_STR_LEN     256
 
@@ -118,6 +119,7 @@ public:
 	vr::VRActionHandle_t m_ActionSecondaryAttack;
 	vr::VRActionHandle_t m_ActionReload;
 	vr::VRActionHandle_t m_ActionWalk;
+	vr::VRActionHandle_t m_ActionTurn;
 	vr::VRActionHandle_t m_ActionUse;
 	vr::VRActionHandle_t m_ActionNextItem;
 	vr::VRActionHandle_t m_ActionPrevItem;
@@ -132,6 +134,9 @@ public:
 	TrackedDevicePoseData m_HmdPose;
 	TrackedDevicePoseData m_LeftControllerPose;
 	TrackedDevicePoseData m_RightControllerPose;
+
+	float mRotationOffset;
+	std::chrono::steady_clock::time_point mPrevFrameTime;
 
 	VR() {};
 	VR(Game *game);

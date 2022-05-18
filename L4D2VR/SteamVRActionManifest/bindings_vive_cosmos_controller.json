@@ -57,9 +57,15 @@
                "inputs" : {
                   "click" : {
                      "output" : "/actions/main/in/Flashlight"
+                  },
+                  "position" : {
+                     "output" : "/actions/main/in/Turn"
                   }
                },
                "mode" : "joystick",
+               "parameters" : {
+                  "deadzone_pct" : "10"
+               },
                "path" : "/user/hand/right/input/joystick"
             },
             {

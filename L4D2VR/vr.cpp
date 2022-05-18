@@ -86,6 +86,7 @@ int VR::SetActionManifest(const char *fileName) {
     g_pInput->GetActionHandle("/actions/main/in/Reload", &m_ActionReload);
     g_pInput->GetActionHandle("/actions/main/in/Use", &m_ActionUse);
     g_pInput->GetActionHandle("/actions/main/in/Walk", &m_ActionWalk);
+    g_pInput->GetActionHandle("/actions/main/in/Turn", &m_ActionTurn);
     g_pInput->GetActionHandle("/actions/main/in/SecondaryAttack", &m_ActionSecondaryAttack);
     g_pInput->GetActionHandle("/actions/main/in/NextItem", &m_ActionNextItem);
     g_pInput->GetActionHandle("/actions/main/in/PrevItem", &m_ActionPrevItem);
@@ -212,6 +213,28 @@ void VR::ProcessInput()
 
     if (!isVREnabled)
         return;
+
+    typedef std::chrono::duration<float, std::milli> duration;
+    auto currentTime = std::chrono::steady_clock::now();
+    duration elapsed = currentTime - mPrevFrameTime;
+    float deltaTime = elapsed.count();
+    mPrevFrameTime = currentTime;
+
+    if (GetAnalogActionData(m_ActionTurn, analogActionData))
+    {
+        float turnSpeed = 0.35;
+        if (analogActionData.x > 0.2)
+        {
+            mRotationOffset -= turnSpeed * deltaTime * analogActionData.x;
+        }
+        if (analogActionData.x < -0.2)
+        {
+            mRotationOffset += turnSpeed * deltaTime * (-analogActionData.x);
+        }
+
+        // Wrap from 0 to 360
+        mRotationOffset -= 360 * std::floor(mRotationOffset / 360);
+    }
 
     if (GetAnalogActionData(m_ActionWalk, analogActionData))		
     {
@@ -396,6 +419,10 @@ void VR::UpdateTracking(Vector viewOrigin)
     Vector VR_hmd_pos_local = m_HmdPose.TrackedDevicePos;					
 
     VR_hmd_ang_local = VR_hmd_ang_local; 
+    VR_hmd_ang_local.y += mRotationOffset;
+    // Wrap angle from -180 to 180
+    VR_hmd_ang_local.y -= 360 * std::floor((VR_hmd_ang_local.y + 180) / 360);
+
     QAngle::AngleVectors(VR_hmd_ang_local, &VR_hmd_forward, &VR_hmd_right, &VR_hmd_up);			
 
     QAngle::AngleVectors(ZeroAngle, &Player_forward, &Player_right, &Player_up);					
@@ -419,8 +446,22 @@ void VR::UpdateTracking(Vector viewOrigin)
     Vector VR_controller_left_pos_local = m_LeftControllerPose.TrackedDevicePos;											
     QAngle VR_controller_left_ang_local = m_LeftControllerPose.TrackedDeviceAng;
 
-    Vector VR_controller_right_pos_local = m_RightControllerPose.TrackedDevicePos;											
+    Vector VR_controller_right_pos_local = m_RightControllerPose.TrackedDevicePos;
     QAngle VR_controller_right_ang_local = m_RightControllerPose.TrackedDeviceAng;
+
+    // When using stick turning, pivot the controllers around the HMD
+    float s = sin(mRotationOffset * 3.14159265 / 180);
+    float c = cos(mRotationOffset * 3.14159265 / 180);
+    VR_controller_right_pos_local.x -= VR_hmd_pos_local.x;
+    VR_controller_right_pos_local.y -= VR_hmd_pos_local.y;
+    float xnew = VR_controller_right_pos_local.x * c - VR_controller_right_pos_local.y * s;
+    float ynew = VR_controller_right_pos_local.x * s + VR_controller_right_pos_local.y * c;
+    VR_controller_right_pos_local.x = xnew + VR_hmd_pos_local.x;
+    VR_controller_right_pos_local.y = ynew + VR_hmd_pos_local.y;
+
+    VR_controller_right_ang_local.y += mRotationOffset;
+    // Wrap angle from -180 to 180
+    VR_controller_right_ang_local.y -= 360 * std::floor((VR_controller_right_ang_local.y + 180) / 360);
 
     QAngle::AngleVectors(VR_controller_left_ang_local, &VR_controller_left_forward, &VR_controller_left_right, &VR_controller_left_up);			
     QAngle::AngleVectors(VR_controller_right_ang_local, &VR_controller_right_forward, &VR_controller_right_right, &VR_controller_right_up);			
