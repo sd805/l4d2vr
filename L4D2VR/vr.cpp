@@ -4,7 +4,12 @@
 #include "game.h"
 #include "hooks.h"
 #include <iostream>
-
+#include <fstream>
+#include <sstream>
+#include <unordered_map>
+#include <string>
+#include <filesystem>
+#include <thread>
 
 VR::VR(Game *game) {
     mGame = game;
@@ -64,6 +69,9 @@ VR::VR(Game *game) {
     SetActionManifest("action_manifest.json");
 
     QAngle::AngleVectors(ZeroAngle, &VR_playspace_forward, &VR_playspace_right, &VR_playspace_up);
+
+    std::thread configParser(&VR::WaitForConfigUpdate, this);
+    configParser.detach();
 }
 
 
@@ -73,7 +81,7 @@ int VR::SetActionManifest(const char *fileName) {
     char currentDir[MAX_STR_LEN];
     GetCurrentDirectory(MAX_STR_LEN, currentDir);
     char path[MAX_STR_LEN];
-    sprintf_s(path, MAX_STR_LEN, "%s\\SteamVRActionManifest\\%s", currentDir, fileName);
+    sprintf_s(path, MAX_STR_LEN, "%s\\VR\\SteamVRActionManifest\\%s", currentDir, fileName);
 
     g_pInput = vr::VRInput();
     if (g_pInput->SetActionManifestPath(path) != vr::VRInputError_None) {
@@ -222,14 +230,32 @@ void VR::ProcessInput()
 
     if (GetAnalogActionData(m_ActionTurn, analogActionData))
     {
-        float turnSpeed = 0.35;
-        if (analogActionData.x > 0.2)
+        if (mSnapTurning)
         {
-            mRotationOffset -= turnSpeed * deltaTime * analogActionData.x;
+            if (!mPressedTurn && analogActionData.x > 0.5)
+            {
+                mRotationOffset -= mSnapTurnAngle;
+                mPressedTurn = true;
+            }
+            else if (!mPressedTurn && analogActionData.x < -0.5)
+            {
+                mRotationOffset += mSnapTurnAngle;
+                mPressedTurn = true;
+            }
+            else if (analogActionData.x < 0.3 && analogActionData.x > -0.3)
+                mPressedTurn = false;
         }
-        if (analogActionData.x < -0.2)
+        // Smooth turning
+        else
         {
-            mRotationOffset += turnSpeed * deltaTime * (-analogActionData.x);
+            if (analogActionData.x > 0.2)
+            {
+                mRotationOffset -= mTurnSpeed * deltaTime * analogActionData.x;
+            }
+            if (analogActionData.x < -0.2)
+            {
+                mRotationOffset += mTurnSpeed * deltaTime * (-analogActionData.x);
+            }
         }
 
         // Wrap from 0 to 360
@@ -441,7 +467,6 @@ void VR::UpdateTracking(Vector viewOrigin)
     ipd = eyeToHeadTransformPosRight.x * 2;
     eyeZ = eyeToHeadTransformPosRight.z;
 
-
     // Hand tracking
     Vector VR_controller_left_pos_local = m_LeftControllerPose.TrackedDevicePos;											
     QAngle VR_controller_left_ang_local = m_LeftControllerPose.TrackedDeviceAng;
@@ -522,4 +547,64 @@ void VR::UpdateIntendedPosition()
 {
     CBasePlayer *localPlayer = (CBasePlayer *)(mGame->ClientEntityList->GetClientEntity(1));
     intendedPositionOffset = localPlayer->EyePosition() - VR_hmd_pos_abs_no_offset;
+}
+
+void VR::ParseConfigFile()
+{
+    std::ifstream configStream("VR\\config.txt");
+    std::unordered_map<std::string, std::string> userConfig;
+
+    std::string line;
+    while (std::getline(configStream, line))
+    {
+        std::istringstream sLine(line);
+        std::string key;
+        if (std::getline(sLine, key, '='))
+        {
+            std::string value;
+            if (std::getline(sLine, value))
+                userConfig[key] = value;
+        }
+    }
+
+    mSnapTurning = userConfig["SnapTurning"] == "true";
+    mSnapTurnAngle = std::stof(userConfig["SnapTurnAngle"]);
+    ipd_scale = std::stof(userConfig["IpdScale"]);
+    mTurnSpeed = std::stof(userConfig["TurnSpeed"]);
+}
+
+void VR::WaitForConfigUpdate()
+{
+    char currentDir[MAX_STR_LEN];
+    GetCurrentDirectory(MAX_STR_LEN, currentDir);
+    char configDir[MAX_STR_LEN];
+    sprintf_s(configDir, MAX_STR_LEN, "%s\\VR\\", currentDir);
+    HANDLE fileChangeHandle = FindFirstChangeNotificationA(configDir, false, FILE_NOTIFY_CHANGE_LAST_WRITE);
+
+    std::filesystem::file_time_type configLastModified;
+    while (1)
+    {
+        try 
+        {
+            // Windows only notifies of change within a directory, so extra check here for just config.txt
+            auto configModifiedTime = std::filesystem::last_write_time("VR\\config.txt");
+            if (configModifiedTime != configLastModified)
+            {
+                configLastModified = configModifiedTime;
+                ParseConfigFile();
+            }
+        }
+        catch (const std::invalid_argument &e)
+        {
+            mGame->errorMsg("Failed to parse config.txt");
+        }
+        catch (const std::filesystem::filesystem_error &e)
+        {
+            mGame->errorMsg("config.txt not found.");
+            return;
+        }
+        
+        FindNextChangeNotification(fileChangeHandle);
+        WaitForSingleObject(fileChangeHandle, INFINITE);
+    }
 }

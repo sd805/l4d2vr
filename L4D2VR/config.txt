@@ -1,0 +1,4 @@
+TurnSpeed=0.55 
+SnapTurning=false
+SnapTurnAngle=45.0
+IpdScale=45.2

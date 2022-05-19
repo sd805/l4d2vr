@@ -106,6 +106,7 @@ public:
 	bool mPressedLeftStick = false;
 	bool mChangedItem = false;
 	bool mToggledFlashlight = false;
+	bool mPressedTurn = false;
 
 	Vector setupOrigin;
 
@@ -138,6 +139,10 @@ public:
 	float mRotationOffset;
 	std::chrono::steady_clock::time_point mPrevFrameTime;
 
+	float mTurnSpeed = 0.55;
+	bool mSnapTurning = false;
+	float mSnapTurnAngle = 45.0;
+
 	VR() {};
 	VR(Game *game);
 	int SetActionManifest(const char *fileName);
@@ -157,5 +162,6 @@ public:
 	bool GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut);
 	void UpdateIntendedPosition();
 	void GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &poseOut);
-
+	void ParseConfigFile();
+	void WaitForConfigUpdate();
 };
