@@ -465,7 +465,7 @@ void VR::UpdateTracking(Vector viewOrigin)
 
     Vector eyePos = viewOrigin;
 
-    VR_hmd_pos_abs_no_offset = eyePos - Vector(0, 0, 64 * 52.49 / 39.37012415030996) + VR_hmd_pos_local_in_world;
+    VR_hmd_pos_abs_no_offset = eyePos - Vector(0, 0, 64) + VR_hmd_pos_local_in_world;
     VR_hmd_pos_abs = VR_hmd_pos_abs_no_offset + intendedPositionOffset;	
 
     VR_hmd_ang_abs = VR_hmd_ang_local;
@@ -498,8 +498,8 @@ void VR::UpdateTracking(Vector viewOrigin)
     Vector VR_controller_right_pos_local_in_world = VR_controller_right_pos_corrected * VR_scale;
 
 
-    VR_controller_left_pos_abs = eyePos - Vector(0, 0, 64 * 52.49 / 39.37012415030996) + VR_controller_left_pos_local_in_world + intendedPositionOffset;		
-    VR_controller_right_pos_abs = eyePos - Vector(0, 0, 64 * 52.49 / 39.37012415030996) + VR_controller_right_pos_local_in_world + intendedPositionOffset;	
+    VR_controller_left_pos_abs = eyePos - Vector(0, 0, 64) + VR_controller_left_pos_local_in_world + intendedPositionOffset;
+    VR_controller_right_pos_abs = eyePos - Vector(0, 0, 64) + VR_controller_right_pos_local_in_world + intendedPositionOffset;
 
     // controller angles
     VR_controller_left_ang_abs = VR_controller_left_ang_local;
@@ -528,7 +528,7 @@ Vector VR::GetViewOriginLeft()
     Vector view_temp_origin;
 
     view_temp_origin = VR_hmd_pos_abs + (VR_hmd_forward * (-(eyeZ * VR_scale)));
-    view_temp_origin = view_temp_origin + (VR_hmd_right * (-((ipd * ipd_scale) / 2)));
+    view_temp_origin = view_temp_origin + (VR_hmd_right * (-((ipd * VR_scale) / 2)));
 
 
     return view_temp_origin;
@@ -540,7 +540,7 @@ Vector VR::GetViewOriginRight()
     Vector view_temp_origin;
 
     view_temp_origin = VR_hmd_pos_abs + (VR_hmd_forward * (-(eyeZ * VR_scale)));
-    view_temp_origin = view_temp_origin + (VR_hmd_right * (ipd * ipd_scale) / 2);
+    view_temp_origin = view_temp_origin + (VR_hmd_right * (ipd * VR_scale) / 2);
 
     return view_temp_origin;
 }
@@ -572,7 +572,6 @@ void VR::ParseConfigFile()
 
     mSnapTurning = userConfig["SnapTurning"] == "true";
     mSnapTurnAngle = std::stof(userConfig["SnapTurnAngle"]);
-    ipd_scale = std::stof(userConfig["IpdScale"]);
     mTurnSpeed = std::stof(userConfig["TurnSpeed"]);
 }
 

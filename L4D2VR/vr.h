@@ -86,7 +86,7 @@ public:
 	QAngle VR_controller_right_ang_abs;
 	QAngle VR_controller_right_ang_test;
 
-	float VR_scale = 52.49;
+	float VR_scale = 43.2;
 
 	int frameBufferWidth;
 	int frameBufferHeight;
@@ -95,8 +95,6 @@ public:
 	float eyeZ;
 
 	Vector intendedPositionOffset = Vector(0, 0, 0);
-
-	float ipd_scale = 45.2;
 
 	ITexture *leftEyeTexture;
 	ITexture *rightEyeTexture;
