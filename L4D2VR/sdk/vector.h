@@ -707,3 +707,15 @@ inline vec_t VectorNormalize(Vector &v)
 	}
 	return l;
 }
+
+inline void VectorPivotXY(Vector &point, const Vector &pivot, float degrees)
+{
+	float s = sin(degrees * 3.14159265 / 180);
+	float c = cos(degrees * 3.14159265 / 180);
+	point.x -= pivot.x;
+	point.y -= pivot.y;
+	float xnew = point.x * c - point.y * s;
+	float ynew = point.x * s + point.y * c;
+	point.x = xnew + pivot.x;
+	point.y = ynew + pivot.y;
+}

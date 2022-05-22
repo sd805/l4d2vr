@@ -442,7 +442,15 @@ void VR::UpdateTracking(Vector viewOrigin)
 
     // HMD tracking
     QAngle VR_hmd_ang_local = m_HmdPose.TrackedDeviceAng;	
-    Vector VR_hmd_pos_local = m_HmdPose.TrackedDevicePos;					
+    Vector VR_hmd_pos_local = m_HmdPose.TrackedDevicePos;	
+
+    Vector deltaPosition = VR_hmd_pos_local - VR_hmd_pos_local_prev;
+    Vector VR_hmd_pos_corrected = VR_hmd_pos_corrected_prev + deltaPosition;
+
+    VectorPivotXY(VR_hmd_pos_corrected, VR_hmd_pos_corrected_prev, mRotationOffset);
+
+    VR_hmd_pos_corrected_prev = VR_hmd_pos_corrected;
+    VR_hmd_pos_local_prev = VR_hmd_pos_local;
 
     VR_hmd_ang_local = VR_hmd_ang_local; 
     VR_hmd_ang_local.y += mRotationOffset;
@@ -453,10 +461,9 @@ void VR::UpdateTracking(Vector viewOrigin)
 
     QAngle::AngleVectors(ZeroAngle, &Player_forward, &Player_right, &Player_up);					
 
+    VR_hmd_pos_local_in_world = VR_hmd_pos_corrected * VR_scale;
 
-    VR_hmd_pos_local_in_world = VR_hmd_pos_local * VR_scale;
-
-    Vector eyePos = { viewOrigin.x, viewOrigin.y, viewOrigin.z };
+    Vector eyePos = viewOrigin;
 
     VR_hmd_pos_abs_no_offset = eyePos - Vector(0, 0, 64 * 52.49 / 39.37012415030996) + VR_hmd_pos_local_in_world;
     VR_hmd_pos_abs = VR_hmd_pos_abs_no_offset + intendedPositionOffset;	
@@ -474,15 +481,11 @@ void VR::UpdateTracking(Vector viewOrigin)
     Vector VR_controller_right_pos_local = m_RightControllerPose.TrackedDevicePos;
     QAngle VR_controller_right_ang_local = m_RightControllerPose.TrackedDeviceAng;
 
+    Vector hmdToController = VR_controller_right_pos_local - VR_hmd_pos_local;
+    Vector VR_controller_right_pos_corrected = VR_hmd_pos_corrected + hmdToController;
+
     // When using stick turning, pivot the controllers around the HMD
-    float s = sin(mRotationOffset * 3.14159265 / 180);
-    float c = cos(mRotationOffset * 3.14159265 / 180);
-    VR_controller_right_pos_local.x -= VR_hmd_pos_local.x;
-    VR_controller_right_pos_local.y -= VR_hmd_pos_local.y;
-    float xnew = VR_controller_right_pos_local.x * c - VR_controller_right_pos_local.y * s;
-    float ynew = VR_controller_right_pos_local.x * s + VR_controller_right_pos_local.y * c;
-    VR_controller_right_pos_local.x = xnew + VR_hmd_pos_local.x;
-    VR_controller_right_pos_local.y = ynew + VR_hmd_pos_local.y;
+    VectorPivotXY(VR_controller_right_pos_corrected, VR_hmd_pos_corrected, mRotationOffset);
 
     VR_controller_right_ang_local.y += mRotationOffset;
     // Wrap angle from -180 to 180
@@ -492,7 +495,7 @@ void VR::UpdateTracking(Vector viewOrigin)
     QAngle::AngleVectors(VR_controller_right_ang_local, &VR_controller_right_forward, &VR_controller_right_right, &VR_controller_right_up);			
 
     Vector VR_controller_left_pos_local_in_world = VR_controller_left_pos_local * VR_scale;
-    Vector VR_controller_right_pos_local_in_world = VR_controller_right_pos_local * VR_scale;
+    Vector VR_controller_right_pos_local_in_world = VR_controller_right_pos_corrected * VR_scale;
 
 
     VR_controller_left_pos_abs = eyePos - Vector(0, 0, 64 * 52.49 / 39.37012415030996) + VR_controller_left_pos_local_in_world + intendedPositionOffset;		

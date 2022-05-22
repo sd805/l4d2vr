@@ -77,6 +77,9 @@ public:
 	Vector VR_hmd_pos_abs_no_offset;
 	QAngle VR_hmd_ang_abs;
 
+	Vector VR_hmd_pos_corrected_prev;
+	Vector VR_hmd_pos_local_prev;
+
 	Vector VR_controller_left_pos_abs;											
 	QAngle VR_controller_left_ang_abs;
 	Vector VR_controller_right_pos_abs;											
