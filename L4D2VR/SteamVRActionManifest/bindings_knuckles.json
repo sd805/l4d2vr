@@ -108,7 +108,7 @@
                },
                "mode" : "dpad",
                "parameters" : {
-                  "deadzone_pct" : "30",
+                  "deadzone_pct" : "70",
                   "overlap_pct" : "0",
                   "sub_mode" : "touch"
                },
