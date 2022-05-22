@@ -86,8 +86,6 @@ public:
 	QAngle VR_controller_right_ang_abs;
 	QAngle VR_controller_right_ang_test;
 
-	float VR_scale = 43.2;
-
 	int frameBufferWidth;
 	int frameBufferHeight;
 
@@ -140,9 +138,11 @@ public:
 	float mRotationOffset;
 	std::chrono::steady_clock::time_point mPrevFrameTime;
 
-	float mTurnSpeed = 0.55;
+	float mTurnSpeed = 0.3;
 	bool mSnapTurning = false;
 	float mSnapTurnAngle = 45.0;
+	float VR_scale = 43.2;
+	float ipd_scale = 1.0;
 
 	VR() {};
 	VR(Game *game);

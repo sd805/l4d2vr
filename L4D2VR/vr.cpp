@@ -528,7 +528,7 @@ Vector VR::GetViewOriginLeft()
     Vector view_temp_origin;
 
     view_temp_origin = VR_hmd_pos_abs + (VR_hmd_forward * (-(eyeZ * VR_scale)));
-    view_temp_origin = view_temp_origin + (VR_hmd_right * (-((ipd * VR_scale) / 2)));
+    view_temp_origin = view_temp_origin + (VR_hmd_right * (-((ipd * ipd_scale * VR_scale) / 2)));
 
 
     return view_temp_origin;
@@ -540,7 +540,7 @@ Vector VR::GetViewOriginRight()
     Vector view_temp_origin;
 
     view_temp_origin = VR_hmd_pos_abs + (VR_hmd_forward * (-(eyeZ * VR_scale)));
-    view_temp_origin = view_temp_origin + (VR_hmd_right * (ipd * VR_scale) / 2);
+    view_temp_origin = view_temp_origin + (VR_hmd_right * (ipd * ipd_scale * VR_scale) / 2);
 
     return view_temp_origin;
 }
@@ -570,9 +570,14 @@ void VR::ParseConfigFile()
         }
     }
 
+    if (userConfig.empty())
+        return;
+
     mSnapTurning = userConfig["SnapTurning"] == "true";
     mSnapTurnAngle = std::stof(userConfig["SnapTurnAngle"]);
     mTurnSpeed = std::stof(userConfig["TurnSpeed"]);
+    VR_scale = std::stof(userConfig["VRScale"]);
+    ipd_scale = std::stof(userConfig["IPDScale"]);
 }
 
 void VR::WaitForConfigUpdate()
@@ -608,5 +613,6 @@ void VR::WaitForConfigUpdate()
         
         FindNextChangeNotification(fileChangeHandle);
         WaitForSingleObject(fileChangeHandle, INFINITE);
+        Sleep(100); // Sometimes the thread tries to read config.txt before it's finished writing
     }
 }

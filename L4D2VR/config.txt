@@ -1,4 +1,5 @@
-TurnSpeed=0.55 
+TurnSpeed=0.3
 SnapTurning=false
 SnapTurnAngle=45.0
-IpdScale=45.2
+VRScale=43.2
+IPDScale=1.0
