@@ -10,7 +10,7 @@
 
 ## Things that need fixing
 * Multiplayer
-* Resolution is limited by monitor's resolution (use DSR or VSR to increase it)
+* Resolution is limited by monitor's resolution (use DSR or VSR to increase your desktop resolution)
 * Melee weapons and interactions require you to aim with your face
 * Menu must be navigated from monitor
 * CPU is underutilized
@@ -23,6 +23,14 @@
 3. Set your video settings to [these](https://i.imgur.com/j6YK1k9.jpg). If you want better texture quality, set Shader Detail to medium, and Paged Pool Memory to high.
 4. Start a campaign and press A on your controller (or F6) to activate VR.
 5. If the camera starts clipping into walls, press down on the left stick to recenter.
+
+## If the game is crashing, try:
+* Setting Paged Pool Memory to High, and Shaders/Effects/Textures to low.
+* Disabling SteamVR theater in [Steam settings](https://external-preview.redd.it/1WdLExouo_YKhTGT6C5GGrOjeWO7qNdIdDRvIRBhw-0.png?auto=webp&s=0d4447a9d954e1ec15b2c010cf50eeabd51f4197)
+* Disabling all add-ons then verifying integrity of game files
+* Re-installing the game
+
+The crashing is likely due to the DX9 to DX12 wrapper. I will look into using DXVK instead.
 
 ## Utilizes code from
 * [VirtualFortress2](https://github.com/PinkMilkProductions/VirtualFortress2)
