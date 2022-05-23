@@ -101,6 +101,7 @@ public:
 	IDirect3DTexture9 *d9RightEyeTexture;
 
 	bool isVREnabled;
+	bool isInitialized;
 
 	bool mPressedLeftStick = false;
 	bool mChangedItem = false;

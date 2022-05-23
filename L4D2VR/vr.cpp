@@ -72,6 +72,8 @@ VR::VR(Game *game) {
 
     std::thread configParser(&VR::WaitForConfigUpdate, this);
     configParser.detach();
+
+    isInitialized = true;
 }
 
 

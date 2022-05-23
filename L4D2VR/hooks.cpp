@@ -210,9 +210,12 @@ HRESULT __stdcall Hooks::dPresent(IDirect3DDevice9 *pDevice, const RECT *pSource
 		iD9on12->ReturnUnderlyingResource(mVR->d9RightEyeTexture, 0, nullptr, nullptr);
 	}
 
-	mVR->UpdatePosesAndActions();
-	mVR->UpdateTracking(mVR->setupOrigin);
-
+	if (mVR->isInitialized)
+	{
+		mVR->UpdatePosesAndActions();
+		mVR->UpdateTracking(mVR->setupOrigin);
+	}
+	
 	return hkPresent.fOriginal(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
 }
 
