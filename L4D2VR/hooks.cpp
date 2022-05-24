@@ -27,6 +27,10 @@ Hooks::Hooks(Game *game)
 	hkCalcViewModelView.enableHook();
 	hkServerFireTerrorBullets.enableHook();
 	hkClientFireTerrorBullets.enableHook();
+	hkProcessUsercmds.enableHook();
+	hkReadUsercmd.enableHook();
+	hkWriteUsercmdDeltaToBuffer.enableHook();
+	hkWriteUsercmd.enableHook();
 }
 
 Hooks::~Hooks()
@@ -89,6 +93,18 @@ int Hooks::initSourceHooks()
 
 	LPVOID clientFireTerrorBulletsAddr = (LPVOID)(mGame->g_client + offsets::ClientFireTerrorBullets);
 	hkClientFireTerrorBullets.createHook(clientFireTerrorBulletsAddr, &dClientFireTerrorBullets);
+
+	LPVOID ProcessUsercmdsAddr = (LPVOID)(mGame->g_server + offsets::ProcessUsercmds);
+	hkProcessUsercmds.createHook(ProcessUsercmdsAddr, &dProcessUsercmds);
+
+	LPVOID ReadUserCmdAddr = (LPVOID)(mGame->g_server + offsets::ReadUserCmd);
+	hkReadUsercmd.createHook(ReadUserCmdAddr, &dReadUsercmd);
+
+	LPVOID WriteUsercmdDeltaToBufferAddr = (LPVOID)(mGame->g_client + offsets::WriteUsercmdDeltaToBuffer);
+	hkWriteUsercmdDeltaToBuffer.createHook(WriteUsercmdDeltaToBufferAddr, &dWriteUsercmdDeltaToBuffer);
+
+	LPVOID WriteUsercmdAddr = (LPVOID)(mGame->g_client + offsets::WriteUsercmd);
+	hkWriteUsercmd.createHook(WriteUsercmdAddr, &dWriteUsercmd);
 
 	return 1;
 }
@@ -318,4 +334,24 @@ int Hooks::dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	}
 
 	return hkClientFireTerrorBullets.fOriginal(playerId, vecOrigin, vecAngles, a4, a5, a6, a7);
+}
+
+float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, void *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused)
+{
+	return hkProcessUsercmds.fOriginal(ecx, player, buf, numcmds, totalcmds, dropped_packets, ignore, paused);
+}
+
+int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
+{
+	return hkReadUsercmd.fOriginal(buf, move, from);
+}
+
+void __fastcall Hooks::dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, void *buf, int from, int to, bool isnewcommand) 
+{
+	return hkWriteUsercmdDeltaToBuffer.fOriginal(ecx, a1, buf, from, to, isnewcommand);
+}
+
+int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
+{
+	return hkWriteUsercmd.fOriginal(buf, to, from);
 }

@@ -73,6 +73,11 @@ typedef bool(__thiscall *tCreateMove)(void *thisptr, float flInputSampleTime, CU
 typedef void(__thiscall *tEndFrame)(PVOID);
 typedef void(__thiscall *tCalcViewModelView)(void *thisptr, void *owner, const Vector &eyePosition, const QAngle &eyeAngles);
 typedef int(__cdecl *tFireTerrorBullets)(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7);
+typedef float(__thiscall *tProcessUsercmds)(void *thisptr, void *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused);
+typedef int(__cdecl *tReadUsercmd)(void *buf, CUserCmd *move, CUserCmd *from);
+typedef void(__thiscall *tWriteUsercmdDeltaToBuffer)(void *thisptr, int a1, void *buf, int from, int to, bool isnewcommand);
+typedef int(__cdecl *tWriteUsercmd)(void *buf, CUserCmd *to, CUserCmd *from);
+
 
 class Hooks
 {
@@ -93,6 +98,10 @@ public:
 	static inline Hook<tCalcViewModelView> hkCalcViewModelView;
 	static inline Hook<tFireTerrorBullets> hkServerFireTerrorBullets;
 	static inline Hook<tFireTerrorBullets> hkClientFireTerrorBullets;
+	static inline Hook<tProcessUsercmds> hkProcessUsercmds;
+	static inline Hook<tReadUsercmd> hkReadUsercmd;
+	static inline Hook<tWriteUsercmdDeltaToBuffer> hkWriteUsercmdDeltaToBuffer;
+	static inline Hook<tWriteUsercmd> hkWriteUsercmd;
 
 	static inline bool mCreatedTexture;
 
@@ -125,4 +134,8 @@ public:
 	static void __fastcall dCalcViewModelView(void *ecx, void *edx, void *owner, const Vector &eyePosition, const QAngle &eyeAngles);
 	static int dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7);
 	static int dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7);
+	static float __fastcall dProcessUsercmds(void *ecx, void *edx, void *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused);
+	static int dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from);
+	static void __fastcall dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, void *buf, int from, int to, bool isnewcommand);
+	static int dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from);
 };
