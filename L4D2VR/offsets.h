@@ -14,6 +14,7 @@ namespace offsets
     static int ServerFireTerrorBullets = 0x3C3FC0; // E8 ? ? ? ? D9 86 ? ? ? ? 8B 4D F4
     static int ReadUserCmd = 0x205100; // E8 ? ? ? ? 8B C6 4F
     static int ProcessUsercmds = 0xEF710; // 55 8B EC B8 ? ? ? ? E8 ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 8B 45 0C 8B 55 08
+    static int CBaseEntity_entindex = 0x25390; // E8 ? ? ? ? 89 47 2C 
 
     // materialsystem.dll offsets
     static int GetRenderTarget = 0x2CD30; // 83 79 4C 00

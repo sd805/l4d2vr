@@ -336,8 +336,17 @@ int Hooks::dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	return hkClientFireTerrorBullets.fOriginal(playerId, vecOrigin, vecAngles, a4, a5, a6, a7);
 }
 
-float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, void *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused)
+float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused)
 {
+	// Function pointer for CBaseEntity::entindex
+	typedef int(__thiscall *tEntindex)(void *thisptr);
+	tEntindex oEntindex = (tEntindex)(mGame->g_server + offsets::CBaseEntity_entindex);
+
+	IServerUnknown * pUnknown = player->m_pUnk;
+	CBasePlayer *pPlayer = (CBasePlayer*)pUnknown->GetBaseEntity();
+
+	int index = oEntindex(pPlayer);
+
 	return hkProcessUsercmds.fOriginal(ecx, player, buf, numcmds, totalcmds, dropped_packets, ignore, paused);
 }
 
