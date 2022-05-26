@@ -302,38 +302,50 @@ void __fastcall Hooks::dEndFrame(void *ecx, void *edx)
 
 void __fastcall Hooks::dCalcViewModelView(void *ecx, void *edx, void *owner, const Vector &eyePosition, const QAngle &eyeAngles)
 {
+	Vector vecNewOrigin = eyePosition;
+	QAngle vecNewAngles = eyeAngles;
+
 	if (mVR->isVREnabled)
 	{
-		Vector vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
-		QAngle vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
-		return hkCalcViewModelView.fOriginal(ecx, owner, vecNewOrigin, vecNewAngles);
+		vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
+		vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
 	}
-	return hkCalcViewModelView.fOriginal(ecx, owner, eyePosition, eyeAngles);
+
+	return hkCalcViewModelView.fOriginal(ecx, owner, vecNewOrigin, vecNewAngles);
 }
 
 int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7)
 {
+	Vector vecNewOrigin = vecOrigin;
+	QAngle vecNewAngles = vecAngles;
 
-	if (mVR->isVREnabled && playerId == 1)
+	// Server host
+	if (playerId == mGame->EngineClient->GetLocalPlayer())
 	{
-		Vector vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
-		QAngle vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
-		return hkServerFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
+		vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
+		vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
+	}
+	// Clients
+	else if (mGame->playersVRInfo[playerId].isUsingVR)
+	{
+		vecNewAngles = mGame->playersVRInfo[playerId].controllerAngles;
 	}
 
-	return hkServerFireTerrorBullets.fOriginal(playerId, vecOrigin, vecAngles, a4, a5, a6, a7);
+	return hkServerFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
 }
 
 int Hooks::dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7)
 {
-	if (mVR->isVREnabled && playerId == 1)
+	Vector vecNewOrigin = vecOrigin;
+	QAngle vecNewAngles = vecAngles;
+	
+	if (mVR->isVREnabled && playerId == mGame->EngineClient->GetLocalPlayer())
 	{
-		Vector vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
-		QAngle vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
-		return hkClientFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
+		vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
+		vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
 	}
 
-	return hkClientFireTerrorBullets.fOriginal(playerId, vecOrigin, vecAngles, a4, a5, a6, a7);
+	return hkClientFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
 }
 
 float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused)
@@ -346,13 +358,32 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 	CBasePlayer *pPlayer = (CBasePlayer*)pUnknown->GetBaseEntity();
 
 	int index = oEntindex(pPlayer);
+	mGame->currentUsercmdID = index;
 
 	return hkProcessUsercmds.fOriginal(ecx, player, buf, numcmds, totalcmds, dropped_packets, ignore, paused);
 }
 
 int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
 {
-	return hkReadUsercmd.fOriginal(buf, move, from);
+	hkReadUsercmd.fOriginal(buf, move, from);
+
+	int i = mGame->currentUsercmdID;
+	if (move->tick_count < 0)
+	{
+		move->tick_count *= -1;
+
+		mGame->playersVRInfo[i].isUsingVR = true;
+		mGame->playersVRInfo[i].controllerAngles.x = (float)move->mousedx / 10;
+		mGame->playersVRInfo[i].controllerAngles.y = (float)move->mousedy / 10;
+
+		move->mousedx = 0;
+		move->mousedy = 0;
+	}
+	else
+	{
+		mGame->playersVRInfo[i].isUsingVR = false;
+	}
+	return 1;
 }
 
 void __fastcall Hooks::dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, void *buf, int from, int to, bool isnewcommand) 
@@ -362,5 +393,16 @@ void __fastcall Hooks::dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, 
 
 int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 {
+	// TODO: Double gunshot sound bug possibly caused by wrong checksum for CUserCmd
+	if (mVR->isVREnabled)
+	{
+		// Signal to the server that this CUserCmd has VR info by making 
+		// tick_count negative. The server will make it positive.
+		to->tick_count *= -1;
+
+		QAngle controllerAngles = mVR->GetRecommendedViewmodelAbsAngle();
+		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
+		to->mousedy = controllerAngles.y * 10;
+	}
 	return hkWriteUsercmd.fOriginal(buf, to, from);
 }

@@ -82,7 +82,7 @@ public:
 	virtual int GetPlayerForUserID(int userID) = 0;
 	virtual void *fn10() = 0;
 	virtual bool Con_IsVisible() = 0;
-	virtual int fn12() = 0;
+	virtual int GetLocalPlayer(void) = 0;
 	virtual int fn13() = 0;
 	virtual int fn14() = 0;
 	virtual int fn15() = 0;

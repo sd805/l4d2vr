@@ -438,7 +438,8 @@ void VR::UpdateTracking(Vector viewOrigin)
 {
     GetPoses();
 
-    CBaseEntity *localPlayer = mGame->GetClientEntity(1);
+    int playerIndex = mGame->EngineClient->GetLocalPlayer();
+    CBaseEntity *localPlayer = mGame->GetClientEntity(playerIndex);
     if (!localPlayer)
         return;
 
@@ -550,8 +551,7 @@ Vector VR::GetViewOriginRight()
 
 void VR::UpdateIntendedPosition()
 {
-    CBasePlayer *localPlayer = (CBasePlayer *)(mGame->ClientEntityList->GetClientEntity(1));
-    intendedPositionOffset = localPlayer->EyePosition() - VR_hmd_pos_abs_no_offset;
+    intendedPositionOffset = setupOrigin - VR_hmd_pos_abs_no_offset;
 }
 
 void VR::ParseConfigFile()

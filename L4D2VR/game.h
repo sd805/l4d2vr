@@ -1,5 +1,7 @@
 #pragma once
 #include <cstdint>
+#include <array>
+#include <QAngle.h>
 
 class IClientEntityList;
 class IEngineTrace;
@@ -13,6 +15,12 @@ class CBaseEntity;
 class VR;
 class Hooks;
 
+
+struct Player
+{
+    bool isUsingVR;
+    QAngle controllerAngles;
+};
 
 class Game 
 {
@@ -33,6 +41,9 @@ public:
 
     VR *mVR;
     Hooks *mHooks;
+
+    std::array<Player, 24> playersVRInfo;
+    int currentUsercmdID;
     
     Game();
 
