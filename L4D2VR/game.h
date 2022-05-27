@@ -1,7 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <array>
-#include <QAngle.h>
+#include "QAngle.h"
+#include "vector.h"
 
 class IClientEntityList;
 class IEngineTrace;
@@ -19,7 +20,8 @@ class Hooks;
 struct Player
 {
     bool isUsingVR;
-    QAngle controllerAngles;
+    QAngle controllerAngle;
+    Vector controllerPos;
 };
 
 class Game 

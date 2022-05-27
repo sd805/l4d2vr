@@ -328,7 +328,8 @@ int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	// Clients
 	else if (mGame->playersVRInfo[playerId].isUsingVR)
 	{
-		vecNewAngles = mGame->playersVRInfo[playerId].controllerAngles;
+		vecNewOrigin = mGame->playersVRInfo[playerId].controllerPos;
+		vecNewAngles = mGame->playersVRInfo[playerId].controllerAngle;
 	}
 
 	return hkServerFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
@@ -368,11 +369,27 @@ int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
 	hkReadUsercmd.fOriginal(buf, move, from);
 
 	int i = mGame->currentUsercmdID;
-	if (move->viewangles.z == -1.0) // Signal for VR CUserCmd
+	if (move->tick_count < 0) // Signal for VR CUserCmd
 	{
+		move->tick_count *= -1;
+
 		mGame->playersVRInfo[i].isUsingVR = true;
-		mGame->playersVRInfo[i].controllerAngles.x = (float)move->mousedx / 10;
-		mGame->playersVRInfo[i].controllerAngles.y = (float)move->mousedy / 10;
+		mGame->playersVRInfo[i].controllerAngle.x = (float)move->mousedx / 10;
+		mGame->playersVRInfo[i].controllerAngle.y = (float)move->mousedy / 10;
+		mGame->playersVRInfo[i].controllerPos.x = move->viewangles.z;
+		mGame->playersVRInfo[i].controllerPos.y = move->upmove;
+
+		// Decode viewangles.x
+		int decodedZInt = (move->viewangles.x / 10000);
+		float decodedAngle = abs((float)(move->viewangles.x - (decodedZInt * 10000)) / 10);
+		decodedAngle -= 360;
+		float decodedZ = (float)decodedZInt / 10;
+
+		mGame->playersVRInfo[i].controllerPos.z = decodedZ;
+
+		move->viewangles.x = decodedAngle;
+		move->viewangles.z = 0;
+		move->upmove = 0;
 	}
 	else
 	{
@@ -395,16 +412,37 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		CVerifiedUserCmd *pVerified = &pVerifiedCommands[(to->command_number) % 150];
 
 		// Signal to the server that this CUserCmd has VR info
-		to->viewangles.z = -1;
+		to->tick_count *= -1;
 
 		QAngle controllerAngles = mVR->GetRecommendedViewmodelAbsAngle();
 		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
 		to->mousedy = controllerAngles.y * 10;
 
+		Vector controllerPos = mVR->GetRecommendedViewmodelAbsPos();
+		to->viewangles.z = controllerPos.x;
+		to->upmove = controllerPos.y;
+
+		// Space in CUserCmd is tight, so encode viewangle.x and controllerPos.z together.
+		// Encoding will overflow if controllerPos.z goes beyond +-21474.8
+		float xAngle = to->viewangles.x;
+		int encodedAngle = (xAngle + 360) * 10;
+		int encoding = (int)(controllerPos.z * 10) * 10000;
+		encoding += encoding < 0 ? -encodedAngle : encodedAngle;
+		to->viewangles.x = encoding;
+
+		hkWriteUsercmd.fOriginal(buf, to, from);
+
+		to->viewangles.x = xAngle;
+		to->tick_count *= -1;
+		to->viewangles.z = 0;
+		to->upmove = 0;
+
 		// Must recalculate checksum for the edited CUserCmd or gunshots will sound
 		// terrible in multiplayer.
 		pVerified->m_cmd = *to;
 		pVerified->m_crc = to->GetChecksum();
+		return 1;
+
 	}
 	return hkWriteUsercmd.fOriginal(buf, to, from);
 }

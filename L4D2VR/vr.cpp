@@ -250,13 +250,16 @@ void VR::ProcessInput()
         // Smooth turning
         else
         {
-            if (analogActionData.x > 0.2)
+            float deadzone = 0.2;
+            // smoother turning
+            float xNormalized = (abs(analogActionData.x) - deadzone) / (1 - deadzone);
+            if (analogActionData.x > deadzone)
             {
-                mRotationOffset -= mTurnSpeed * deltaTime * analogActionData.x;
+                mRotationOffset -= mTurnSpeed * deltaTime * xNormalized;
             }
-            if (analogActionData.x < -0.2)
+            if (analogActionData.x < -deadzone)
             {
-                mRotationOffset += mTurnSpeed * deltaTime * (-analogActionData.x);
+                mRotationOffset += mTurnSpeed * deltaTime * xNormalized;
             }
         }
 
