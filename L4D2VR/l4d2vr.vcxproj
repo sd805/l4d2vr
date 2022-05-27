@@ -186,6 +186,7 @@
     <ClInclude Include="game.h" />
     <ClInclude Include="hooks.h" />
     <ClInclude Include="offsets.h" />
+    <ClInclude Include="sdk\checksum_crc.h" />
     <ClInclude Include="sdk\CUserCmd.h" />
     <ClInclude Include="sdk\material.h" />
     <ClInclude Include="sdk\QAngle.h" />
@@ -200,6 +201,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="game.cpp" />
     <ClCompile Include="hooks.cpp" />
+    <ClCompile Include="sdk\checksum_crc.cpp" />
     <ClCompile Include="sdk\QAngle.cpp" />
     <ClCompile Include="vr.cpp" />
   </ItemGroup>

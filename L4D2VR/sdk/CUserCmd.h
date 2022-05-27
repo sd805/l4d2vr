@@ -1,6 +1,8 @@
+//========= Copyright Valve Corporation, All rights reserved. ============//
 #pragma once
 #include "vector.h"
 #include "QAngle.h"
+#include "checksum_crc.h"
 
 typedef unsigned int CRC32_t;
 typedef unsigned char byte;
@@ -56,17 +58,10 @@ public:
 		weaponselect = src.weaponselect;
 		weaponsubtype = src.weaponsubtype;
 		random_seed = src.random_seed;
-#ifdef GAME_DLL
-		server_random_seed = src.server_random_seed;
-#endif
 		mousedx = src.mousedx;
 		mousedy = src.mousedy;
 
 		hasbeenpredicted = src.hasbeenpredicted;
-
-#if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
-		entitygroundcontact = src.entitygroundcontact;
-#endif
 
 		return *this;
 	}
@@ -80,7 +75,21 @@ public:
 	{
 		CRC32_t crc;
 
-		// ...
+		CRC32_Init(&crc);
+		CRC32_ProcessBuffer(&crc, &command_number, sizeof(command_number));
+		CRC32_ProcessBuffer(&crc, &tick_count, sizeof(tick_count));
+		CRC32_ProcessBuffer(&crc, &viewangles, sizeof(viewangles));
+		CRC32_ProcessBuffer(&crc, &forwardmove, sizeof(forwardmove));
+		CRC32_ProcessBuffer(&crc, &sidemove, sizeof(sidemove));
+		CRC32_ProcessBuffer(&crc, &upmove, sizeof(upmove));
+		CRC32_ProcessBuffer(&crc, &buttons, sizeof(buttons));
+		CRC32_ProcessBuffer(&crc, &impulse, sizeof(impulse));
+		CRC32_ProcessBuffer(&crc, &weaponselect, sizeof(weaponselect));
+		CRC32_ProcessBuffer(&crc, &weaponsubtype, sizeof(weaponsubtype));
+		CRC32_ProcessBuffer(&crc, &random_seed, sizeof(random_seed));
+		CRC32_ProcessBuffer(&crc, &mousedx, sizeof(mousedx));
+		CRC32_ProcessBuffer(&crc, &mousedy, sizeof(mousedy));
+		CRC32_Final(&crc);
 
 		return crc;
 	}
@@ -96,43 +105,42 @@ public:
 		impulse = 0;
 	}
 
-	// For matching server and client commands for debugging
 	int		command_number;
-
-	// the tick the client created this command
 	int		tick_count;
-
-	// Player instantaneous view angles.
 	QAngle	viewangles;
-	// Intended velocities
-	//	forward velocity.
 	float	forwardmove;
-	//  sideways velocity.
 	float	sidemove;
-	//  upward velocity.
 	float	upmove;
-	// Attack button states
 	int		buttons;
-	// Impulse command issued.
 	byte    impulse;
-	// Current weapon id
 	int		weaponselect;
 	int		weaponsubtype;
-
-	int		random_seed;	// For shared random functions
-#ifdef GAME_DLL
-	int		server_random_seed; // Only the server populates this seed
-#endif
-
-	short	mousedx;		// mouse accum in x from create move
-	short	mousedy;		// mouse accum in y from create move
-
-	// Client only, tracks whether we've predicted this command at least once
+	int		random_seed;
+	short	mousedx;
+	short	mousedy;		
 	bool	hasbeenpredicted;
+	char pad[25];
+};
+static_assert(sizeof(CUserCmd) == 0x58);
 
-	// Back channel to communicate IK state
-#if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
-	CUtlVector< CEntityGroundContact > entitygroundcontact;
-#endif
+class CVerifiedUserCmd
+{
+public:
+	CUserCmd        m_cmd;
+	CRC32_t         m_crc;
+};
+
+class CInput
+{
+public:
+	virtual        void        Init_All(void);
+	virtual        void        Shutdown_All(void);
+	virtual        int            GetButtonBits(int);
+	virtual        void        CreateMove(int sequence_number, float input_sample_frametime, bool active);
+	virtual        void        ExtraMouseSample(float frametime, bool active);
+	virtual        bool        WriteUsercmdDeltaToBuffer(int *buf, int from, int to, bool isnewcommand);
+	virtual        void        EncodeUserCmdToBuffer(int buf, int slot);
+	virtual        void        DecodeUserCmdFromBuffer(int buf, int slot);
+	virtual        CUserCmd *GetUserCmd(int uk, int sequence_number);
 
 };

@@ -9,6 +9,7 @@ namespace offsets
     static int ClientFireTerrorBullets = 0x2F4350; // E8 ? ? ? ? 83 C4 1C 80 BE ? ? ? ? ?
     static int WriteUsercmdDeltaToBuffer = 0x134790; // 55 8B EC 83 EC 60 0F 57 C0 8B 55 0C
     static int WriteUsercmd = 0x1AAD50; // E8 ? ? ? ? 83 C4 0C 38 5E 10
+    static int g_ppInput = 0x6E0F04; // 8B 0D ? ? ? ? 8B 01 8B 50 58 FF E2
 
     // server.dll offsets
     static int ServerFireTerrorBullets = 0x3C3FC0; // E8 ? ? ? ? D9 86 ? ? ? ? 8B 4D F4

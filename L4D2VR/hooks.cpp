@@ -320,7 +320,7 @@ int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	QAngle vecNewAngles = vecAngles;
 
 	// Server host
-	if (playerId == mGame->EngineClient->GetLocalPlayer())
+	if (mVR->isVREnabled && playerId == mGame->EngineClient->GetLocalPlayer())
 	{
 		vecNewOrigin = mVR->GetRecommendedViewmodelAbsPos();
 		vecNewAngles = mVR->GetRecommendedViewmodelAbsAngle();
@@ -368,16 +368,11 @@ int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
 	hkReadUsercmd.fOriginal(buf, move, from);
 
 	int i = mGame->currentUsercmdID;
-	if (move->tick_count < 0)
+	if (move->viewangles.z == -1.0) // Signal for VR CUserCmd
 	{
-		move->tick_count *= -1;
-
 		mGame->playersVRInfo[i].isUsingVR = true;
 		mGame->playersVRInfo[i].controllerAngles.x = (float)move->mousedx / 10;
 		mGame->playersVRInfo[i].controllerAngles.y = (float)move->mousedy / 10;
-
-		move->mousedx = 0;
-		move->mousedy = 0;
 	}
 	else
 	{
@@ -393,16 +388,23 @@ void __fastcall Hooks::dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, 
 
 int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 {
-	// TODO: Double gunshot sound bug possibly caused by wrong checksum for CUserCmd
 	if (mVR->isVREnabled)
 	{
-		// Signal to the server that this CUserCmd has VR info by making 
-		// tick_count negative. The server will make it positive.
-		to->tick_count *= -1;
+		CInput *g_pInput = *(CInput **)(mGame->g_client + offsets::g_ppInput);
+		CVerifiedUserCmd *pVerifiedCommands = *(CVerifiedUserCmd **)((uintptr_t)g_pInput + 0xF0);
+		CVerifiedUserCmd *pVerified = &pVerifiedCommands[(to->command_number) % 150];
+
+		// Signal to the server that this CUserCmd has VR info
+		to->viewangles.z = -1;
 
 		QAngle controllerAngles = mVR->GetRecommendedViewmodelAbsAngle();
 		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
 		to->mousedy = controllerAngles.y * 10;
+
+		// Must recalculate checksum for the edited CUserCmd or gunshots will sound
+		// terrible in multiplayer.
+		pVerified->m_cmd = *to;
+		pVerified->m_crc = to->GetChecksum();
 	}
 	return hkWriteUsercmd.fOriginal(buf, to, from);
 }

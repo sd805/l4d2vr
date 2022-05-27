@@ -48,6 +48,9 @@
     <ClInclude Include="sdk\vector.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="sdk\checksum_crc.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -66,6 +69,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sdk\QAngle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sdk\checksum_crc.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
