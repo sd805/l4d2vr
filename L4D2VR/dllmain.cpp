@@ -44,6 +44,21 @@ DWORD WINAPI InitL4D2VR(HMODULE hModule)
     freopen_s(&fp, "CONOUT$", "w", stdout);
 #endif
 
+    // Make sure -insecure is used
+    LPWSTR *szArglist;
+    int nArgs;
+    szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+    bool insecureEnabled = false;
+    for (int i = 0; i < nArgs; ++i)
+    {
+        if (wcscmp(szArglist[i], L"-insecure") == 0)
+            insecureEnabled = true;
+    }
+    LocalFree(szArglist);
+
+    if (!insecureEnabled)
+        ExitProcess(0);
+
     Game* game = new Game();
     g_pGame = game;
 
