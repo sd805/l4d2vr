@@ -195,5 +195,9 @@ public:
 	virtual void ResetMaterialLightmapPageInfoEv() = 0; //CMaterialSystem::ResetMaterialLightmapPageInfo(void)
 	virtual void ClearBuffersEbbb() = 0; //CMaterialSystem::ClearBuffers(bool,bool,bool)
 	virtual IMatRenderContext *GetRenderContext() = 0; //CMaterialSystem::GetRenderContext(void)
-};
+	
+	char pad_0004[10932]; //0x0004
+	bool isGameRunning; //0x2AB8
+}; //Size: 0x2ABC
+static_assert(sizeof(IMaterialSystem) == 0x2ABC);
 

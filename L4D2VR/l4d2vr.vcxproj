@@ -194,6 +194,7 @@
     <ClInclude Include="sdk\texture.h" />
     <ClInclude Include="sdk\trace.h" />
     <ClInclude Include="sdk\vector.h" />
+    <ClInclude Include="sigscanner.h" />
     <ClInclude Include="vr.h" />
   </ItemGroup>
   <ItemGroup>

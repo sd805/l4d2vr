@@ -51,6 +51,9 @@
     <ClInclude Include="sdk\checksum_crc.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="sigscanner.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

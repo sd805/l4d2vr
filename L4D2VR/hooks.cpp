@@ -75,35 +75,35 @@ int Hooks::initDxHooks()
 
 int Hooks::initSourceHooks()
 {
-	LPVOID pGetRenderTargetVFunc = (LPVOID)(mGame->g_materialSystem + offsets::GetRenderTarget);
+	LPVOID pGetRenderTargetVFunc = (LPVOID)(mGame->mOffsets->GetRenderTarget.address);
 	hkGetRenderTarget.createHook(pGetRenderTargetVFunc, &dGetRenderTarget);
 
-	LPVOID pRenderViewVFunc = (LPVOID)(mGame->g_client + offsets::RenderView);
+	LPVOID pRenderViewVFunc = (LPVOID)(mGame->mOffsets->RenderView.address);
 	hkRenderView.createHook(pRenderViewVFunc, &dRenderView);
 
 	void **vTable = *reinterpret_cast<void ***>(mGame->MaterialSystem);
 	LPVOID pEndFrameVFunc = reinterpret_cast<LPVOID>(vTable[42]);
 	hkEndFrame.createHook(pEndFrameVFunc, &dEndFrame);
 
-	LPVOID calcViewModelViewAddr = (LPVOID)(mGame->g_client + offsets::CalcViewModelView);
+	LPVOID calcViewModelViewAddr = (LPVOID)(mGame->mOffsets->CalcViewModelView.address);
 	hkCalcViewModelView.createHook(calcViewModelViewAddr, &dCalcViewModelView);
 
-	LPVOID serverFireTerrorBulletsAddr = (LPVOID)(mGame->g_server + offsets::ServerFireTerrorBullets);
+	LPVOID serverFireTerrorBulletsAddr = (LPVOID)(mGame->mOffsets->ServerFireTerrorBullets.address);
 	hkServerFireTerrorBullets.createHook(serverFireTerrorBulletsAddr, &dServerFireTerrorBullets);
 
-	LPVOID clientFireTerrorBulletsAddr = (LPVOID)(mGame->g_client + offsets::ClientFireTerrorBullets);
+	LPVOID clientFireTerrorBulletsAddr = (LPVOID)(mGame->mOffsets->ClientFireTerrorBullets.address);
 	hkClientFireTerrorBullets.createHook(clientFireTerrorBulletsAddr, &dClientFireTerrorBullets);
 
-	LPVOID ProcessUsercmdsAddr = (LPVOID)(mGame->g_server + offsets::ProcessUsercmds);
+	LPVOID ProcessUsercmdsAddr = (LPVOID)(mGame->mOffsets->ProcessUsercmds.address);
 	hkProcessUsercmds.createHook(ProcessUsercmdsAddr, &dProcessUsercmds);
 
-	LPVOID ReadUserCmdAddr = (LPVOID)(mGame->g_server + offsets::ReadUserCmd);
+	LPVOID ReadUserCmdAddr = (LPVOID)(mGame->mOffsets->ReadUserCmd.address);
 	hkReadUsercmd.createHook(ReadUserCmdAddr, &dReadUsercmd);
 
-	LPVOID WriteUsercmdDeltaToBufferAddr = (LPVOID)(mGame->g_client + offsets::WriteUsercmdDeltaToBuffer);
+	LPVOID WriteUsercmdDeltaToBufferAddr = (LPVOID)(mGame->mOffsets->WriteUsercmdDeltaToBuffer.address);
 	hkWriteUsercmdDeltaToBuffer.createHook(WriteUsercmdDeltaToBufferAddr, &dWriteUsercmdDeltaToBuffer);
 
-	LPVOID WriteUsercmdAddr = (LPVOID)(mGame->g_client + offsets::WriteUsercmd);
+	LPVOID WriteUsercmdAddr = (LPVOID)(mGame->mOffsets->WriteUsercmd.address);
 	hkWriteUsercmd.createHook(WriteUsercmdAddr, &dWriteUsercmd);
 
 	return 1;
@@ -160,10 +160,9 @@ HRESULT __stdcall Hooks::dPresent(IDirect3DDevice9 *pDevice, const RECT *pSource
 
 		hkCreateTexture.enableHook();
 
-		bool *m_GameRunning = (bool *)((uintptr_t)mGame->MaterialSystem + offsets::isGameRunning);
-		*m_GameRunning = false;
+		mGame->MaterialSystem->isGameRunning = false;
 		mGame->MaterialSystem->BeginRenderTargetAllocation();
-		*m_GameRunning = true;
+		mGame->MaterialSystem->isGameRunning = true;
 
 		uint32_t recommendedWidth, recommendedHeight;
 		recommendedWidth = mVR->frameBufferWidth / 2;
@@ -171,9 +170,9 @@ HRESULT __stdcall Hooks::dPresent(IDirect3DDevice9 *pDevice, const RECT *pSource
 
 		mVR->leftEyeTexture = mGame->MaterialSystem->CreateNamedRenderTargetTextureEx("leftEye", recommendedWidth, recommendedHeight, RT_SIZE_LITERAL, mGame->MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
 		mVR->rightEyeTexture = mGame->MaterialSystem->CreateNamedRenderTargetTextureEx("rightEye", recommendedWidth, recommendedHeight, RT_SIZE_LITERAL, mGame->MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
-		*m_GameRunning = false;
+		mGame->MaterialSystem->isGameRunning = false;
 		//MaterialSystem->EndRenderTargetAllocation(); // Freezes game and leaks memory
-		*m_GameRunning = true;
+		mGame->MaterialSystem->isGameRunning = true;
 
 		hkCreateTexture.disableHook();
 		mCreatedTexture = true;
@@ -353,7 +352,7 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 {
 	// Function pointer for CBaseEntity::entindex
 	typedef int(__thiscall *tEntindex)(void *thisptr);
-	tEntindex oEntindex = (tEntindex)(mGame->g_server + offsets::CBaseEntity_entindex);
+	tEntindex oEntindex = (tEntindex)(mGame->mOffsets->CBaseEntity_entindex.address);
 
 	IServerUnknown * pUnknown = player->m_pUnk;
 	CBasePlayer *pPlayer = (CBasePlayer*)pUnknown->GetBaseEntity();
@@ -407,7 +406,7 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 {
 	if (mVR->isVREnabled)
 	{
-		CInput *g_pInput = *(CInput **)(mGame->g_client + offsets::g_ppInput);
+		CInput *g_pInput = **(CInput ***)(mGame->mOffsets->g_pppInput.address);
 		CVerifiedUserCmd *pVerifiedCommands = *(CVerifiedUserCmd **)((uintptr_t)g_pInput + 0xF0);
 		CVerifiedUserCmd *pVerified = &pVerifiedCommands[(to->command_number) % 150];
 

@@ -13,6 +13,7 @@ class IViewRender;
 class IViewRender;
 class CBaseEntity;
 
+class Offsets;
 class VR;
 class Hooks;
 
@@ -41,11 +42,13 @@ public:
     uintptr_t g_materialSystem;
     uintptr_t g_LocalPlayer;
 
+    Offsets *mOffsets;
     VR *mVR;
     Hooks *mHooks;
 
     std::array<Player, 24> playersVRInfo;
     int currentUsercmdID;
+
     
     Game();
 

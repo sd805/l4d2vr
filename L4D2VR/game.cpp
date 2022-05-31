@@ -5,6 +5,7 @@
 #include "vr.h"
 #include "hooks.h"
 #include "offsets.h"
+#include "sigscanner.h"
 
 Game::Game()
 {
@@ -41,6 +42,7 @@ Game::Game()
         errorMsg("Failed to load server.dll in dllmain");
     }
 
+
     ClientEntityList = (IClientEntityList *)GetInterface("client.dll", "VClientEntityList003");
     EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient004");
     EngineClient = (IEngineClient *)GetInterface("engine.dll", "VEngineClient013");
@@ -48,9 +50,9 @@ Game::Game()
     ClientViewRender = (IViewRender *)GetInterface("client.dll", "VEngineRenderView013");
     EngineViewRender = (IViewRender *)GetInterface("engine.dll", "VEngineRenderView013");
 
+    mOffsets = new Offsets();
     mVR = new VR(this);
     mHooks = new Hooks(this);
-
 }
 
 void *Game::GetInterface(const char *dllname, const char *interfacename)
@@ -86,7 +88,7 @@ char *Game::getNetworkName(uintptr_t *entity)
 
 void **Game::getClientModeVTable()
 {
-    uintptr_t *g_pClientMode = (uintptr_t *)(g_client + offsets::g_pClientMode);
+    uintptr_t *g_pClientMode = *(uintptr_t **)(mOffsets->g_ppClientMode.address);
     void **clientModeVTable = *reinterpret_cast<void ***>(g_pClientMode);
     return clientModeVTable;
 }
