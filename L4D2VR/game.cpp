@@ -9,50 +9,25 @@
 
 Game::Game()
 {
-    while (!GetModuleHandle("client.dll"))
+    while (!(m_BaseClient = (uintptr_t)GetModuleHandle("client.dll")))
         Sleep(50);
-    while (!GetModuleHandle("engine.dll"))
+    while (!(m_BaseEngine = (uintptr_t)GetModuleHandle("engine.dll")))
         Sleep(50);
-    while (!GetModuleHandle("MaterialSystem.dll"))
+    while (!(m_BaseMaterialSystem = (uintptr_t)GetModuleHandle("MaterialSystem.dll")))
         Sleep(50);
-    while (!GetModuleHandle("server.dll"))
+    while (!(m_BaseServer = (uintptr_t)GetModuleHandle("server.dll")))
         Sleep(50);
 
-    g_engine = (uintptr_t)GetModuleHandle("engine.dll");
-    if (g_engine == NULL)
-    {
-        errorMsg("Failed to load engine.dll in dllmain");
-    }
+    m_ClientEntityList = (IClientEntityList *)GetInterface("client.dll", "VClientEntityList003");
+    m_EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient004");
+    m_EngineClient = (IEngineClient *)GetInterface("engine.dll", "VEngineClient013");
+    m_MaterialSystem = (IMaterialSystem *)GetInterface("MaterialSystem.dll", "VMaterialSystem080");
+    m_ClientViewRender = (IViewRender *)GetInterface("client.dll", "VEngineRenderView013");
+    m_EngineViewRender = (IViewRender *)GetInterface("engine.dll", "VEngineRenderView013");
 
-    g_client = (uintptr_t)GetModuleHandle("client.dll");
-    if (g_client == NULL)
-    {
-        errorMsg("Failed to load client.dll in dllmain");
-    }
-
-    g_materialSystem = (uintptr_t)GetModuleHandle("MaterialSystem.dll");
-    if (g_materialSystem == NULL)
-    {
-        errorMsg("Failed to load MaterialSystem.dll in dllmain");
-    }
-
-    g_server = (uintptr_t)GetModuleHandle("server.dll");
-    if (g_server == NULL)
-    {
-        errorMsg("Failed to load server.dll in dllmain");
-    }
-
-
-    ClientEntityList = (IClientEntityList *)GetInterface("client.dll", "VClientEntityList003");
-    EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient004");
-    EngineClient = (IEngineClient *)GetInterface("engine.dll", "VEngineClient013");
-    MaterialSystem = (IMaterialSystem *)GetInterface("MaterialSystem.dll", "VMaterialSystem080");
-    ClientViewRender = (IViewRender *)GetInterface("client.dll", "VEngineRenderView013");
-    EngineViewRender = (IViewRender *)GetInterface("engine.dll", "VEngineRenderView013");
-
-    mOffsets = new Offsets();
-    mVR = new VR(this);
-    mHooks = new Hooks(this);
+    m_Offsets = new Offsets();
+    m_VR = new VR(this);
+    m_Hooks = new Hooks(this);
 }
 
 void *Game::GetInterface(const char *dllname, const char *interfacename)
@@ -72,7 +47,7 @@ void Game::errorMsg(const char *msg)
 
 CBaseEntity *Game::GetClientEntity(int entityIndex)
 {
-    return (CBaseEntity *)(ClientEntityList->GetClientEntity(entityIndex));
+    return (CBaseEntity *)(m_ClientEntityList->GetClientEntity(entityIndex));
 }
 
 char *Game::getNetworkName(uintptr_t *entity)
@@ -88,19 +63,19 @@ char *Game::getNetworkName(uintptr_t *entity)
 
 void **Game::getClientModeVTable()
 {
-    uintptr_t *g_pClientMode = *(uintptr_t **)(mOffsets->g_ppClientMode.address);
+    uintptr_t *g_pClientMode = *(uintptr_t **)(m_Offsets->g_ppClientMode.address);
     void **clientModeVTable = *reinterpret_cast<void ***>(g_pClientMode);
     return clientModeVTable;
 }
 
 void Game::ClientCmd(const char *szCmdString)
 {
-    EngineClient->ClientCmd(szCmdString);
+    m_EngineClient->ClientCmd(szCmdString);
 }
 
 void Game::ClientCmd_Unrestricted(const char *szCmdString)
 {
-    EngineClient->ClientCmd_Unrestricted(szCmdString);
+    m_EngineClient->ClientCmd_Unrestricted(szCmdString);
 }
 
 

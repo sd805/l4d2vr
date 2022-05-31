@@ -1,4 +1,0 @@
-EXPORTS
-
-MiniDumpReadDumpStream = MiniDumpReadDumpStream_Hook
-MiniDumpWriteDump = MiniDumpWriteDump_Hook

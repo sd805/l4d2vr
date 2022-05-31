@@ -187,9 +187,8 @@
     <ClInclude Include="hooks.h" />
     <ClInclude Include="offsets.h" />
     <ClInclude Include="sdk\checksum_crc.h" />
-    <ClInclude Include="sdk\CUserCmd.h" />
+    <ClInclude Include="sdk\usercmd.h" />
     <ClInclude Include="sdk\material.h" />
-    <ClInclude Include="sdk\QAngle.h" />
     <ClInclude Include="sdk\sdk.h" />
     <ClInclude Include="sdk\texture.h" />
     <ClInclude Include="sdk\trace.h" />
@@ -203,7 +202,6 @@
     <ClCompile Include="game.cpp" />
     <ClCompile Include="hooks.cpp" />
     <ClCompile Include="sdk\checksum_crc.cpp" />
-    <ClCompile Include="sdk\QAngle.cpp" />
     <ClCompile Include="vr.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

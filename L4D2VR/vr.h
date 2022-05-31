@@ -1,10 +1,9 @@
 #pragma once
 #include "openvr.h"
-#include "QAngle.h"
 #include "vector.h"
 #include <chrono>
 
-#define MAX_STR_LEN     256
+#define MAX_STR_LEN 256
 
 class Game;
 class IDirect3DTexture9;
@@ -23,92 +22,77 @@ struct TrackedDevicePoseData {
 class VR
 {
 public:
-	Game *mGame;
+	Game *m_Game;
 
-	vr::IVRSystem *g_pSystem = NULL;
-	vr::IVRInput *g_pInput = NULL;
-	float g_horizontalFOVLeft;
-	float g_aspectRatioLeft;
-	float g_horizontalOffsetLeft;
-	float g_verticalOffsetLeft;
-	float g_horizontalFOVRight;
-	float g_aspectRatioRight;
-	float g_horizontalOffsetRight;
-	float g_verticalOffsetRight;
+	vr::IVRSystem *m_System = NULL;
+	vr::IVRInput *m_Input = NULL;
+	float m_HorizontalOffsetLeft;
+	float m_VerticalOffsetLeft;
+	float m_HorizontalOffsetRight;
+	float m_VerticalOffsetRight;
 
-	uint32_t m_nRenderWidth;
-	uint32_t m_nRenderHeight;
-	float m_nAspect;
-	float m_nFov;
+	uint32_t m_RenderWidth;
+	uint32_t m_RenderHeight;
+	float m_Aspect;
+	float m_Fov;
 
-	vr::VRTextureBounds_t m_sTextureBounds[2];
-	vr::TrackedDevicePose_t g_poses[vr::k_unMaxTrackedDeviceCount];
-	TrackedDevicePoseData TrackedDevicesPoses[vr::k_unMaxTrackedDeviceCount];
+	vr::VRTextureBounds_t m_TextureBounds[2];
+	vr::TrackedDevicePose_t m_Poses[vr::k_unMaxTrackedDeviceCount];
 
-	Vector eyeToHeadTransformPosLeft;
-	Vector eyeToHeadTransformPosRight;
+	Vector m_EyeToHeadTransformPosLeft;
+	Vector m_EyeToHeadTransformPosRight;
 
-	Vector VR_hmd_forward;
-	Vector VR_hmd_right;
-	Vector VR_hmd_up;
+	Vector m_HmdForward;
+	Vector m_HmdRight;
+	Vector m_HmdUp;
 
-	Vector VR_hmd_pos_local_in_world;
+	Vector m_HmdPosLocalInWorld;
 
-	Vector Player_forward;
-	Vector Player_right;
-	Vector Player_up;
+	Vector m_LeftControllerForward;
+	Vector m_LeftControllerRight;
+	Vector m_LeftControllerUp;
 
-	Vector VR_playspace_forward;
-	Vector VR_playspace_right;
-	Vector VR_playspace_up;
-	QAngle ZeroAngle = QAngle(0, 0, 0);
+	Vector m_RightControllerForward;
+	Vector m_RightControllerRight;
+	Vector m_RightControllerUp;
+	Vector m_RightControllerForwardCorrected;
+	Vector m_RightControllerUpCorrected;
 
-	Vector VR_controller_left_forward;
-	Vector VR_controller_left_right;
-	Vector VR_controller_left_up;
+	Vector m_HmdPosAbs;														
+	Vector m_HmdPosAbsNoOffset;
+	QAngle m_HmdAngAbs;
 
-	Vector VR_controller_right_forward;
-	Vector VR_controller_right_right;
-	Vector VR_controller_right_up;
-	Vector VR_controller_right_forward_corrected;
-	Vector VR_controller_right_up_corrected;
+	Vector m_HmdPosCorrectedPrev;
+	Vector m_HmdPosLocalPrev;
 
-	Vector VR_hmd_pos_abs;														
-	Vector VR_hmd_pos_abs_no_offset;
-	QAngle VR_hmd_ang_abs;
+	Vector m_LeftControllerPosAbs;											
+	QAngle m_LeftControllerAngAbs;
+	Vector m_RightControllerPosAbs;											
+	QAngle m_RightControllerAngAbs;
 
-	Vector VR_hmd_pos_corrected_prev;
-	Vector VR_hmd_pos_local_prev;
+	int m_FrameBufferWidth;
+	int m_FrameBufferHeight;
 
-	Vector VR_controller_left_pos_abs;											
-	QAngle VR_controller_left_ang_abs;
-	Vector VR_controller_right_pos_abs;											
-	QAngle VR_controller_right_ang_abs;
-	QAngle VR_controller_right_ang_test;
+	float m_Ipd;																	
+	float m_EyeZ;
 
-	int frameBufferWidth;
-	int frameBufferHeight;
+	Vector m_IntendedPositionOffset = Vector(0, 0, 0);
 
-	float ipd;																	
-	float eyeZ;
+	ITexture *m_LeftEyeTexture;
+	ITexture *m_RightEyeTexture;
 
-	Vector intendedPositionOffset = Vector(0, 0, 0);
+	IDirect3DTexture9 *m_D9LeftEyeTexture;
+	IDirect3DTexture9 *m_D9RightEyeTexture;
 
-	ITexture *leftEyeTexture;
-	ITexture *rightEyeTexture;
+	bool m_IsVREnabled;
+	bool m_IsInitialized;
 
-	IDirect3DTexture9 *d9LeftEyeTexture;
-	IDirect3DTexture9 *d9RightEyeTexture;
+	bool m_PressedLeftStick = false;
+	bool m_ChangedItem = false;
+	bool m_ToggledFlashlight = false;
+	bool m_PressedTurn = false;
 
-	bool isVREnabled;
-	bool isInitialized;
-
-	bool mPressedLeftStick = false;
-	bool mChangedItem = false;
-	bool mToggledFlashlight = false;
-	bool mPressedTurn = false;
-
-	Vector setupOrigin;
+	Vector m_SetupOrigin;
 
 	// action set
 	vr::VRActionSetHandle_t m_ActionSet;
@@ -136,14 +120,14 @@ public:
 	TrackedDevicePoseData m_LeftControllerPose;
 	TrackedDevicePoseData m_RightControllerPose;
 
-	float mRotationOffset;
-	std::chrono::steady_clock::time_point mPrevFrameTime;
+	float m_RotationOffset;
+	std::chrono::steady_clock::time_point m_PrevFrameTime;
 
-	float mTurnSpeed = 0.3;
-	bool mSnapTurning = false;
-	float mSnapTurnAngle = 45.0;
-	float VR_scale = 43.2;
-	float ipd_scale = 1.0;
+	float m_TurnSpeed = 0.3;
+	bool m_SnapTurning = false;
+	float m_SnapTurnAngle = 45.0;
+	float m_VRScale = 43.2;
+	float m_IpdScale = 1.0;
 
 	VR() {};
 	VR(Game *game);

@@ -83,8 +83,8 @@ typedef int(__cdecl *tWriteUsercmd)(void *buf, CUserCmd *to, CUserCmd *from);
 class Hooks
 {
 public:
-	static inline Game *mGame;
-	static inline VR *mVR;
+	static inline Game *m_Game;
+	static inline VR *m_VR;
 
 	static inline Hook<tBeginScene> hkBeginScene;
 	static inline Hook<tClear> hkClear;
@@ -104,12 +104,10 @@ public:
 	static inline Hook<tWriteUsercmdDeltaToBuffer> hkWriteUsercmdDeltaToBuffer;
 	static inline Hook<tWriteUsercmd> hkWriteUsercmd;
 
-	static inline bool mCreatedTexture;
+	static inline bool m_CreatedTexture;
 
-	static inline IDirect3DDevice9On12 *iD9on12;
-	static inline ID3D12CommandQueue *commandQueue;
-
-	static inline bool mInRenderView;
+	static inline IDirect3DDevice9On12 *m_D9on12;
+	static inline ID3D12CommandQueue *m_CommandQueue;
 
 	Hooks() {};
 	Hooks(Game *game);
@@ -117,9 +115,9 @@ public:
 	~Hooks();
 
 	int initDxHooks();
-
 	int initSourceHooks();
-
+	static void CreateVRTextures();
+	static void SubmitVRTextures();
 
 	// Detour functions
 	static HRESULT __stdcall dBeginScene(IDirect3DDevice9 *pDevice);

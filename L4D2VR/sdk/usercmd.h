@@ -1,7 +1,6 @@
 //========= Copyright Valve Corporation, All rights reserved. ============//
 #pragma once
 #include "vector.h"
-#include "QAngle.h"
 #include "checksum_crc.h"
 
 typedef unsigned int CRC32_t;
@@ -30,16 +29,9 @@ public:
 		weaponselect = 0;
 		weaponsubtype = 0;
 		random_seed = 0;
-#ifdef GAME_DLL
-		server_random_seed = 0;
-#endif
 		mousedx = 0;
 		mousedy = 0;
-
 		hasbeenpredicted = false;
-#if defined( HL2_DLL ) || defined( HL2_CLIENT_DLL )
-		entitygroundcontact.RemoveAll();
-#endif
 	}
 
 	CUserCmd &operator =(const CUserCmd &src)

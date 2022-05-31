@@ -3,7 +3,7 @@
 #pragma once
 
 #include <math.h>
-#include "CUserCmd.h"
+#include "usercmd.h"
 #include "material.h"
 
 class IClientEntityList

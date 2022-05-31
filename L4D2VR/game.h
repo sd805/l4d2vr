@@ -1,7 +1,6 @@
 #pragma once
 #include <cstdint>
 #include <array>
-#include "QAngle.h"
 #include "vector.h"
 
 class IClientEntityList;
@@ -28,28 +27,26 @@ struct Player
 class Game 
 {
 public:
-    IClientEntityList *ClientEntityList;
-    IEngineTrace *EngineTrace;
-    IEngineClient *EngineClient;
-    IMaterialSystem *MaterialSystem;
-    IBaseClientDLL *BaseClientDll;
-    IViewRender *ClientViewRender;
-    IViewRender *EngineViewRender;
+    IClientEntityList *m_ClientEntityList;
+    IEngineTrace *m_EngineTrace;
+    IEngineClient *m_EngineClient;
+    IMaterialSystem *m_MaterialSystem;
+    IBaseClientDLL *m_BaseClientDll;
+    IViewRender *m_ClientViewRender;
+    IViewRender *m_EngineViewRender;
 
-    uintptr_t g_engine;
-    uintptr_t g_client;
-    uintptr_t g_server;
-    uintptr_t g_materialSystem;
-    uintptr_t g_LocalPlayer;
+    uintptr_t m_BaseEngine;
+    uintptr_t m_BaseClient;
+    uintptr_t m_BaseServer;
+    uintptr_t m_BaseMaterialSystem;
 
-    Offsets *mOffsets;
-    VR *mVR;
-    Hooks *mHooks;
+    Offsets *m_Offsets;
+    VR *m_VR;
+    Hooks *m_Hooks;
 
-    std::array<Player, 24> playersVRInfo;
-    int currentUsercmdID;
+    std::array<Player, 24> m_PlayersVRInfo;
+    int m_CurrentUsercmdID;
 
-    
     Game();
 
     void *GetInterface(const char *dllname, const char *interfacename);

@@ -12,15 +12,16 @@
 #include <thread>
 
 VR::VR(Game *game) {
-    mGame = game;
+    m_Game = game;
 
-    char g_errorString[MAX_STR_LEN];
+    char errorString[MAX_STR_LEN];
 
     vr::HmdError error = vr::VRInitError_None;
-    g_pSystem = vr::VR_Init(&error, vr::VRApplication_Scene);
+    m_System = vr::VR_Init(&error, vr::VRApplication_Scene);
+
     if (error != vr::VRInitError_None) {
-        snprintf(g_errorString, MAX_STR_LEN, "VR_Init failed: %s", vr::VR_GetVRInitErrorAsEnglishDescription(error));
-        Game::errorMsg(g_errorString);
+        snprintf(errorString, MAX_STR_LEN, "VR_Init failed: %s", vr::VR_GetVRInitErrorAsEnglishDescription(error));
+        Game::errorMsg(errorString);
         return;
     }
 
@@ -28,52 +29,48 @@ VR::VR(Game *game) {
 
     if (!vr::VRCompositor())
     {
-        std::cout << "Compositor initialization failed." << std::endl;
+        Game::errorMsg("Compositor initialization failed.");
         return;
     }
 
-    g_pInput = vr::VRInput();
+    m_Input = vr::VRInput();
+    m_System = vr::OpenVRInternal_ModuleContext().VRSystem();
 
-
-    g_pSystem = vr::OpenVRInternal_ModuleContext().VRSystem();
-
-    g_pSystem->GetRecommendedRenderTargetSize(&m_nRenderWidth, &m_nRenderHeight);
+    m_System->GetRecommendedRenderTargetSize(&m_RenderWidth, &m_RenderHeight);
 
     float l_left = 0.0f, l_right = 0.0f, l_top = 0.0f, l_bottom = 0.0f;
-    g_pSystem->GetProjectionRaw(vr::EVREye::Eye_Left, &l_left, &l_right, &l_top, &l_bottom);
+    m_System->GetProjectionRaw(vr::EVREye::Eye_Left, &l_left, &l_right, &l_top, &l_bottom);
 
     float r_left = 0.0f, r_right = 0.0f, r_top = 0.0f, r_bottom = 0.0f;
-    g_pSystem->GetProjectionRaw(vr::EVREye::Eye_Right, &r_left, &r_right, &r_top, &r_bottom);
+    m_System->GetProjectionRaw(vr::EVREye::Eye_Right, &r_left, &r_right, &r_top, &r_bottom);
 
     float tanHalfFov[2];
 
     tanHalfFov[0] = max(-l_left, l_right, -r_left, r_right);
     tanHalfFov[1] = max(-l_top, l_bottom, -r_top, r_bottom);
 
-    m_sTextureBounds[0].uMin = 0.5f + 0.5f * l_left / tanHalfFov[0];
-    m_sTextureBounds[0].uMax = 0.5f + 0.5f * l_right / tanHalfFov[0];
-    m_sTextureBounds[0].vMin = 0.5f - 0.5f * l_bottom / tanHalfFov[1];
-    m_sTextureBounds[0].vMax = 0.5f - 0.5f * l_top / tanHalfFov[1];
+    m_TextureBounds[0].uMin = 0.5f + 0.5f * l_left / tanHalfFov[0];
+    m_TextureBounds[0].uMax = 0.5f + 0.5f * l_right / tanHalfFov[0];
+    m_TextureBounds[0].vMin = 0.5f - 0.5f * l_bottom / tanHalfFov[1];
+    m_TextureBounds[0].vMax = 0.5f - 0.5f * l_top / tanHalfFov[1];
 
-    m_sTextureBounds[1].uMin = 0.5f + 0.5f * r_left / tanHalfFov[0];
-    m_sTextureBounds[1].uMax = 0.5f + 0.5f * r_right / tanHalfFov[0];
-    m_sTextureBounds[1].vMin = 0.5f - 0.5f * r_bottom / tanHalfFov[1];
-    m_sTextureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov[1];
+    m_TextureBounds[1].uMin = 0.5f + 0.5f * r_left / tanHalfFov[0];
+    m_TextureBounds[1].uMax = 0.5f + 0.5f * r_right / tanHalfFov[0];
+    m_TextureBounds[1].vMin = 0.5f - 0.5f * r_bottom / tanHalfFov[1];
+    m_TextureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov[1];
 
-    m_nRenderWidth = m_nRenderWidth / max(m_sTextureBounds[0].uMax - m_sTextureBounds[0].uMin, m_sTextureBounds[1].uMax - m_sTextureBounds[1].uMin);
-    m_nRenderHeight = m_nRenderHeight / max(m_sTextureBounds[0].vMax - m_sTextureBounds[0].vMin, m_sTextureBounds[1].vMax - m_sTextureBounds[1].vMin);
+    m_RenderWidth = m_RenderWidth / max(m_TextureBounds[0].uMax - m_TextureBounds[0].uMin, m_TextureBounds[1].uMax - m_TextureBounds[1].uMin);
+    m_RenderHeight = m_RenderHeight / max(m_TextureBounds[0].vMax - m_TextureBounds[0].vMin, m_TextureBounds[1].vMax - m_TextureBounds[1].vMin);
 
-    m_nAspect = tanHalfFov[0] / tanHalfFov[1];
-    m_nFov = 2.0f * atan(tanHalfFov[0]) * 360 / (3.14159265358979323846 * 2);
+    m_Aspect = tanHalfFov[0] / tanHalfFov[1];
+    m_Fov = 2.0f * atan(tanHalfFov[0]) * 360 / (3.14159265358979323846 * 2);
 
     SetActionManifest("action_manifest.json");
-
-    QAngle::AngleVectors(ZeroAngle, &VR_playspace_forward, &VR_playspace_right, &VR_playspace_up);
 
     std::thread configParser(&VR::WaitForConfigUpdate, this);
     configParser.detach();
 
-    isInitialized = true;
+    m_IsInitialized = true;
 }
 
 
@@ -85,42 +82,40 @@ int VR::SetActionManifest(const char *fileName) {
     char path[MAX_STR_LEN];
     sprintf_s(path, MAX_STR_LEN, "%s\\VR\\SteamVRActionManifest\\%s", currentDir, fileName);
 
-    g_pInput = vr::VRInput();
-    if (g_pInput->SetActionManifestPath(path) != vr::VRInputError_None) {
+    if (m_Input->SetActionManifestPath(path) != vr::VRInputError_None) {
         Game::errorMsg("SetActionManifestPath failed");
     }
 
-    g_pInput->GetActionHandle("/actions/main/in/ActivateVR", &m_ActionActivateVR);
-    g_pInput->GetActionHandle("/actions/main/in/Jump", &m_ActionJump);
-    g_pInput->GetActionHandle("/actions/main/in/PrimaryAttack", &m_ActionPrimaryAttack);
-    g_pInput->GetActionHandle("/actions/main/in/Reload", &m_ActionReload);
-    g_pInput->GetActionHandle("/actions/main/in/Use", &m_ActionUse);
-    g_pInput->GetActionHandle("/actions/main/in/Walk", &m_ActionWalk);
-    g_pInput->GetActionHandle("/actions/main/in/Turn", &m_ActionTurn);
-    g_pInput->GetActionHandle("/actions/main/in/SecondaryAttack", &m_ActionSecondaryAttack);
-    g_pInput->GetActionHandle("/actions/main/in/NextItem", &m_ActionNextItem);
-    g_pInput->GetActionHandle("/actions/main/in/PrevItem", &m_ActionPrevItem);
-    g_pInput->GetActionHandle("/actions/main/in/ResetPosition", &m_ActionResetPosition);
-    g_pInput->GetActionHandle("/actions/main/in/Crouch", &m_ActionCrouch);
-    g_pInput->GetActionHandle("/actions/main/in/Flashlight", &m_ActionFlashlight);
+    m_Input->GetActionHandle("/actions/main/in/ActivateVR", &m_ActionActivateVR);
+    m_Input->GetActionHandle("/actions/main/in/Jump", &m_ActionJump);
+    m_Input->GetActionHandle("/actions/main/in/PrimaryAttack", &m_ActionPrimaryAttack);
+    m_Input->GetActionHandle("/actions/main/in/Reload", &m_ActionReload);
+    m_Input->GetActionHandle("/actions/main/in/Use", &m_ActionUse);
+    m_Input->GetActionHandle("/actions/main/in/Walk", &m_ActionWalk);
+    m_Input->GetActionHandle("/actions/main/in/Turn", &m_ActionTurn);
+    m_Input->GetActionHandle("/actions/main/in/SecondaryAttack", &m_ActionSecondaryAttack);
+    m_Input->GetActionHandle("/actions/main/in/NextItem", &m_ActionNextItem);
+    m_Input->GetActionHandle("/actions/main/in/PrevItem", &m_ActionPrevItem);
+    m_Input->GetActionHandle("/actions/main/in/ResetPosition", &m_ActionResetPosition);
+    m_Input->GetActionHandle("/actions/main/in/Crouch", &m_ActionCrouch);
+    m_Input->GetActionHandle("/actions/main/in/Flashlight", &m_ActionFlashlight);
 
-    g_pInput->GetActionSetHandle("/actions/main", &m_ActionSet);
+    m_Input->GetActionSetHandle("/actions/main", &m_ActionSet);
     m_ActiveActionSet.ulActionSet = m_ActionSet;
 
-    // Get pose index for each controller
+    // Get index for each controller
     vr::VRInputValueHandle_t leftControllerHandle{};
     vr::VRInputValueHandle_t rightControllerHandle{};
-    g_pInput->GetInputSourceHandle("/user/hand/left", &leftControllerHandle);
-    g_pInput->GetInputSourceHandle("/user/hand/right", &rightControllerHandle);
+    m_Input->GetInputSourceHandle("/user/hand/left", &leftControllerHandle);
+    m_Input->GetInputSourceHandle("/user/hand/right", &rightControllerHandle);
 
     vr::InputOriginInfo_t leftOriginInfo{};
     vr::InputOriginInfo_t rightOriginInfo{};
-    g_pInput->GetOriginTrackedDeviceInfo(leftControllerHandle, &leftOriginInfo, sizeof(leftOriginInfo));
-    g_pInput->GetOriginTrackedDeviceInfo(rightControllerHandle, &rightOriginInfo, sizeof(rightOriginInfo));
+    m_Input->GetOriginTrackedDeviceInfo(leftControllerHandle, &leftOriginInfo, sizeof(leftOriginInfo));
+    m_Input->GetOriginTrackedDeviceInfo(rightControllerHandle, &rightOriginInfo, sizeof(rightOriginInfo));
 
     m_LeftControllerIndex = leftOriginInfo.trackedDeviceIndex;
     m_RightControllerIndex = rightOriginInfo.trackedDeviceIndex;
-
 
     return 0;
 }
@@ -158,9 +153,9 @@ void VR::GetPoses()
     vr::InputPoseActionData_t poseActionData;
     vr::TrackedDevicePose_t pose;
 
-    vr::TrackedDevicePose_t hmdPose = g_poses[vr::k_unTrackedDeviceIndex_Hmd];
-    vr::TrackedDevicePose_t leftControllerPose = g_poses[m_LeftControllerIndex];
-    vr::TrackedDevicePose_t rightControllerPose = g_poses[m_RightControllerIndex];
+    vr::TrackedDevicePose_t hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
+    vr::TrackedDevicePose_t leftControllerPose = m_Poses[m_LeftControllerIndex];
+    vr::TrackedDevicePose_t rightControllerPose = m_Poses[m_RightControllerIndex];
 
     GetPoseData(hmdPose, m_HmdPose);
     GetPoseData(leftControllerPose, m_LeftControllerPose);
@@ -169,28 +164,28 @@ void VR::GetPoses()
 
 void VR::UpdatePosesAndActions() 
 {
-    vr::VRCompositor()->WaitGetPoses(g_poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
-    g_pInput->UpdateActionState(&m_ActiveActionSet, sizeof(vr::VRActiveActionSet_t), 1);
+    vr::VRCompositor()->WaitGetPoses(m_Poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+    m_Input->UpdateActionState(&m_ActiveActionSet, sizeof(vr::VRActiveActionSet_t), 1);
 }
 
 void VR::GetViewParameters() 
 {
-    vr::HmdMatrix34_t eyeToHeadLeft = g_pSystem->GetEyeToHeadTransform(vr::Eye_Left);
-    vr::HmdMatrix34_t eyeToHeadRight = g_pSystem->GetEyeToHeadTransform(vr::Eye_Right);
-    eyeToHeadTransformPosLeft.x = eyeToHeadLeft.m[0][3];
-    eyeToHeadTransformPosLeft.y = eyeToHeadLeft.m[1][3];
-    eyeToHeadTransformPosLeft.z = eyeToHeadLeft.m[2][3];
+    vr::HmdMatrix34_t eyeToHeadLeft = m_System->GetEyeToHeadTransform(vr::Eye_Left);
+    vr::HmdMatrix34_t eyeToHeadRight = m_System->GetEyeToHeadTransform(vr::Eye_Right);
+    m_EyeToHeadTransformPosLeft.x = eyeToHeadLeft.m[0][3];
+    m_EyeToHeadTransformPosLeft.y = eyeToHeadLeft.m[1][3];
+    m_EyeToHeadTransformPosLeft.z = eyeToHeadLeft.m[2][3];
 
-    eyeToHeadTransformPosRight.x = eyeToHeadRight.m[0][3];
-    eyeToHeadTransformPosRight.y = eyeToHeadRight.m[1][3];
-    eyeToHeadTransformPosRight.z = eyeToHeadRight.m[2][3];
+    m_EyeToHeadTransformPosRight.x = eyeToHeadRight.m[0][3];
+    m_EyeToHeadTransformPosRight.y = eyeToHeadRight.m[1][3];
+    m_EyeToHeadTransformPosRight.z = eyeToHeadRight.m[2][3];
 }
 
 
 bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle)
 {
     vr::InputDigitalActionData_t digitalActionData;
-    vr::EVRInputError result = g_pInput->GetDigitalActionData(actionHandle, &digitalActionData, sizeof(digitalActionData), vr::k_ulInvalidInputValueHandle);
+    vr::EVRInputError result = m_Input->GetDigitalActionData(actionHandle, &digitalActionData, sizeof(digitalActionData), vr::k_ulInvalidInputValueHandle);
     
     if (result == vr::VRInputError_None)
         return digitalActionData.bState;
@@ -200,7 +195,7 @@ bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle)
 
 bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut)
 {
-    vr::EVRInputError result = g_pInput->GetAnalogActionData(actionHandle, &analogDataOut, sizeof(analogDataOut), vr::k_ulInvalidInputValueHandle);
+    vr::EVRInputError result = m_Input->GetAnalogActionData(actionHandle, &analogDataOut, sizeof(analogDataOut), vr::k_ulInvalidInputValueHandle);
 
     if (result == vr::VRInputError_None)
         return true;
@@ -214,38 +209,38 @@ void VR::ProcessInput()
 
     if (GetAsyncKeyState(VK_F6) || PressedDigitalAction(m_ActionActivateVR))
     {
-        if (!isVREnabled)
+        if (!m_IsVREnabled)
         {
-            mGame->mHooks->hkRenderView.enableHook();
-            isVREnabled = true;
+            m_Game->m_Hooks->hkRenderView.enableHook();
+            m_IsVREnabled = true;
         }
     }
 
-    if (!isVREnabled)
+    if (!m_IsVREnabled)
         return;
 
     typedef std::chrono::duration<float, std::milli> duration;
     auto currentTime = std::chrono::steady_clock::now();
-    duration elapsed = currentTime - mPrevFrameTime;
+    duration elapsed = currentTime - m_PrevFrameTime;
     float deltaTime = elapsed.count();
-    mPrevFrameTime = currentTime;
+    m_PrevFrameTime = currentTime;
 
     if (GetAnalogActionData(m_ActionTurn, analogActionData))
     {
-        if (mSnapTurning)
+        if (m_SnapTurning)
         {
-            if (!mPressedTurn && analogActionData.x > 0.5)
+            if (!m_PressedTurn && analogActionData.x > 0.5)
             {
-                mRotationOffset -= mSnapTurnAngle;
-                mPressedTurn = true;
+                m_RotationOffset -= m_SnapTurnAngle;
+                m_PressedTurn = true;
             }
-            else if (!mPressedTurn && analogActionData.x < -0.5)
+            else if (!m_PressedTurn && analogActionData.x < -0.5)
             {
-                mRotationOffset += mSnapTurnAngle;
-                mPressedTurn = true;
+                m_RotationOffset += m_SnapTurnAngle;
+                m_PressedTurn = true;
             }
             else if (analogActionData.x < 0.3 && analogActionData.x > -0.3)
-                mPressedTurn = false;
+                m_PressedTurn = false;
         }
         // Smooth turning
         else
@@ -255,185 +250,182 @@ void VR::ProcessInput()
             float xNormalized = (abs(analogActionData.x) - deadzone) / (1 - deadzone);
             if (analogActionData.x > deadzone)
             {
-                mRotationOffset -= mTurnSpeed * deltaTime * xNormalized;
+                m_RotationOffset -= m_TurnSpeed * deltaTime * xNormalized;
             }
             if (analogActionData.x < -deadzone)
             {
-                mRotationOffset += mTurnSpeed * deltaTime * xNormalized;
+                m_RotationOffset += m_TurnSpeed * deltaTime * xNormalized;
             }
         }
 
         // Wrap from 0 to 360
-        mRotationOffset -= 360 * std::floor(mRotationOffset / 360);
+        m_RotationOffset -= 360 * std::floor(m_RotationOffset / 360);
     }
 
     if (GetAnalogActionData(m_ActionWalk, analogActionData))		
     {
         if (analogActionData.y > 0.5)	
         {
-            mGame->ClientCmd_Unrestricted("-back");
-            mGame->ClientCmd_Unrestricted("+forward");
+            m_Game->ClientCmd_Unrestricted("-back");
+            m_Game->ClientCmd_Unrestricted("+forward");
         }
         else if (analogActionData.y < -0.5)		
         {
-            mGame->ClientCmd_Unrestricted("-forward");
-            mGame->ClientCmd_Unrestricted("+back");
+            m_Game->ClientCmd_Unrestricted("-forward");
+            m_Game->ClientCmd_Unrestricted("+back");
         }
         else
         {
-            mGame->ClientCmd_Unrestricted("-back");
-            mGame->ClientCmd_Unrestricted("-forward");
+            m_Game->ClientCmd_Unrestricted("-back");
+            m_Game->ClientCmd_Unrestricted("-forward");
         }
 
         if (analogActionData.x > 0.5)		
         {
-            mGame->ClientCmd_Unrestricted("-moveleft");
-            mGame->ClientCmd_Unrestricted("+moveright");
+            m_Game->ClientCmd_Unrestricted("-moveleft");
+            m_Game->ClientCmd_Unrestricted("+moveright");
         }
         else if (analogActionData.x < -0.5)		
         {
-            mGame->ClientCmd_Unrestricted("-moveright");
-            mGame->ClientCmd_Unrestricted("+moveleft");
+            m_Game->ClientCmd_Unrestricted("-moveright");
+            m_Game->ClientCmd_Unrestricted("+moveleft");
         }
         else
         {
-            mGame->ClientCmd_Unrestricted("-moveright");
-            mGame->ClientCmd_Unrestricted("-moveleft");
+            m_Game->ClientCmd_Unrestricted("-moveright");
+            m_Game->ClientCmd_Unrestricted("-moveleft");
         }
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-forward");
-        mGame->ClientCmd_Unrestricted("-back");
-        mGame->ClientCmd_Unrestricted("-moveleft");
-        mGame->ClientCmd_Unrestricted("-moveright");
+        m_Game->ClientCmd_Unrestricted("-forward");
+        m_Game->ClientCmd_Unrestricted("-back");
+        m_Game->ClientCmd_Unrestricted("-moveleft");
+        m_Game->ClientCmd_Unrestricted("-moveright");
     }
 
     if (PressedDigitalAction(m_ActionPrimaryAttack))
     {
-        mGame->ClientCmd_Unrestricted("+attack");
+        m_Game->ClientCmd_Unrestricted("+attack");
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-attack");
+        m_Game->ClientCmd_Unrestricted("-attack");
     }
 
     if (PressedDigitalAction(m_ActionJump))
     {
-        mGame->ClientCmd_Unrestricted("+jump");
+        m_Game->ClientCmd_Unrestricted("+jump");
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-jump");
+        m_Game->ClientCmd_Unrestricted("-jump");
     }
 
     if (PressedDigitalAction(m_ActionUse))
     {
-        mGame->ClientCmd_Unrestricted("+use");
+        m_Game->ClientCmd_Unrestricted("+use");
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-use");
+        m_Game->ClientCmd_Unrestricted("-use");
     }
 
     if (PressedDigitalAction(m_ActionReload))
     {
-        mGame->ClientCmd_Unrestricted("+reload");
+        m_Game->ClientCmd_Unrestricted("+reload");
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-reload");
+        m_Game->ClientCmd_Unrestricted("-reload");
     }
 
     if (PressedDigitalAction(m_ActionSecondaryAttack))
     {
-        mGame->ClientCmd_Unrestricted("+attack2");
+        m_Game->ClientCmd_Unrestricted("+attack2");
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-attack2");
+        m_Game->ClientCmd_Unrestricted("-attack2");
     }
 
     if (PressedDigitalAction(m_ActionPrevItem))
     {
-        if (!mChangedItem)
+        if (!m_ChangedItem)
         {
-            mGame->ClientCmd_Unrestricted("invprev");
-            mChangedItem = true;
+            m_Game->ClientCmd_Unrestricted("invprev");
+            m_ChangedItem = true;
         }
     }
     else if (PressedDigitalAction(m_ActionNextItem))
     {
-        if (!mChangedItem)
+        if (!m_ChangedItem)
         {
-            mGame->ClientCmd_Unrestricted("invnext");
-            mChangedItem = true;
+            m_Game->ClientCmd_Unrestricted("invnext");
+            m_ChangedItem = true;
         }
     }
     else
     {
-        mChangedItem = false;
+        m_ChangedItem = false;
     }
 
     if (PressedDigitalAction(m_ActionResetPosition))
     {
-        if (!mPressedLeftStick)
+        if (!m_PressedLeftStick)
         {
             UpdateIntendedPosition();
-            mPressedLeftStick = true;
+            m_PressedLeftStick = true;
         }
     }
     else
     {
-        mPressedLeftStick = false;
+        m_PressedLeftStick = false;
     }
 
     if (PressedDigitalAction(m_ActionCrouch))
     {
-        mGame->ClientCmd_Unrestricted("+duck");
+        m_Game->ClientCmd_Unrestricted("+duck");
     }
     else
     {
-        mGame->ClientCmd_Unrestricted("-duck");
+        m_Game->ClientCmd_Unrestricted("-duck");
     }
 
     if (PressedDigitalAction(m_ActionFlashlight))
     {
-        if (!mToggledFlashlight)
+        if (!m_ToggledFlashlight)
         {
-            mGame->ClientCmd_Unrestricted("impulse 100");
-            mToggledFlashlight = true;
+            m_Game->ClientCmd_Unrestricted("impulse 100");
+            m_ToggledFlashlight = true;
         }
     }
     else
     {
-        mToggledFlashlight = false;
+        m_ToggledFlashlight = false;
     }
 
 }
 
 QAngle VR::GetRightControllerAbsAngle()
 {
-    return VR_controller_right_ang_abs;
+    return m_RightControllerAngAbs;
 }
 
 Vector VR::GetRightControllerAbsPos()
 {
-    return VR_controller_right_pos_abs;
+    return m_RightControllerPosAbs;
 }
-
 
 Vector VR::GetRecommendedViewmodelAbsPos()
 {
-    Vector result{};
-    result = GetRightControllerAbsPos() - (VR_controller_right_forward_corrected * 20) -(VR_controller_right_right * 3);
-    return result;
+    return GetRightControllerAbsPos() - (m_RightControllerForwardCorrected * 20) - (m_RightControllerRight * 3);
 }
 
 QAngle VR::GetRecommendedViewmodelAbsAngle()
 {
     QAngle result{};
-    QAngle::VectorAngles(VR_controller_right_forward_corrected, -VR_controller_right_up_corrected, result);
+    QAngle::VectorAngles(m_RightControllerForwardCorrected, -m_RightControllerUpCorrected, result);
     return result;
 }
 
@@ -441,120 +433,112 @@ void VR::UpdateTracking(Vector viewOrigin)
 {
     GetPoses();
 
-    int playerIndex = mGame->EngineClient->GetLocalPlayer();
-    CBaseEntity *localPlayer = mGame->GetClientEntity(playerIndex);
+    int playerIndex = m_Game->m_EngineClient->GetLocalPlayer();
+    CBaseEntity *localPlayer = m_Game->GetClientEntity(playerIndex);
     if (!localPlayer)
         return;
 
     // HMD tracking
-    QAngle VR_hmd_ang_local = m_HmdPose.TrackedDeviceAng;	
-    Vector VR_hmd_pos_local = m_HmdPose.TrackedDevicePos;	
+    QAngle hmdAngLocal = m_HmdPose.TrackedDeviceAng;	
+    Vector hmdPosLocal = m_HmdPose.TrackedDevicePos;	
 
-    Vector deltaPosition = VR_hmd_pos_local - VR_hmd_pos_local_prev;
-    Vector VR_hmd_pos_corrected = VR_hmd_pos_corrected_prev + deltaPosition;
+    Vector deltaPosition = hmdPosLocal - m_HmdPosLocalPrev;
+    Vector hmdPosCorrected = m_HmdPosCorrectedPrev + deltaPosition;
 
-    VectorPivotXY(VR_hmd_pos_corrected, VR_hmd_pos_corrected_prev, mRotationOffset);
+    VectorPivotXY(hmdPosCorrected, m_HmdPosCorrectedPrev, m_RotationOffset);
 
-    VR_hmd_pos_corrected_prev = VR_hmd_pos_corrected;
-    VR_hmd_pos_local_prev = VR_hmd_pos_local;
+    m_HmdPosCorrectedPrev = hmdPosCorrected;
+    m_HmdPosLocalPrev = hmdPosLocal;
 
-    VR_hmd_ang_local = VR_hmd_ang_local; 
-    VR_hmd_ang_local.y += mRotationOffset;
+    hmdAngLocal.y += m_RotationOffset;
     // Wrap angle from -180 to 180
-    VR_hmd_ang_local.y -= 360 * std::floor((VR_hmd_ang_local.y + 180) / 360);
+    hmdAngLocal.y -= 360 * std::floor((hmdAngLocal.y + 180) / 360);
 
-    QAngle::AngleVectors(VR_hmd_ang_local, &VR_hmd_forward, &VR_hmd_right, &VR_hmd_up);			
+    QAngle::AngleVectors(hmdAngLocal, &m_HmdForward, &m_HmdRight, &m_HmdUp);				
 
-    QAngle::AngleVectors(ZeroAngle, &Player_forward, &Player_right, &Player_up);					
-
-    VR_hmd_pos_local_in_world = VR_hmd_pos_corrected * VR_scale;
+    m_HmdPosLocalInWorld = hmdPosCorrected * m_VRScale;
 
     Vector eyePos = viewOrigin;
 
-    VR_hmd_pos_abs_no_offset = eyePos - Vector(0, 0, 64) + VR_hmd_pos_local_in_world;
-    VR_hmd_pos_abs = VR_hmd_pos_abs_no_offset + intendedPositionOffset;	
+    m_HmdPosAbsNoOffset = eyePos - Vector(0, 0, 64) + m_HmdPosLocalInWorld;
+    m_HmdPosAbs = m_HmdPosAbsNoOffset + m_IntendedPositionOffset;	
 
-    VR_hmd_ang_abs = VR_hmd_ang_local;
+    m_HmdAngAbs = hmdAngLocal;
 
     GetViewParameters();
-    ipd = eyeToHeadTransformPosRight.x * 2;
-    eyeZ = eyeToHeadTransformPosRight.z;
+    m_Ipd = m_EyeToHeadTransformPosRight.x * 2;
+    m_EyeZ = m_EyeToHeadTransformPosRight.z;
 
     // Hand tracking
-    Vector VR_controller_left_pos_local = m_LeftControllerPose.TrackedDevicePos;											
-    QAngle VR_controller_left_ang_local = m_LeftControllerPose.TrackedDeviceAng;
+    Vector leftControllerPosLocal = m_LeftControllerPose.TrackedDevicePos;											
+    QAngle leftControllerAngLocal = m_LeftControllerPose.TrackedDeviceAng;
 
-    Vector VR_controller_right_pos_local = m_RightControllerPose.TrackedDevicePos;
-    QAngle VR_controller_right_ang_local = m_RightControllerPose.TrackedDeviceAng;
+    Vector rightControllerPosLocal = m_RightControllerPose.TrackedDevicePos;
+    QAngle rightControllerAngLocal = m_RightControllerPose.TrackedDeviceAng;
 
-    Vector hmdToController = VR_controller_right_pos_local - VR_hmd_pos_local;
-    Vector VR_controller_right_pos_corrected = VR_hmd_pos_corrected + hmdToController;
+    Vector hmdToController = rightControllerPosLocal - hmdPosLocal;
+    Vector rightControllerPosCorrected = hmdPosCorrected + hmdToController;
 
     // When using stick turning, pivot the controllers around the HMD
-    VectorPivotXY(VR_controller_right_pos_corrected, VR_hmd_pos_corrected, mRotationOffset);
+    VectorPivotXY(rightControllerPosCorrected, hmdPosCorrected, m_RotationOffset);
 
-    VR_controller_right_ang_local.y += mRotationOffset;
+    rightControllerAngLocal.y += m_RotationOffset;
     // Wrap angle from -180 to 180
-    VR_controller_right_ang_local.y -= 360 * std::floor((VR_controller_right_ang_local.y + 180) / 360);
+    rightControllerAngLocal.y -= 360 * std::floor((rightControllerAngLocal.y + 180) / 360);
 
-    QAngle::AngleVectors(VR_controller_left_ang_local, &VR_controller_left_forward, &VR_controller_left_right, &VR_controller_left_up);			
-    QAngle::AngleVectors(VR_controller_right_ang_local, &VR_controller_right_forward, &VR_controller_right_right, &VR_controller_right_up);			
+    QAngle::AngleVectors(leftControllerAngLocal, &m_LeftControllerForward, &m_LeftControllerRight, &m_LeftControllerUp);			
+    QAngle::AngleVectors(rightControllerAngLocal, &m_RightControllerForward, &m_RightControllerRight, &m_RightControllerUp);			
 
-    Vector VR_controller_left_pos_local_in_world = VR_controller_left_pos_local * VR_scale;
-    Vector VR_controller_right_pos_local_in_world = VR_controller_right_pos_corrected * VR_scale;
+    Vector leftControllerPosLocalInWorld = leftControllerPosLocal * m_VRScale;
+    Vector rightControllerPosLocalInWorld = rightControllerPosCorrected * m_VRScale;
 
-
-    VR_controller_left_pos_abs = eyePos - Vector(0, 0, 64) + VR_controller_left_pos_local_in_world + intendedPositionOffset;
-    VR_controller_right_pos_abs = eyePos - Vector(0, 0, 64) + VR_controller_right_pos_local_in_world + intendedPositionOffset;
+    m_LeftControllerPosAbs = eyePos - Vector(0, 0, 64) + leftControllerPosLocalInWorld + m_IntendedPositionOffset;
+    m_RightControllerPosAbs = eyePos - Vector(0, 0, 64) + rightControllerPosLocalInWorld + m_IntendedPositionOffset;
 
     // controller angles
-    VR_controller_left_ang_abs = VR_controller_left_ang_local;
-    VR_controller_right_ang_abs = VR_controller_right_ang_local;
+    m_LeftControllerAngAbs = leftControllerAngLocal;
+    m_RightControllerAngAbs = rightControllerAngLocal;
 
     // adjust controller angle 45 degrees down from its up vector
-    Vector down = -VR_controller_right_up;
-    VR_controller_right_forward_corrected = (VR_controller_right_forward + down) / 2;
-    VectorNormalize(VR_controller_right_forward_corrected);
-    CrossProduct(VR_controller_right_forward_corrected, VR_controller_right_right, VR_controller_right_up_corrected);
+    Vector down = -m_RightControllerUp;
+    m_RightControllerForwardCorrected = (m_RightControllerForward + down) / 2;
+    VectorNormalize(m_RightControllerForwardCorrected);
+    CrossProduct(m_RightControllerForwardCorrected, m_RightControllerRight, m_RightControllerUpCorrected);
 
     // Process action input
     ProcessInput();
-
 }
 
 Vector VR::GetViewAngle()
 {
-    Vector result = { VR_hmd_ang_abs.x, VR_hmd_ang_abs.y, VR_hmd_ang_abs.z };
-    return result;
+    return Vector( m_HmdAngAbs.x, m_HmdAngAbs.y, m_HmdAngAbs.z );
 }
 
 Vector VR::GetViewOriginLeft()
 {
+    Vector viewOriginLeft;
 
-    Vector view_temp_origin;
+    viewOriginLeft = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));
+    viewOriginLeft = viewOriginLeft + (m_HmdRight * (-((m_Ipd * m_IpdScale * m_VRScale) / 2)));
 
-    view_temp_origin = VR_hmd_pos_abs + (VR_hmd_forward * (-(eyeZ * VR_scale)));
-    view_temp_origin = view_temp_origin + (VR_hmd_right * (-((ipd * ipd_scale * VR_scale) / 2)));
-
-
-    return view_temp_origin;
+    return viewOriginLeft;
 }
 
 Vector VR::GetViewOriginRight()
 {
 
-    Vector view_temp_origin;
+    Vector viewOriginRight;
 
-    view_temp_origin = VR_hmd_pos_abs + (VR_hmd_forward * (-(eyeZ * VR_scale)));
-    view_temp_origin = view_temp_origin + (VR_hmd_right * (ipd * ipd_scale * VR_scale) / 2);
+    viewOriginRight = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));
+    viewOriginRight = viewOriginRight + (m_HmdRight * (m_Ipd * m_IpdScale * m_VRScale) / 2);
 
-    return view_temp_origin;
+    return viewOriginRight;
 }
 
 
 void VR::UpdateIntendedPosition()
 {
-    intendedPositionOffset = setupOrigin - VR_hmd_pos_abs_no_offset;
+    m_IntendedPositionOffset = m_SetupOrigin - m_HmdPosAbsNoOffset;
 }
 
 void VR::ParseConfigFile()
@@ -578,11 +562,11 @@ void VR::ParseConfigFile()
     if (userConfig.empty())
         return;
 
-    mSnapTurning = userConfig["SnapTurning"] == "true";
-    mSnapTurnAngle = std::stof(userConfig["SnapTurnAngle"]);
-    mTurnSpeed = std::stof(userConfig["TurnSpeed"]);
-    VR_scale = std::stof(userConfig["VRScale"]);
-    ipd_scale = std::stof(userConfig["IPDScale"]);
+    m_SnapTurning = userConfig["SnapTurning"] == "true";
+    m_SnapTurnAngle = std::stof(userConfig["SnapTurnAngle"]);
+    m_TurnSpeed = std::stof(userConfig["TurnSpeed"]);
+    m_VRScale = std::stof(userConfig["VRScale"]);
+    m_IpdScale = std::stof(userConfig["IPDScale"]);
 }
 
 void VR::WaitForConfigUpdate()
@@ -608,11 +592,11 @@ void VR::WaitForConfigUpdate()
         }
         catch (const std::invalid_argument &e)
         {
-            mGame->errorMsg("Failed to parse config.txt");
+            m_Game->errorMsg("Failed to parse config.txt");
         }
         catch (const std::filesystem::filesystem_error &e)
         {
-            mGame->errorMsg("config.txt not found.");
+            m_Game->errorMsg("config.txt not found.");
             return;
         }
         

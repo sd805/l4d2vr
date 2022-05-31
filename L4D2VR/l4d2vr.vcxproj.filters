@@ -27,13 +27,10 @@
     <ClInclude Include="offsets.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sdk\CUserCmd.h">
+    <ClInclude Include="sdk\usercmd.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\material.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sdk\QAngle.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sdk\sdk.h">
@@ -69,9 +66,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="game.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sdk\QAngle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sdk\checksum_crc.cpp">
