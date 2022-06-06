@@ -22,30 +22,36 @@ struct Player
     bool isUsingVR;
     QAngle controllerAngle;
     Vector controllerPos;
+
+    Player()
+        : isUsingVR(false),
+        controllerAngle({ 0,0,0 }),
+        controllerPos({ 0,0,0 })
+    {}
 };
 
 class Game 
 {
 public:
-    IClientEntityList *m_ClientEntityList;
-    IEngineTrace *m_EngineTrace;
-    IEngineClient *m_EngineClient;
-    IMaterialSystem *m_MaterialSystem;
-    IBaseClientDLL *m_BaseClientDll;
-    IViewRender *m_ClientViewRender;
-    IViewRender *m_EngineViewRender;
+    IClientEntityList *m_ClientEntityList = nullptr;
+    IEngineTrace *m_EngineTrace = nullptr;
+    IEngineClient *m_EngineClient = nullptr;
+    IMaterialSystem *m_MaterialSystem = nullptr;
+    IBaseClientDLL *m_BaseClientDll = nullptr;
+    IViewRender *m_ClientViewRender = nullptr;
+    IViewRender *m_EngineViewRender = nullptr;
 
     uintptr_t m_BaseEngine;
     uintptr_t m_BaseClient;
     uintptr_t m_BaseServer;
     uintptr_t m_BaseMaterialSystem;
 
-    Offsets *m_Offsets;
-    VR *m_VR;
-    Hooks *m_Hooks;
+    Offsets *m_Offsets = nullptr;
+    VR *m_VR = nullptr;
+    Hooks *m_Hooks = nullptr;
 
     std::array<Player, 24> m_PlayersVRInfo;
-    int m_CurrentUsercmdID;
+    int m_CurrentUsercmdID = -1;
 
     Game();
 

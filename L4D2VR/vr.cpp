@@ -101,6 +101,7 @@ int VR::SetActionManifest(const char *fileName) {
     m_Input->GetActionHandle("/actions/main/in/Flashlight", &m_ActionFlashlight);
 
     m_Input->GetActionSetHandle("/actions/main", &m_ActionSet);
+    m_ActiveActionSet = {};
     m_ActiveActionSet.ulActionSet = m_ActionSet;
 
     // Get index for each controller
