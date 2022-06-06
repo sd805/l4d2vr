@@ -2,14 +2,11 @@
 #define D3D_DEBUG_INFO
 #include <d3d9.h>
 #include <d3dx9.h>
-#include <d3d9on12.h>
-#include <d3d12.h>
 #include <iostream>
 #include "MinHook.h"
 
 #pragma comment (lib, "d3d9.lib")
 #pragma comment (lib, "d3dx9.lib")
-#pragma comment (lib, "d3d12.lib")
 
 class Game;
 class VR;
@@ -60,12 +57,6 @@ struct Hook {
 	}
 };
 
-// DirectX functions
-typedef HRESULT(__stdcall *tBeginScene)(IDirect3DDevice9 *pDevice); 
-typedef HRESULT(__stdcall *tClear)(IDirect3DDevice9 *pDevice, DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
-typedef HRESULT(__stdcall *tEndScene)(IDirect3DDevice9 *pDevice);
-typedef HRESULT(APIENTRY *tCreateTexture)(IDirect3DDevice9 *, UINT, UINT, UINT, DWORD, D3DFORMAT, D3DPOOL, IDirect3DTexture9 **, HANDLE *);
-typedef HRESULT(__stdcall *tPresent)(IDirect3DDevice9 *pDevice, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion);
 
 // Source Engine functions
 typedef ITexture *(__thiscall *tGetRenderTarget)(void *thisptr);
@@ -86,12 +77,6 @@ public:
 	static inline Game *m_Game;
 	static inline VR *m_VR;
 
-	static inline Hook<tBeginScene> hkBeginScene;
-	static inline Hook<tClear> hkClear;
-	static inline Hook<tEndScene> hkEndScene;
-	static inline Hook<tCreateTexture> hkCreateTexture;
-	static inline Hook<tPresent> hkPresent;
-
 	static inline Hook<tGetRenderTarget> hkGetRenderTarget;
 	static inline Hook<tRenderView> hkRenderView;
 	static inline Hook<tCreateMove> hkCreateMove;
@@ -104,28 +89,14 @@ public:
 	static inline Hook<tWriteUsercmdDeltaToBuffer> hkWriteUsercmdDeltaToBuffer;
 	static inline Hook<tWriteUsercmd> hkWriteUsercmd;
 
-	static inline bool m_CreatedTexture;
-
-	static inline IDirect3DDevice9On12 *m_D9on12;
-	static inline ID3D12CommandQueue *m_CommandQueue;
-
 	Hooks() {};
 	Hooks(Game *game);
 
 	~Hooks();
 
-	int initDxHooks();
 	int initSourceHooks();
-	static void CreateVRTextures();
-	static void SubmitVRTextures();
 
 	// Detour functions
-	static HRESULT __stdcall dBeginScene(IDirect3DDevice9 *pDevice);
-	static HRESULT __stdcall dClear(IDirect3DDevice9 *pDevice, DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil);
-	static HRESULT __stdcall dEndScene(IDirect3DDevice9 *pDevice);
-	static HRESULT APIENTRY dCreateTexture(IDirect3DDevice9 *pDevice, UINT w, UINT h, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool, IDirect3DTexture9 **tex, HANDLE *shared_handle);
-	static HRESULT __stdcall dPresent(IDirect3DDevice9 *pDevice, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion);
-
 	static ITexture *__fastcall dGetRenderTarget(void *ecx, void *edx);
 	static void __fastcall dRenderView(void *ecx, void *edx, CViewSetup &setup, CViewSetup &hudViewSetup, int nClearFlags, int whatToDraw);
 	static bool __fastcall dCreateMove(void *ecx, void *edx, float flInputSampleTime, CUserCmd *cmd);

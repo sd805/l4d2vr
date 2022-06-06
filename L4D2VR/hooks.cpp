@@ -16,11 +16,8 @@ Hooks::Hooks(Game *game)
 	m_Game = game;
 	m_VR = m_Game->m_VR;
 
-	//initDxHooks();
 	initSourceHooks();
 
-	//hkBeginScene.enableHook();
-	//hkPresent.enableHook();
 	hkGetRenderTarget.enableHook();
 	hkCalcViewModelView.enableHook();
 	hkServerFireTerrorBullets.enableHook();
@@ -39,37 +36,6 @@ Hooks::~Hooks()
 	}
 }
 
-int Hooks::initDxHooks()
-{
-	IDirect3D9 *pD3D = Direct3DCreate9(D3D_SDK_VERSION);
-	if (!pD3D)
-		return 1;
-
-	D3DPRESENT_PARAMETERS d3dparams = { 0 };
-	d3dparams.SwapEffect = D3DSWAPEFFECT_DISCARD;
-	d3dparams.hDeviceWindow = GetForegroundWindow();
-	d3dparams.Windowed = true;
-	d3dparams.BackBufferFormat = D3DFMT_UNKNOWN;
-
-	IDirect3DDevice9 *pDevice = nullptr;
-
-	HRESULT result = pD3D->CreateDevice(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3dparams.hDeviceWindow, D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dparams, &pDevice);
-
-	void **vTable = *reinterpret_cast<void ***>(pDevice);
-
-	LPVOID beginSceneVFunc = reinterpret_cast<LPVOID>(vTable[41]);
-	LPVOID endSceneVFunc = reinterpret_cast<LPVOID>(vTable[42]);
-	LPVOID createTextureVFunc = reinterpret_cast<LPVOID>(vTable[23]);
-	LPVOID clearVFunc = reinterpret_cast<LPVOID>(vTable[43]);
-	LPVOID presentVFunc = reinterpret_cast<LPVOID>(vTable[17]);
-
-	hkPresent.createHook(presentVFunc, &dPresent);
-	hkBeginScene.createHook(beginSceneVFunc, &dBeginScene);
-	hkCreateTexture.createHook(createTextureVFunc, &dCreateTexture);
-
-	pDevice->Release();
-	pD3D->Release();
-}
 
 int Hooks::initSourceHooks()
 {
@@ -107,73 +73,6 @@ int Hooks::initSourceHooks()
 	return 1;
 }
 
-HRESULT __stdcall Hooks::dBeginScene(IDirect3DDevice9 *pDevice)
-{
-	return hkBeginScene.fOriginal(pDevice);
-}
-
-HRESULT __stdcall Hooks::dClear(IDirect3DDevice9 *pDevice, DWORD Count, const D3DRECT *pRects, DWORD Flags, D3DCOLOR Color, float Z, DWORD Stencil)
-{
-	return hkClear.fOriginal(pDevice, Count, pRects, Flags, Color, Z, Stencil);
-}
-
-HRESULT __stdcall Hooks::dEndScene(IDirect3DDevice9 *pDevice)
-{
-	return hkEndScene.fOriginal(pDevice);
-}
-
-HRESULT APIENTRY Hooks::dCreateTexture(IDirect3DDevice9 *pDevice, UINT w, UINT h, UINT levels, DWORD usage, D3DFORMAT format, D3DPOOL pool, IDirect3DTexture9 **tex, HANDLE *shared_handle) 
-{
-	HRESULT hr = pDevice->QueryInterface(__uuidof(IDirect3DDevice9On12), (void **)&m_D9on12);
-
-	ID3D12Device *d12Device;
-	m_D9on12->GetD3D12Device(__uuidof(ID3D12Device), (void **)&d12Device);
-
-	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
-	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-	d12Device->CreateCommandQueue(&queueDesc, __uuidof(ID3D12CommandQueue), (void **)&m_CommandQueue);
-
-	HRESULT result = hkCreateTexture.fOriginal(pDevice, w, h, levels, usage, format, pool, tex, shared_handle);
-
-	if (!m_VR->m_D9LeftEyeTexture)
-	{
-		m_VR->m_D9LeftEyeTexture = *tex;
-	}
-	else if (!m_VR->m_D9RightEyeTexture)
-	{
-		m_VR->m_D9RightEyeTexture = *tex;
-	}
-
-	return result;
-}
-
-HRESULT __stdcall Hooks::dPresent(IDirect3DDevice9 *pDevice, const RECT *pSourceRect, const RECT *pDestRect, HWND hDestWindowOverride, const RGNDATA *pDirtyRegion)
-{
-	if (!m_CreatedTexture && m_VR->m_IsVREnabled)
-	{
-		CreateVRTextures();
-	}
-
-	if (m_VR->m_IsVREnabled)
-	{
-		// Prevents crashing at menu
-		if (!m_Game->m_EngineClient->IsInGame())
-		{
-			IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
-			rndrContext->SetRenderTarget(NULL);
-		}
-		SubmitVRTextures();
-	}
-
-	if (m_VR->m_IsInitialized)
-	{
-		m_VR->UpdatePosesAndActions();
-		m_VR->UpdateTracking(m_VR->m_SetupOrigin);
-	}
-	
-	return hkPresent.fOriginal(pDevice, pSourceRect, pDestRect, hDestWindowOverride, pDirtyRegion);
-}
 
 ITexture *__fastcall Hooks::dGetRenderTarget(void *ecx, void *edx)
 {
@@ -387,67 +286,4 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 
 	}
 	return hkWriteUsercmd.fOriginal(buf, to, from);
-}
-
-void Hooks::CreateVRTextures()
-{
-	IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
-	rndrContext->GetRenderTargetDimensions(m_VR->m_FrameBufferWidth, m_VR->m_FrameBufferHeight);
-
-	hkCreateTexture.enableHook();
-
-	m_Game->m_MaterialSystem->isGameRunning = false;
-	m_Game->m_MaterialSystem->BeginRenderTargetAllocation();
-	m_Game->m_MaterialSystem->isGameRunning = true;
-
-	uint32_t recommendedWidth, recommendedHeight;
-	recommendedWidth = m_VR->m_FrameBufferWidth / 2;
-	recommendedHeight = m_VR->m_FrameBufferHeight;
-
-	m_VR->m_LeftEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("leftEye", recommendedWidth, recommendedHeight, RT_SIZE_LITERAL, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
-	m_VR->m_RightEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("rightEye", recommendedWidth, recommendedHeight, RT_SIZE_LITERAL, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
-	m_Game->m_MaterialSystem->isGameRunning = false;
-	//MaterialSystem->EndRenderTargetAllocation(); // Freezes game and leaks memory
-	m_Game->m_MaterialSystem->isGameRunning = true;
-
-	hkCreateTexture.disableHook();
-	m_CreatedTexture = true;
-}
-
-void Hooks::SubmitVRTextures()
-{
-	ID3D12Resource *leftEyeD12Res;
-	ID3D12Resource *rightEyeD12Res;
-	m_D9on12->UnwrapUnderlyingResource(m_VR->m_D9LeftEyeTexture, m_CommandQueue, __uuidof(ID3D12Resource), (void **)&leftEyeD12Res);
-
-
-	vr::VRTextureBounds_t bounds;
-	bounds.uMin = 0.0f;
-	bounds.uMax = 1.0f;
-	bounds.vMin = 0.0f;
-	bounds.vMax = 1.0f;
-
-	vr::D3D12TextureData_t d3d12LeftEyeTexture = { leftEyeD12Res, m_CommandQueue, 0 };
-	vr::Texture_t leftEyeTexture = { (void *)&d3d12LeftEyeTexture, vr::TextureType_DirectX12, vr::ColorSpace_Gamma };
-
-	bounds.uMin = 0.0f + m_VR->m_HorizontalOffsetLeft * 0.25f;
-	bounds.uMax = 1.0f + m_VR->m_HorizontalOffsetLeft * 0.25f;
-	bounds.vMin = 0.0f - m_VR->m_VerticalOffsetLeft * 0.5f;
-	bounds.vMax = 1.0f - m_VR->m_VerticalOffsetLeft * 0.5f;
-	vr::EVRCompositorError leftEyeError = vr::VRCompositor()->Submit(vr::Eye_Left, &leftEyeTexture, &(m_VR->m_TextureBounds)[0], vr::Submit_Default);
-
-	m_D9on12->ReturnUnderlyingResource(m_VR->m_D9LeftEyeTexture, 0, nullptr, nullptr);
-
-
-	m_D9on12->UnwrapUnderlyingResource(m_VR->m_D9RightEyeTexture, m_CommandQueue, __uuidof(ID3D12Resource), (void **)&rightEyeD12Res);
-	vr::D3D12TextureData_t d3d12RightEyeTexture = { rightEyeD12Res, m_CommandQueue, 0 };
-	vr::Texture_t rightEyeTexture = { (void *)&d3d12RightEyeTexture, vr::TextureType_DirectX12, vr::ColorSpace_Gamma };
-
-	bounds.uMin = 0.0f + m_VR->m_HorizontalOffsetRight * 0.25f;
-	bounds.uMax = 1.0f + m_VR->m_HorizontalOffsetRight * 0.25f;
-	bounds.vMin = 0.0f - m_VR->m_VerticalOffsetRight * 0.5f;
-	bounds.vMax = 1.0f - m_VR->m_VerticalOffsetRight * 0.5f;
-	vr::EVRCompositorError rightEyeError = vr::VRCompositor()->Submit(vr::Eye_Right, &rightEyeTexture, &(m_VR->m_TextureBounds)[1], vr::Submit_Default);
-
-	m_D9on12->ReturnUnderlyingResource(m_VR->m_D9RightEyeTexture, 0, nullptr, nullptr);
 }
