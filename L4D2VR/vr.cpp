@@ -101,20 +101,6 @@ int VR::SetActionManifest(const char *fileName) {
     m_ActiveActionSet = {};
     m_ActiveActionSet.ulActionSet = m_ActionSet;
 
-    // Get index for each controller
-    vr::VRInputValueHandle_t leftControllerHandle{};
-    vr::VRInputValueHandle_t rightControllerHandle{};
-    m_Input->GetInputSourceHandle("/user/hand/left", &leftControllerHandle);
-    m_Input->GetInputSourceHandle("/user/hand/right", &rightControllerHandle);
-
-    vr::InputOriginInfo_t leftOriginInfo{};
-    vr::InputOriginInfo_t rightOriginInfo{};
-    m_Input->GetOriginTrackedDeviceInfo(leftControllerHandle, &leftOriginInfo, sizeof(leftOriginInfo));
-    m_Input->GetOriginTrackedDeviceInfo(rightControllerHandle, &rightOriginInfo, sizeof(rightOriginInfo));
-
-    m_LeftControllerIndex = leftOriginInfo.trackedDeviceIndex;
-    m_RightControllerIndex = rightOriginInfo.trackedDeviceIndex;
-
     return 0;
 }
 
@@ -209,8 +195,12 @@ void VR::GetPoses()
     vr::TrackedDevicePose_t pose;
 
     vr::TrackedDevicePose_t hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
-    vr::TrackedDevicePose_t leftControllerPose = m_Poses[m_LeftControllerIndex];
-    vr::TrackedDevicePose_t rightControllerPose = m_Poses[m_RightControllerIndex];
+
+    vr::TrackedDeviceIndex_t leftControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
+    vr::TrackedDevicePose_t leftControllerPose = m_Poses[leftControllerIndex];
+
+    vr::TrackedDeviceIndex_t rightControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
+    vr::TrackedDevicePose_t rightControllerPose = m_Poses[rightControllerIndex];
 
     GetPoseData(hmdPose, m_HmdPose);
     GetPoseData(leftControllerPose, m_LeftControllerPose);

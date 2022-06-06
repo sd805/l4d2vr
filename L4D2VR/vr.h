@@ -21,7 +21,7 @@ struct TrackedDevicePoseData {
 
 struct SharedTextureHolder {
 	vr::VRVulkanTextureData_t m_VulkanData;
-	vr::Texture_t			m_VRTexture;
+	vr::Texture_t m_VRTexture;
 };
 
 
@@ -32,6 +32,7 @@ public:
 
 	vr::IVRSystem *m_System = nullptr;
 	vr::IVRInput *m_Input = nullptr;
+
 	float m_HorizontalOffsetLeft;
 	float m_VerticalOffsetLeft;
 	float m_HorizontalOffsetRight;
@@ -76,9 +77,6 @@ public:
 	Vector m_RightControllerPosAbs;											
 	QAngle m_RightControllerAngAbs;
 
-	int m_FrameBufferWidth;
-	int m_FrameBufferHeight;
-
 	float m_Ipd;																	
 	float m_EyeZ;
 
@@ -86,9 +84,6 @@ public:
 
 	ITexture *m_LeftEyeTexture;
 	ITexture *m_RightEyeTexture;
-
-	IDirect3DTexture9 *m_D9LeftEyeTexture;
-	IDirect3DTexture9 *m_D9RightEyeTexture;
 
 	IDirect3DSurface9 *m_D9LeftEyeSurface;
 	IDirect3DSurface9 *m_D9RightEyeSurface;
@@ -127,9 +122,6 @@ public:
 	vr::VRActionHandle_t m_ActionCrouch;
 	vr::VRActionHandle_t m_ActionFlashlight;
 	vr::VRActionHandle_t m_ActionActivateVR;
-
-	int m_LeftControllerIndex;
-	int m_RightControllerIndex;
 
 	TrackedDevicePoseData m_HmdPose;
 	TrackedDevicePoseData m_LeftControllerPose;

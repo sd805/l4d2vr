@@ -84,13 +84,8 @@ void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CVie
 {
 	IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
 
-	int clearflags = 0;
-
 	CViewSetup leftEyeView = setup;
 	CViewSetup rightEyeView = setup;
-
-	int width_VR = m_VR->m_FrameBufferWidth / 2;
-	int height_VR = m_VR->m_FrameBufferHeight;
 
 	// Left eye CViewSetup
 	leftEyeView.x = 0;
