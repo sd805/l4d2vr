@@ -801,15 +801,15 @@
     <ClInclude Include="..\dxvk\include\shaders\hud_text_vert.h">
       <Filter>dxvk</Filter>
     </ClInclude>
+    <ClInclude Include="..\dxvk\include\version.h">
+      <Filter>dxvk</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="hooks.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="d9on12Proxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vr.cpp">
