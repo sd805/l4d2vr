@@ -7,7 +7,7 @@
 * Singleplayer w/ bots
 * 6DoF VR view
 * Motion controls for guns
-* Multiplayer (Set server type to local server)
+* Multiplayer (only if the host has the mod and the server is set to local)
 
 ## Things that need fixing
 
