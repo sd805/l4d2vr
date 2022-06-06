@@ -46,8 +46,8 @@ VR::VR(Game *game) {
 
     float tanHalfFov[2];
 
-    tanHalfFov[0] = max(-l_left, l_right, -r_left, r_right);
-    tanHalfFov[1] = max(-l_top, l_bottom, -r_top, r_bottom);
+    tanHalfFov[0] = std::max({ -l_left, l_right, -r_left, r_right });
+    tanHalfFov[1] = std::max({ -l_top, l_bottom, -r_top, r_bottom });
 
     m_TextureBounds[0].uMin = 0.5f + 0.5f * l_left / tanHalfFov[0];
     m_TextureBounds[0].uMax = 0.5f + 0.5f * l_right / tanHalfFov[0];
@@ -58,9 +58,6 @@ VR::VR(Game *game) {
     m_TextureBounds[1].uMax = 0.5f + 0.5f * r_right / tanHalfFov[0];
     m_TextureBounds[1].vMin = 0.5f - 0.5f * r_bottom / tanHalfFov[1];
     m_TextureBounds[1].vMax = 0.5f - 0.5f * r_top / tanHalfFov[1];
-
-    m_RenderWidth = m_RenderWidth / max(m_TextureBounds[0].uMax - m_TextureBounds[0].uMin, m_TextureBounds[1].uMax - m_TextureBounds[1].uMin);
-    m_RenderHeight = m_RenderHeight / max(m_TextureBounds[0].vMax - m_TextureBounds[0].vMin, m_TextureBounds[1].vMax - m_TextureBounds[1].vMin);
 
     m_Aspect = tanHalfFov[0] / tanHalfFov[1];
     m_Fov = 2.0f * atan(tanHalfFov[0]) * 360 / (3.14159265358979323846 * 2);
@@ -119,6 +116,63 @@ int VR::SetActionManifest(const char *fileName) {
     m_RightControllerIndex = rightOriginInfo.trackedDeviceIndex;
 
     return 0;
+}
+
+void VR::Update()
+{
+    if (!m_IsInitialized || !m_Game->m_Initialized)
+        return;
+
+    if (m_IsVREnabled)
+    {
+        if (!m_CreatedVRTextures)
+        {
+            CreateVRTextures();
+            m_Game->m_Hooks->hkRenderView.enableHook();
+        }
+
+        // Prevents crashing at menu
+        if (!m_Game->m_EngineClient->IsInGame())
+        {
+            IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
+            rndrContext->SetRenderTarget(NULL);
+        }
+        SubmitVRTextures();
+    }
+    
+    UpdatePosesAndActions();
+    UpdateTracking(m_SetupOrigin);
+}
+
+void VR::CreateVRTextures()
+{
+    m_Game->m_MaterialSystem->isGameRunning = false;
+    m_Game->m_MaterialSystem->BeginRenderTargetAllocation();
+    m_Game->m_MaterialSystem->isGameRunning = true;
+
+    m_CreatingTextureID = 0;
+    m_LeftEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("leftEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
+    m_CreatingTextureID = 1;
+    m_RightEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("rightEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
+    m_CreatingTextureID = -1;
+
+    m_Game->m_MaterialSystem->isGameRunning = false;
+    //MaterialSystem->EndRenderTargetAllocation(); // Freezes game and leaks memory
+    m_Game->m_MaterialSystem->isGameRunning = true;
+
+    m_CreatedVRTextures = true;
+}
+
+void VR::SubmitVRTextures()
+{
+    if (!m_RenderedNewFrame)
+        return;
+
+    vr::EVRCompositorError leftEyeError = vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
+
+    vr::EVRCompositorError rightEyeError = vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
+
+    m_RenderedNewFrame = false;
 }
 
 void VR::GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &poseOut)
@@ -210,11 +264,7 @@ void VR::ProcessInput()
 
     if (GetAsyncKeyState(VK_F6) || PressedDigitalAction(m_ActionActivateVR))
     {
-        if (!m_IsVREnabled)
-        {
-            m_Game->m_Hooks->hkRenderView.enableHook();
-            m_IsVREnabled = true;
-        }
+        m_IsVREnabled = true;
     }
 
     if (!m_IsVREnabled)

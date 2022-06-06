@@ -28,6 +28,8 @@ Game::Game()
     m_Offsets = new Offsets();
     m_VR = new VR(this);
     m_Hooks = new Hooks(this);
+
+    m_Initialized = true;
 }
 
 void *Game::GetInterface(const char *dllname, const char *interfacename)

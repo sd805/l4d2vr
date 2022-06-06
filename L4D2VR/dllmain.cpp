@@ -6,8 +6,6 @@
 #include "vr.h"
 #include "sdk.h"
 
-Game *g_pGame;
-
 // testing random hooks
 // TestMeleeSwingCollision: game.g_client + 0x30C040
 typedef void(__thiscall *TestMeleeSwingCollision)(void *thisptr, Vector const &vec);
@@ -59,8 +57,7 @@ DWORD WINAPI InitL4D2VR(HMODULE hModule)
     if (!insecureEnabled)
         ExitProcess(0);
 
-    Game* game = new Game();
-    g_pGame = game;
+    g_Game = new Game();
 
     return 0;
 }

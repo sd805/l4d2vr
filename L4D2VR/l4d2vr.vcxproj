@@ -73,14 +73,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>d3d9</TargetName>
-    <IncludePath>$(DXSDK_DIR)Include;$(SolutionDir)thirdparty\minhook\include;$(SolutionDir)thirdparty\openvr\include;$(ProjectDir)sdk;$(SolutionDir)dxvk\include;$(SolutionDir)dxvk\src\d3d9\shaders;$(SolutionDir)dxvk\include\shaders;$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(DXSDK_DIR)Include;$(SolutionDir)thirdparty\minhook\include;$(SolutionDir)thirdparty\openvr\include;$(ProjectDir)sdk;$(SolutionDir)dxvk\include;$(SolutionDir)dxvk\src\d3d9\shaders;$(SolutionDir)dxvk\include\shaders;$(ProjectDir);$(SolutionDir);$(SolutionDir)dxvk\src\d3d9;$(IncludePath)</IncludePath>
     <ExecutablePath>$(ProjectDir)include;$(ExecutablePath)</ExecutablePath>
     <LibraryPath>$(DXSDK_DIR)Lib\x86;$(SolutionDir)thirdparty\minhook\lib\$(Configuration);$(SolutionDir)thirdparty\openvr\lib\win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>d3d9</TargetName>
-    <IncludePath>$(DXSDK_DIR)Include;$(SolutionDir)thirdparty\minhook\include;$(SolutionDir)thirdparty\openvr\include;$(ProjectDir)sdk;$(SolutionDir)dxvk\include;$(SolutionDir)dxvk\src\d3d9\shaders;$(SolutionDir)dxvk\include\shaders;$(ProjectDir);$(SolutionDir);$(IncludePath)</IncludePath>
+    <IncludePath>$(DXSDK_DIR)Include;$(SolutionDir)thirdparty\minhook\include;$(SolutionDir)thirdparty\openvr\include;$(ProjectDir)sdk;$(SolutionDir)dxvk\include;$(SolutionDir)dxvk\src\d3d9\shaders;$(SolutionDir)dxvk\include\shaders;$(ProjectDir);$(SolutionDir);$(SolutionDir)dxvk\src\d3d9;$(IncludePath)</IncludePath>
     <ExecutablePath>$(ProjectDir)include;$(ExecutablePath)</ExecutablePath>
     <LibraryPath>$(DXSDK_DIR)Lib\x86;$(SolutionDir)thirdparty\minhook\lib\$(Configuration);$(SolutionDir)thirdparty\openvr\lib\win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -111,8 +111,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>openvr_api.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <ModuleDefinitionFile>$(ProjectDir)d3d9.def</ModuleDefinitionFile>
+      <AdditionalDependencies>openvr_api.lib;libMinHook.x86.lib;$(SolutionDir)dxvk\lib32\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>$(SolutionDir)dxvk\src\d3d9\d3d9.def</ModuleDefinitionFile>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "C:\Program Files (x86)\Steam\steamapps\common\Left 4 Dead 2\$(TargetName)$(TargetExt)"</Command>
@@ -137,9 +137,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <ModuleDefinitionFile>$(ProjectDir)d3d9.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)dxvk\src\d3d9\d3d9.def</ModuleDefinitionFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>openvr_api.lib;libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>openvr_api.lib;libMinHook.x86.lib;$(SolutionDir)dxvk\lib32\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>copy /Y "$(OutDir)$(TargetName)$(TargetExt)" "C:\Program Files (x86)\Steam\steamapps\common\Left 4 Dead 2\$(TargetName)$(TargetExt)"</Command>

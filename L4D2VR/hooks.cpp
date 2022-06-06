@@ -16,11 +16,11 @@ Hooks::Hooks(Game *game)
 	m_Game = game;
 	m_VR = m_Game->m_VR;
 
-	initDxHooks();
+	//initDxHooks();
 	initSourceHooks();
 
-	hkBeginScene.enableHook();
-	hkPresent.enableHook();
+	//hkBeginScene.enableHook();
+	//hkPresent.enableHook();
 	hkGetRenderTarget.enableHook();
 	hkCalcViewModelView.enableHook();
 	hkServerFireTerrorBullets.enableHook();
@@ -195,8 +195,8 @@ void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CVie
 
 	// Left eye CViewSetup
 	leftEyeView.x = 0;
-	leftEyeView.width = width_VR;
-	leftEyeView.height = height_VR;
+	leftEyeView.width = m_VR->m_RenderWidth;
+	leftEyeView.height = m_VR->m_RenderHeight;
 	leftEyeView.fov = m_VR->m_Fov;
 	leftEyeView.fovViewmodel = m_VR->m_Fov;
 	leftEyeView.m_flAspectRatio = m_VR->m_Aspect;
@@ -212,12 +212,12 @@ void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CVie
 	m_Game->m_EngineClient->SetViewAngles(inGameAngle);
 
 	rndrContext->SetRenderTarget(m_VR->m_LeftEyeTexture);
-	hkRenderView.fOriginal(ecx, leftEyeView, hudViewSetup, clearflags, whatToDraw);
+	hkRenderView.fOriginal(ecx, leftEyeView, hudViewSetup, nClearFlags, whatToDraw);
 
 	// Right eye CViewSetup
 	rightEyeView.x = 0;
-	rightEyeView.width = width_VR;
-	rightEyeView.height = height_VR;
+	rightEyeView.width = m_VR->m_RenderWidth;
+	rightEyeView.height = m_VR->m_RenderHeight;
 	rightEyeView.fov = m_VR->m_Fov;
 	rightEyeView.fovViewmodel = m_VR->m_Fov;
 	rightEyeView.m_flAspectRatio = m_VR->m_Aspect;
@@ -227,7 +227,9 @@ void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CVie
 	rightEyeView.angles = m_VR->GetViewAngle();
 
 	rndrContext->SetRenderTarget(m_VR->m_RightEyeTexture);
-	hkRenderView.fOriginal(ecx, rightEyeView, hudViewSetup, clearflags, whatToDraw);
+	hkRenderView.fOriginal(ecx, rightEyeView, hudViewSetup, nClearFlags, whatToDraw);
+
+	m_VR->m_RenderedNewFrame = true;
 }
 
 bool __fastcall Hooks::dCreateMove(void *ecx, void *edx, float flInputSampleTime, CUserCmd *cmd)

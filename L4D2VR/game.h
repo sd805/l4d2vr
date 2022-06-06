@@ -12,10 +12,12 @@ class IViewRender;
 class IViewRender;
 class CBaseEntity;
 
+class Game;
 class Offsets;
 class VR;
 class Hooks;
 
+inline Game *g_Game;
 
 struct Player
 {
@@ -49,6 +51,8 @@ public:
     Offsets *m_Offsets = nullptr;
     VR *m_VR = nullptr;
     Hooks *m_Hooks = nullptr;
+
+    bool m_Initialized = false;
 
     std::array<Player, 24> m_PlayersVRInfo;
     int m_CurrentUsercmdID = -1;

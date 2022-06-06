@@ -7,6 +7,7 @@
 
 class Game;
 class IDirect3DTexture9;
+class IDirect3DSurface9;
 class ITexture;
 
 
@@ -16,6 +17,11 @@ struct TrackedDevicePoseData {
 	Vector TrackedDeviceVel;
 	QAngle TrackedDeviceAng;
 	QAngle TrackedDeviceAngVel;
+};
+
+struct SharedTextureHolder {
+	vr::VRVulkanTextureData_t m_VulkanData;
+	vr::Texture_t			m_VRTexture;
 };
 
 
@@ -84,8 +90,17 @@ public:
 	IDirect3DTexture9 *m_D9LeftEyeTexture;
 	IDirect3DTexture9 *m_D9RightEyeTexture;
 
+	IDirect3DSurface9 *m_D9LeftEyeSurface;
+	IDirect3DSurface9 *m_D9RightEyeSurface;
+
+	SharedTextureHolder m_VKLeftEye;
+	SharedTextureHolder m_VKRightEye;
+
 	bool m_IsVREnabled = false;
 	bool m_IsInitialized = false;
+	bool m_RenderedNewFrame = false;
+	bool m_CreatedVRTextures = false;
+	int m_CreatingTextureID = -1;
 
 	bool m_PressedLeftStick = false;
 	bool m_ChangedItem = false;
@@ -123,6 +138,7 @@ public:
 	float m_RotationOffset = 0;
 	std::chrono::steady_clock::time_point m_PrevFrameTime;
 
+
 	float m_TurnSpeed = 0.3;
 	bool m_SnapTurning = false;
 	float m_SnapTurnAngle = 45.0;
@@ -132,6 +148,9 @@ public:
 	VR() {};
 	VR(Game *game);
 	int SetActionManifest(const char *fileName);
+	void Update();
+	void CreateVRTextures();
+	void SubmitVRTextures();
 	void GetPoses();
 	void UpdatePosesAndActions();
 	void GetViewParameters();
