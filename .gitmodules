@@ -1,0 +1,3 @@
+[submodule "dxvk"]
+	path = dxvk
+	url = https://github.com/sd805/dxvk.git
