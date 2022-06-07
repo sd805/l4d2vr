@@ -197,9 +197,12 @@ void VR::GetPoses()
     vr::TrackedDevicePose_t hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
 
     vr::TrackedDeviceIndex_t leftControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
-    vr::TrackedDevicePose_t leftControllerPose = m_Poses[leftControllerIndex];
-
     vr::TrackedDeviceIndex_t rightControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
+
+    if (m_LeftHanded)
+        std::swap(leftControllerIndex, rightControllerIndex);
+
+    vr::TrackedDevicePose_t leftControllerPose = m_Poses[leftControllerIndex];
     vr::TrackedDevicePose_t rightControllerPose = m_Poses[rightControllerIndex];
 
     GetPoseData(hmdPose, m_HmdPose);
@@ -606,6 +609,7 @@ void VR::ParseConfigFile()
     m_SnapTurning = userConfig["SnapTurning"] == "true";
     m_SnapTurnAngle = std::stof(userConfig["SnapTurnAngle"]);
     m_TurnSpeed = std::stof(userConfig["TurnSpeed"]);
+    m_LeftHanded = userConfig["LeftHanded"] == "true";
     m_VRScale = std::stof(userConfig["VRScale"]);
     m_IpdScale = std::stof(userConfig["IPDScale"]);
 }

@@ -134,6 +134,7 @@ public:
 	float m_TurnSpeed = 0.3;
 	bool m_SnapTurning = false;
 	float m_SnapTurnAngle = 45.0;
+	bool m_LeftHanded = false;
 	float m_VRScale = 43.2;
 	float m_IpdScale = 1.0;
 

@@ -804,6 +804,9 @@
     <ClInclude Include="..\dxvk\include\version.h">
       <Filter>dxvk</Filter>
     </ClInclude>
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipecompiler.h">
+      <Filter>dxvk</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -1215,6 +1218,9 @@
       <Filter>dxvk</Filter>
     </ClCompile>
     <ClCompile Include="..\dxvk\src\vulkan\vulkan_presenter.cpp">
+      <Filter>dxvk</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecompiler.cpp">
       <Filter>dxvk</Filter>
     </ClCompile>
   </ItemGroup>

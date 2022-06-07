@@ -130,6 +130,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -363,6 +364,7 @@
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_openxr.h" />
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_options.h" />
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipecache.h" />
+    <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipecompiler.h" />
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipelayout.h" />
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipemanager.h" />
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_platform_exts.h" />
@@ -536,6 +538,7 @@
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_openxr.cpp" />
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_options.cpp" />
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecache.cpp" />
+    <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipecompiler.cpp" />
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipelayout.cpp" />
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_pipemanager.cpp" />
     <ClCompile Include="..\dxvk\src\dxvk\dxvk_queue.cpp" />
