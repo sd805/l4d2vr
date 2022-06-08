@@ -11,17 +11,17 @@
 
 ## Things that need fixing
 
-* Menu is broken (use arrow keys when you can)
+* GUI/HUD is broken (use arrow keys to navigate pause menu)
 * Melee weapons and interactions require you to aim with your face
 * No roomscale movement
 * CPU is underutilized
 
 ## How to use
-1. Launch L4D2, turn off vsync and multicore rendering, and set the display to windowded mode. The rest of the settings are up to you.
-2. Download [L4D2VR.zip](https://github.com/sd805/l4d2vr/releases) and extract the files to your Left 4 Dead 2 directory (steamapps\common\Left 4 Dead 2)
-3. Launch SteamVR, then launch Left 4 Dead 2 with these launch options:
+1. Download [L4D2VR.zip](https://github.com/sd805/l4d2vr/releases) and extract the files to your Left 4 Dead 2 directory (steamapps\common\Left 4 Dead 2)
+2. Launch SteamVR, then launch Left 4 Dead 2 with these launch options:
     * -insecure -window -novid +mat_motion_blur_percent_of_screen_max 0 +crosshair 0
-4. Start a campaign and press A on your controller (or F6) to activate VR. 
+3. In settings, turn off vsync and multicore rendering, and set the display to windowed mode. The rest of the settings are up to you.
+4. Load into a campaign and press A on your controller (or F6) to activate VR. 
 5. If the camera starts clipping into walls, press down on the left stick to recenter.
 
 ## If the game is crashing, try:
