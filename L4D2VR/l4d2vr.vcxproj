@@ -597,6 +597,9 @@
   <ItemGroup>
     <ResourceCompile Include="..\dxvk\src\d3d9\version.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="config.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

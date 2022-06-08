@@ -44,6 +44,7 @@ public:
     Offset WriteUsercmdDeltaToBuffer = { "client.dll", 0x134790, "55 8B EC 83 EC 60 0F 57 C0 8B 55 0C" };
     Offset WriteUsercmd =              { "client.dll", 0x1AAD50, "55 8B EC A1 ? ? ? ? 83 78 30 00 53 8B 5D 10 56 57" };
     Offset g_pppInput =                { "client.dll", 0xA8A22, "8B 0D ? ? ? ? 8B 01 8B 50 58 FF E2", 2 };
+    Offset AdjustEngineViewport =      { "client.dll", 0x31A890, "55 8B EC 8B 0D ? ? ? ? 85 C9 74 17" };
 
     Offset ServerFireTerrorBullets = { "server.dll", 0x3C3FC0, "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 8B 45 08 8B 4D 10" };
     Offset ReadUserCmd =             { "server.dll", 0x205100, "55 8B EC 53 8B 5D 10 56 57 8B 7D 0C 53" };
@@ -51,4 +52,7 @@ public:
     Offset CBaseEntity_entindex =    { "server.dll", 0x25390, "8B 41 28 85 C0 75 01 C3 8B 0D ? ? ? ? 2B 41 58 C1 F8 04 C3 CC CC CC CC CC CC CC CC CC CC CC 55"};
 
     Offset GetRenderTarget = { "materialsystem.dll", 0x2CD30, "83 79 4C 00" };
+    Offset Viewport =        { "materialsystem.dll", 0x2E010, "55 8B EC 83 EC 28 8B C1" };
+    Offset GetViewport =     { "materialsystem.dll", 0x2D240, "55 8B EC 8B 41 4C 8B 49 40 8D 04 C0 83 7C 81 ? ?" };
+
 };

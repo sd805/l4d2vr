@@ -26,6 +26,9 @@ Hooks::Hooks(Game *game)
 	hkReadUsercmd.enableHook();
 	hkWriteUsercmdDeltaToBuffer.enableHook();
 	hkWriteUsercmd.enableHook();
+	hkAdjustEngineViewport.enableHook();
+	hkViewport.enableHook();
+	hkGetViewport.enableHook();
 }
 
 Hooks::~Hooks()
@@ -69,6 +72,15 @@ int Hooks::initSourceHooks()
 
 	LPVOID WriteUsercmdAddr = (LPVOID)(m_Game->m_Offsets->WriteUsercmd.address);
 	hkWriteUsercmd.createHook(WriteUsercmdAddr, &dWriteUsercmd);
+
+	LPVOID AdjustEngineViewportAddr = (LPVOID)(m_Game->m_Offsets->AdjustEngineViewport.address);
+	hkAdjustEngineViewport.createHook(AdjustEngineViewportAddr, &dAdjustEngineViewport);
+
+	LPVOID ViewportAddr = (LPVOID)(m_Game->m_Offsets->Viewport.address);
+	hkViewport.createHook(ViewportAddr, &dViewport);
+
+	LPVOID GetViewportAddr = (LPVOID)(m_Game->m_Offsets->GetViewport.address);
+	hkGetViewport.createHook(GetViewportAddr, &dGetViewport);
 
 	return 1;
 }
@@ -281,4 +293,23 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 
 	}
 	return hkWriteUsercmd.fOriginal(buf, to, from);
+}
+
+void Hooks::dAdjustEngineViewport(int &x, int &y, int &width, int &height)
+{
+	hkAdjustEngineViewport.fOriginal(x, y, width, height);
+}
+
+void Hooks::dViewport(void *ecx, void *edx, int x, int y, int width, int height)
+{
+	
+	//hkViewport.fOriginal(ecx, x, y, 1800, 1800);
+	hkViewport.fOriginal(ecx, x, y, width, height);
+}
+
+void Hooks::dGetViewport(void *ecx, void *edx, int &x, int &y, int &width, int &height)
+{
+	//int newWidth = 1000;
+	//int newHeight = 1000;
+	hkGetViewport.fOriginal(ecx, x, y, width, height);
 }

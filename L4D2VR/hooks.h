@@ -69,6 +69,9 @@ typedef float(__thiscall *tProcessUsercmds)(void *thisptr, edict_t *player, void
 typedef int(__cdecl *tReadUsercmd)(void *buf, CUserCmd *move, CUserCmd *from);
 typedef void(__thiscall *tWriteUsercmdDeltaToBuffer)(void *thisptr, int a1, void *buf, int from, int to, bool isnewcommand);
 typedef int(__cdecl *tWriteUsercmd)(void *buf, CUserCmd *to, CUserCmd *from);
+typedef int(__cdecl *tAdjustEngineViewport)(int &x, int &y, int &width, int &height);
+typedef void(__thiscall *tViewport)(void *thisptr, int x, int y, int width, int height);
+typedef void(__thiscall *tGetViewport)(void *thisptr, int &x, int &y, int &width, int &height);
 
 
 class Hooks
@@ -88,6 +91,9 @@ public:
 	static inline Hook<tReadUsercmd> hkReadUsercmd;
 	static inline Hook<tWriteUsercmdDeltaToBuffer> hkWriteUsercmdDeltaToBuffer;
 	static inline Hook<tWriteUsercmd> hkWriteUsercmd;
+	static inline Hook<tAdjustEngineViewport> hkAdjustEngineViewport;
+	static inline Hook<tViewport> hkViewport;
+	static inline Hook<tGetViewport> hkGetViewport;
 
 	Hooks() {};
 	Hooks(Game *game);
@@ -108,4 +114,7 @@ public:
 	static int dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from);
 	static void __fastcall dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, void *buf, int from, int to, bool isnewcommand);
 	static int dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from);
+	static void dAdjustEngineViewport(int &x, int &y, int &width, int &height);
+	static void __fastcall dViewport(void *ecx, void *edx, int x, int y, int width, int height);
+	static void __fastcall dGetViewport(void *ecx, void *edx, int &x, int &y, int &width, int &height);
 };
