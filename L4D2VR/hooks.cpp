@@ -278,6 +278,20 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		encoding += encoding < 0 ? -encodedAngle : encodedAngle;
 		to->viewangles.x = encoding;
 
+		if (m_VR->m_RoomscaleActive)
+		{
+			Vector setupOriginToHMD = m_VR->m_SetupOriginToHMD;
+			setupOriginToHMD.z = 0;
+			float distance = VectorLength(setupOriginToHMD);
+			if (distance > 1)
+			{
+				float forwardSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdForward);
+				float sideSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdRight);
+				to->forwardmove += distance * forwardSpeed;
+				to->sidemove += distance * sideSpeed;
+			}
+		}
+
 		hkWriteUsercmd.fOriginal(buf, to, from);
 
 		to->viewangles.x = xAngle;

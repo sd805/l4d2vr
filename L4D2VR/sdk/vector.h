@@ -646,6 +646,12 @@ inline Vector Vector::operator/(float fl) const
 	return res;
 }
 
+FORCEINLINE  Vector &Vector::operator+=(const Vector &v)
+{
+	x += v.x; y += v.y; z += v.z;
+	return *this;
+}
+
 inline Vector Vector::operator-(const Vector &v) const
 {
 	Vector res;
@@ -681,6 +687,11 @@ enum
 FORCEINLINE vec_t DotProduct(const Vector &a, const Vector &b)
 {
 	return(a.x * b.x + a.y * b.y + a.z * b.z);
+}
+
+FORCEINLINE vec_t DotProduct2D(const Vector &a, const Vector &b)
+{
+	return(a.x * b.x + a.y * b.y);
 }
 
 inline void CrossProduct(const Vector &a, const Vector &b, Vector &result)

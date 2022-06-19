@@ -1959,8 +1959,14 @@ public:
 	virtual void *nullsub_240() = 0;
 	virtual void *sub_10021980() = 0;
 	virtual void *CalcViewModelView(const Vector &eyeOrigin, const QAngle &eyeAngles) = 0;
-};
+	
+	char pad_0000[252]; //0x0004
+	Vector m_vecVelocity; //0x0100
+	char pad_010C[56]; //0x010C
+	int m_hGroundEntity; //0x0144
 
+};//Size: 0x0148
+static_assert(sizeof(CBasePlayer) == 0x148);
 
 class C_TerrorViewModel
 {

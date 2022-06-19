@@ -308,6 +308,8 @@ void VR::ProcessInput()
 
     if (GetAnalogActionData(m_ActionWalk, analogActionData))		
     {
+        bool pushingStickX = true;
+        bool pushingStickY = true;
         if (analogActionData.y > 0.5)	
         {
             m_Game->ClientCmd_Unrestricted("-back");
@@ -322,6 +324,7 @@ void VR::ProcessInput()
         {
             m_Game->ClientCmd_Unrestricted("-back");
             m_Game->ClientCmd_Unrestricted("-forward");
+            pushingStickY = false;
         }
 
         if (analogActionData.x > 0.5)		
@@ -338,7 +341,10 @@ void VR::ProcessInput()
         {
             m_Game->ClientCmd_Unrestricted("-moveright");
             m_Game->ClientCmd_Unrestricted("-moveleft");
+            pushingStickX = false;
         }
+
+        m_PushingThumbstick = pushingStickX || pushingStickY;
     }
     else
     {
@@ -418,7 +424,7 @@ void VR::ProcessInput()
     {
         if (!m_PressedLeftStick)
         {
-            UpdateIntendedPosition();
+            ResetPosition();
             m_PressedLeftStick = true;
         }
     }
@@ -478,7 +484,7 @@ void VR::UpdateTracking(Vector viewOrigin)
     GetPoses();
 
     int playerIndex = m_Game->m_EngineClient->GetLocalPlayer();
-    CBaseEntity *localPlayer = m_Game->GetClientEntity(playerIndex);
+    CBasePlayer *localPlayer = (CBasePlayer *)m_Game->GetClientEntity(playerIndex);
     if (!localPlayer)
         return;
 
@@ -502,12 +508,38 @@ void VR::UpdateTracking(Vector viewOrigin)
 
     m_HmdPosLocalInWorld = hmdPosCorrected * m_VRScale;
 
-    Vector eyePos = viewOrigin;
+    // Roomscale setup
+    Vector cameraMovingDirection = m_SetupOrigin - m_SetupOriginPrev;
+    Vector cameraToPlayer = m_HmdPosAbsPrev - m_SetupOriginPrev;
+    cameraMovingDirection.z = 0;
+    cameraToPlayer.z = 0;
+    float cameraFollowing = DotProduct(cameraMovingDirection, cameraToPlayer);
+    float cameraDistance = VectorLength(cameraToPlayer);
 
-    m_HmdPosAbsNoOffset = eyePos - Vector(0, 0, 64) + m_HmdPosLocalInWorld;
-    m_HmdPosAbs = m_HmdPosAbsNoOffset + m_IntendedPositionOffset;	
+    if (localPlayer->m_hGroundEntity != -1 && localPlayer->m_vecVelocity.IsZero())
+        m_RoomscaleActive = true;
+
+    // TODO: Get roomscale to work while using thumbstick
+    if ((cameraFollowing < 0 && cameraDistance > 1) || (m_PushingThumbstick))
+        m_RoomscaleActive = false;
+
+    if (!m_RoomscaleActive)
+        m_CameraAnchor += m_SetupOrigin - m_SetupOriginPrev;
+    
+    m_CameraAnchor.z = m_SetupOrigin.z + m_HeightOffset;
+
+    m_HmdPosAbs = m_CameraAnchor - Vector(0, 0, 64) + m_HmdPosLocalInWorld;
+
+    Vector distance = m_HmdPosAbs - m_SetupOrigin;
+    if (VectorLength(distance) > 200)
+        ResetPosition();
+
+    m_SetupOriginToHMD = m_HmdPosAbs - m_SetupOrigin;
 
     m_HmdAngAbs = hmdAngLocal;
+
+    m_HmdPosAbsPrev = m_HmdPosAbs;
+    m_SetupOriginPrev = m_SetupOrigin;
 
     GetViewParameters();
     m_Ipd = m_EyeToHeadTransformPosRight.x * 2;
@@ -536,8 +568,8 @@ void VR::UpdateTracking(Vector viewOrigin)
     Vector leftControllerPosLocalInWorld = leftControllerPosLocal * m_VRScale;
     Vector rightControllerPosLocalInWorld = rightControllerPosCorrected * m_VRScale;
 
-    m_LeftControllerPosAbs = eyePos - Vector(0, 0, 64) + leftControllerPosLocalInWorld + m_IntendedPositionOffset;
-    m_RightControllerPosAbs = eyePos - Vector(0, 0, 64) + rightControllerPosLocalInWorld + m_IntendedPositionOffset;
+    m_LeftControllerPosAbs = m_CameraAnchor - Vector(0, 0, 64) + leftControllerPosLocalInWorld;
+    m_RightControllerPosAbs = m_CameraAnchor - Vector(0, 0, 64) + rightControllerPosLocalInWorld;
 
     // controller angles
     m_LeftControllerAngAbs = leftControllerAngLocal;
@@ -580,9 +612,10 @@ Vector VR::GetViewOriginRight()
 }
 
 
-void VR::UpdateIntendedPosition()
+void VR::ResetPosition()
 {
-    m_IntendedPositionOffset = m_SetupOrigin - m_HmdPosAbsNoOffset;
+    m_CameraAnchor += m_SetupOrigin - m_HmdPosAbs;
+    m_HeightOffset += m_SetupOrigin.z - m_HmdPosAbs.z;
 }
 
 void VR::ParseConfigFile()

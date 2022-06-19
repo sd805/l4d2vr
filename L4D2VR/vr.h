@@ -66,11 +66,19 @@ public:
 	Vector m_RightControllerUpCorrected;
 
 	Vector m_HmdPosAbs = { 0,0,0 };
-	Vector m_HmdPosAbsNoOffset = { 0,0,0 };
+	Vector m_HmdPosAbsPrev = { 0,0,0 };
 	QAngle m_HmdAngAbs;
 
 	Vector m_HmdPosCorrectedPrev = { 0,0,0 };
 	Vector m_HmdPosLocalPrev = { 0,0,0 };
+
+	Vector m_SetupOrigin = { 0,0,0 };
+	Vector m_SetupOriginPrev = { 0,0,0 };
+	Vector m_CameraAnchor = { 0,0,0 };
+	Vector m_SetupOriginToHMD = { 0,0,0 };
+
+	float m_HeightOffset = 0.0;
+	bool m_RoomscaleActive = false;
 
 	Vector m_LeftControllerPosAbs;											
 	QAngle m_LeftControllerAngAbs;
@@ -101,8 +109,7 @@ public:
 	bool m_ChangedItem = false;
 	bool m_ToggledFlashlight = false;
 	bool m_PressedTurn = false;
-
-	Vector m_SetupOrigin = { 0,0,0 };
+	bool m_PushingThumbstick = false;
 
 	// action set
 	vr::VRActionSetHandle_t m_ActionSet;
@@ -158,7 +165,7 @@ public:
 	Vector GetViewOriginRight();
 	bool PressedDigitalAction(vr::VRActionHandle_t &actionHandle);
 	bool GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut);
-	void UpdateIntendedPosition();
+	void ResetPosition();
 	void GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &poseOut);
 	void ParseConfigFile();
 	void WaitForConfigUpdate();
