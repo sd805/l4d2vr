@@ -659,6 +659,14 @@ inline Vector Vector::operator-(const Vector &v) const
 	return res;
 }
 
+FORCEINLINE  Vector &Vector::operator*=(float fl)
+{
+	x *= fl;
+	y *= fl;
+	z *= fl;
+	return *this;
+}
+
 FORCEINLINE  Vector &Vector::operator/=(float fl)
 {
 	float oofl = 1.0f / fl;

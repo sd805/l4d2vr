@@ -1852,11 +1852,11 @@ public:
 	virtual void *sub_10069930() = 0;
 	virtual void *nullsub_179() = 0;
 	virtual void *sub_100673C0() = 0;
-	virtual void *sub_10069850() = 0;
+	virtual void *IsPlayer() = 0;
 	virtual void *sub_1001E040() = 0;
 	virtual void *sub_1001E050() = 0;
 	virtual void *sub_10019720() = 0;
-	virtual void *sub_10019730() = 0;
+	virtual void *IsNPC() = 0;
 	virtual void *sub_10019740() = 0;
 	virtual void *sub_10019750() = 0;
 	virtual void *sub_10019760() = 0;
@@ -2114,11 +2114,11 @@ public:
 	virtual void *sub_10165410() = 0;
 	virtual void *nullsub_179() = 0;
 	virtual void *sub_101686F0() = 0;
-	virtual void *sub_100196F0() = 0;
+	virtual void *IsPlayer() = 0;
 	virtual void *sub_10019700() = 0;
 	virtual void *sub_10019710() = 0;
 	virtual void *sub_10019720() = 0;
-	virtual void *sub_10019730() = 0;
+	virtual void *IsNPC() = 0;
 	virtual void *sub_10019740() = 0;
 	virtual void *sub_10019750() = 0;
 	virtual void *sub_10019760() = 0;

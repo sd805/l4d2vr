@@ -19,7 +19,7 @@ Game::Game()
         Sleep(50);
 
     m_ClientEntityList = (IClientEntityList *)GetInterface("client.dll", "VClientEntityList003");
-    m_EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient004");
+    m_EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient003");
     m_EngineClient = (IEngineClient *)GetInterface("engine.dll", "VEngineClient013");
     m_MaterialSystem = (IMaterialSystem *)GetInterface("MaterialSystem.dll", "VMaterialSystem080");
     m_ClientViewRender = (IViewRender *)GetInterface("client.dll", "VEngineRenderView013");

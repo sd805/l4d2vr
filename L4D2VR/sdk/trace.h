@@ -3,6 +3,7 @@
 #include "vector.h"
 
 
+
 struct cplane_t
 {
 	Vector	normal;
@@ -23,6 +24,7 @@ struct csurface_t
 #define	CONTENTS_WINDOW			0x2		// translucent, but not watery (glass)
 #define	CONTENTS_GRATE			0x8		// alpha-tested "grate" textures.  Bullets/sight pass through, but solids don't
 #define CONTENTS_MOVEABLE		0x4000
+#define	CONTENTS_PLAYERCLIP		0x10000
 #define	CONTENTS_MONSTERCLIP	0x20000
 #define	CONTENTS_MONSTER		0x2000000
 #define	CONTENTS_DEBRIS			0x4000000
@@ -31,6 +33,8 @@ struct csurface_t
 #define MASK_NPCWORLDSTATIC			(CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_MONSTERCLIP|CONTENTS_GRATE)
 #define STANDARD_TRACE_MASK			( MASK_NPCWORLDSTATIC | CONTENTS_MOVEABLE | CONTENTS_MONSTER | CONTENTS_DEBRIS | CONTENTS_HITBOX )
 #define	MASK_SHOT					(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEBRIS|CONTENTS_HITBOX)
+#define MASK_SHOT_HULL				(CONTENTS_SOLID|CONTENTS_MOVEABLE|CONTENTS_MONSTER|CONTENTS_WINDOW|CONTENTS_DEBRIS|CONTENTS_GRATE)
+#define MASK_STATICWORLD			(CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_GRATE)
 
 #define DISPSURF_FLAG_SURFACE		(1<<0)
 #define DISPSURF_FLAG_WALKABLE		(1<<1)
@@ -153,22 +157,54 @@ enum class TraceType
 class ITraceFilter
 {
 public:
-	virtual bool ShouldHitEntity(void * pEntity, int contentsMask) = 0;
+	virtual bool ShouldHitEntity(IHandleEntity * pEntity, int contentsMask) = 0;
 	virtual TraceType	GetTraceType() const = 0;
 };
 
 class CTraceFilter : public ITraceFilter
 {
 public:
-	bool ShouldHitEntity(void *pEntityHandle, int /*contents mask*/)
+	CTraceFilter(IHandleEntity *passentity, int collisionGroup, void *pExtraShouldHitCheckFn = NULL)
 	{
-		return !(pEntityHandle == pSkip);
+		m_pPassEnt = passentity;
+		m_collisionGroup = collisionGroup;
+		m_pExtraShouldHitCheckFunction = pExtraShouldHitCheckFn;
 	}
 	virtual TraceType GetTraceType() const
 	{
 		return TraceType::TRACE_EVERYTHING;
 	}
-	void *pSkip;
+
+	IHandleEntity *m_pPassEnt;
+	int m_collisionGroup;
+	void *m_pExtraShouldHitCheckFunction;
+};
+
+
+class CTraceFilterSkipNPCsAndPlayers : public CTraceFilter
+{
+public:
+	CTraceFilterSkipNPCsAndPlayers(IHandleEntity *passentity, int collisionGroup)
+		: CTraceFilter(passentity, collisionGroup)
+	{
+	}
+
+	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
+	{
+		CBasePlayer *pEntity = (CBasePlayer *)pServerEntity;
+		if (!pEntity)
+			return true;
+
+		if (m_pPassEnt == pServerEntity)
+			return false;
+
+		if (pEntity->IsNPC() || pEntity->IsPlayer())
+		{
+			return false;
+		}
+
+		return true;
+	}
 };
 
 
@@ -179,6 +215,7 @@ struct Ray_t
 	VectorAligned  m_Delta;	// direction + length of the ray
 	VectorAligned  m_StartOffset;	// Add this to m_Start to get the actual ray start
 	VectorAligned  m_Extents;	// Describes an axis aligned box extruded along a ray
+	const matrix3x4_t *m_pWorldAxisTransform;
 	bool	m_IsRay;	// are the extents zero?
 	bool	m_IsSwept;	// is delta != 0?
 
@@ -191,6 +228,8 @@ struct Ray_t
 
 		VectorClear(m_Extents); 
 		m_IsRay = true;
+
+		m_pWorldAxisTransform = 0;
 
 		// Offset m_Start to be in the center of the box...
 		VectorClear(m_StartOffset);

@@ -3,6 +3,7 @@
 #include "sdk.h"
 #include "game.h"
 #include "hooks.h"
+#include "trace.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -520,6 +521,7 @@ void VR::UpdateTracking(Vector viewOrigin)
         m_RoomscaleActive = true;
 
     // TODO: Get roomscale to work while using thumbstick
+    // TODO: Roomscale barely works in multiplayer
     if ((cameraFollowing < 0 && cameraDistance > 1) || (m_PushingThumbstick))
         m_RoomscaleActive = false;
 
@@ -530,11 +532,27 @@ void VR::UpdateTracking(Vector viewOrigin)
 
     m_HmdPosAbs = m_CameraAnchor - Vector(0, 0, 64) + m_HmdPosLocalInWorld;
 
-    Vector distance = m_HmdPosAbs - m_SetupOrigin;
-    if (VectorLength(distance) > 200)
-        ResetPosition();
+    // Check if camera is clipping inside wall
+    CGameTrace trace;
+    Ray_t ray;
+    CTraceFilterSkipNPCsAndPlayers tracefilter((IHandleEntity*)localPlayer, 0);
+
+    Vector extendedHmdPos = m_HmdPosAbs - m_SetupOrigin;
+    VectorNormalize(extendedHmdPos);
+    extendedHmdPos = m_HmdPosAbs + (extendedHmdPos * 10);
+    ray.Init(m_SetupOrigin, extendedHmdPos);
+
+    m_Game->m_EngineTrace->TraceRay(ray, STANDARD_TRACE_MASK, &tracefilter, &trace);
+    if (trace.fraction < 1)
+    {
+        Vector distanceInsideWall = trace.endpos - extendedHmdPos;
+        m_CameraAnchor += distanceInsideWall;
+        m_HmdPosAbs = m_CameraAnchor - Vector(0, 0, 64) + m_HmdPosLocalInWorld;
+    }
 
     m_SetupOriginToHMD = m_HmdPosAbs - m_SetupOrigin;
+    if (VectorLength(m_SetupOriginToHMD) > 150)
+        ResetPosition();
 
     m_HmdAngAbs = hmdAngLocal;
 
