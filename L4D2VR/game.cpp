@@ -63,13 +63,6 @@ char *Game::getNetworkName(uintptr_t *entity)
     return m_pNetworkName;
 }
 
-void **Game::getClientModeVTable()
-{
-    uintptr_t *g_pClientMode = *(uintptr_t **)(m_Offsets->g_ppClientMode.address);
-    void **clientModeVTable = *reinterpret_cast<void ***>(g_pClientMode);
-    return clientModeVTable;
-}
-
 void Game::ClientCmd(const char *szCmdString)
 {
     m_EngineClient->ClientCmd(szCmdString);

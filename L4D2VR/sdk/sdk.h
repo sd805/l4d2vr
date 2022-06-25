@@ -1964,9 +1964,10 @@ public:
 	Vector m_vecVelocity; //0x0100
 	char pad_010C[56]; //0x010C
 	int m_hGroundEntity; //0x0144
-
-};//Size: 0x0148
-static_assert(sizeof(CBasePlayer) == 0x148);
+	char pad_0148[4872]; //0x0148
+	int m_iObserverMode; //0x1450
+}; //Size: 0x1454
+static_assert(sizeof(CBasePlayer) == 0x1454);
 
 class C_TerrorViewModel
 {

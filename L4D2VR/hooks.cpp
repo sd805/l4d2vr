@@ -29,6 +29,7 @@ Hooks::Hooks(Game *game)
 	hkAdjustEngineViewport.enableHook();
 	hkViewport.enableHook();
 	hkGetViewport.enableHook();
+	hkCreateMove.enableHook();
 }
 
 Hooks::~Hooks()
@@ -47,10 +48,6 @@ int Hooks::initSourceHooks()
 
 	LPVOID pRenderViewVFunc = (LPVOID)(m_Game->m_Offsets->RenderView.address);
 	hkRenderView.createHook(pRenderViewVFunc, &dRenderView);
-
-	void **vTable = *reinterpret_cast<void ***>(m_Game->m_MaterialSystem);
-	LPVOID pEndFrameVFunc = reinterpret_cast<LPVOID>(vTable[42]);
-	hkEndFrame.createHook(pEndFrameVFunc, &dEndFrame);
 
 	LPVOID calcViewModelViewAddr = (LPVOID)(m_Game->m_Offsets->CalcViewModelView.address);
 	hkCalcViewModelView.createHook(calcViewModelViewAddr, &dCalcViewModelView);
@@ -81,6 +78,14 @@ int Hooks::initSourceHooks()
 
 	LPVOID GetViewportAddr = (LPVOID)(m_Game->m_Offsets->GetViewport.address);
 	hkGetViewport.createHook(GetViewportAddr, &dGetViewport);
+
+	void *clientMode = nullptr;
+	while (!clientMode)
+	{
+		Sleep(10);
+		clientMode = **(void ***)(m_Game->m_Offsets->g_pClientMode.address);
+	}
+	hkCreateMove.createHook( (*(void ***)clientMode)[27], dCreateMove );
 
 	return 1;
 }
@@ -140,7 +145,24 @@ void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CVie
 
 bool __fastcall Hooks::dCreateMove(void *ecx, void *edx, float flInputSampleTime, CUserCmd *cmd)
 {
-	return hkCreateMove.fOriginal(ecx, flInputSampleTime, cmd);
+	if (!cmd->command_number)
+		return hkCreateMove.fOriginal(ecx, flInputSampleTime, cmd);
+
+	if (m_VR->m_RoomscaleActive)
+	{
+		Vector setupOriginToHMD = m_VR->m_SetupOriginToHMD;
+		setupOriginToHMD.z = 0;
+		float distance = VectorLength(setupOriginToHMD);
+		if (distance > 1)
+		{
+			float forwardSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdForward);
+			float sideSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdRight);
+			cmd->forwardmove += distance * forwardSpeed;
+			cmd->sidemove += distance * sideSpeed;
+		}
+	}
+
+	return false;
 }
 
 void __fastcall Hooks::dEndFrame(void *ecx, void *edx)
@@ -278,19 +300,7 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		encoding += encoding < 0 ? -encodedAngle : encodedAngle;
 		to->viewangles.x = encoding;
 
-		if (m_VR->m_RoomscaleActive)
-		{
-			Vector setupOriginToHMD = m_VR->m_SetupOriginToHMD;
-			setupOriginToHMD.z = 0;
-			float distance = VectorLength(setupOriginToHMD);
-			if (distance > 1)
-			{
-				float forwardSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdForward);
-				float sideSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdRight);
-				to->forwardmove += distance * forwardSpeed;
-				to->sidemove += distance * sideSpeed;
-			}
-		}
+		
 
 		hkWriteUsercmd.fOriginal(buf, to, from);
 

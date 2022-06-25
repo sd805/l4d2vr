@@ -65,7 +65,6 @@ public:
 
     CBaseEntity *GetClientEntity(int entityIndex);
     char *getNetworkName(uintptr_t *entity);
-    void **getClientModeVTable();
     void ClientCmd(const char *szCmdString);
     void ClientCmd_Unrestricted(const char *szCmdString);
 

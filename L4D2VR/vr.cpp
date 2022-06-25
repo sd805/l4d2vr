@@ -521,7 +521,6 @@ void VR::UpdateTracking(Vector viewOrigin)
         m_RoomscaleActive = true;
 
     // TODO: Get roomscale to work while using thumbstick
-    // TODO: Roomscale barely works in multiplayer
     if ((cameraFollowing < 0 && cameraDistance > 1) || (m_PushingThumbstick))
         m_RoomscaleActive = false;
 
