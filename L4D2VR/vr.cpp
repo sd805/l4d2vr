@@ -485,7 +485,7 @@ void VR::UpdateTracking(Vector viewOrigin)
     GetPoses();
 
     int playerIndex = m_Game->m_EngineClient->GetLocalPlayer();
-    CBasePlayer *localPlayer = (CBasePlayer *)m_Game->GetClientEntity(playerIndex);
+    C_BasePlayer *localPlayer = (C_BasePlayer *)m_Game->GetClientEntity(playerIndex);
     if (!localPlayer)
         return;
 

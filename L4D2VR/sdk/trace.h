@@ -191,7 +191,7 @@ public:
 
 	virtual bool ShouldHitEntity(IHandleEntity *pServerEntity, int contentsMask)
 	{
-		CBasePlayer *pEntity = (CBasePlayer *)pServerEntity;
+		C_BasePlayer *pEntity = (C_BasePlayer *)pServerEntity;
 		if (!pEntity)
 			return true;
 

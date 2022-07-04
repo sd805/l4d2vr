@@ -6,6 +6,8 @@
 #include "usercmd.h"
 #include "material.h"
 
+class C_BaseCombatWeapon;
+
 class IClientEntityList
 {
 public:
@@ -1214,996 +1216,6 @@ private:
 
 };
 
-class CCollisionProperty
-{
-public:
-	unsigned char _0x0[0x8];
-	Vector	m_vecMins; // 0x8
-	Vector	m_vecMaxs; // 0x14
-	int    	m_usSolidFlags; // 0x20
-	int    	m_nSolidType; // 0x22
-	int    	m_triggerBloat; // 0x23
-	unsigned char _0x27[0x3];
-	int    	m_nSurroundType; // 0x2a
-	Vector	m_vecSpecifiedSurroundingMins; // 0x2c
-	Vector	m_vecSpecifiedSurroundingMaxs; // 0x38
-};
-
-class CGlowProperty
-{
-public:
-	unsigned char _0x0[0x4];
-	int    	m_iGlowType; // 0x4
-	int    	m_nGlowRange; // 0x8
-	int    	m_nGlowRangeMin; // 0xc
-	int    	m_glowColorOverride; // 0x10
-	int    	m_bFlashing; // 0x14
-};
-
-class CBaseEntity
-{
-public:
-	unsigned char _0x0[0x14];
-	int    	m_hScriptUseTarget; // 0x14
-	unsigned char _0x18[0x1c];
-	int    	m_Gender; // 0x34
-	unsigned char _0x38[0x2c];
-	int    	m_clrRender; // 0x64
-	int    	m_cellbits; // 0x68
-	unsigned char _0x6c[0x4];
-	int    	m_cellX; // 0x70
-	int    	m_cellY; // 0x74
-	int    	m_cellZ; // 0x78
-	unsigned char _0x7c[0x48];
-	Vector	m_playerAngles; // 0xc4
-	unsigned char _0xd0c[0x18];
-	int    	m_fEffects; // 0xe0
-	int    	m_iTeamNum; // 0xe4
-	unsigned char _0xe8[0x30];
-	Vector	m_angRotation; // 0x118
-	Vector	m_vecOrigin; // 0x124
-	unsigned char _0x130[0x4];
-	int    	moveparent; // 0x134
-	int    	m_hOwnerEntity; // 0x138
-	unsigned char _0x13c[0x4];
-	int    	m_nModelIndex; // 0x140
-	int    	m_nRenderFX; // 0x142
-	int    	m_nRenderMode; // 0x143
-	unsigned char _0x147[0x1];
-	int    	m_flAnimTime; // 0x148
-	unsigned char _0x14c[0x4];
-	int    	m_flSimulationTime; // 0x150
-	unsigned char _0x154[0x4];
-	float  	m_flCreateTime; // 0x158
-	unsigned char _0x15c[0x8c];
-	float  	m_fadeMinDist; // 0x1e8
-	float  	m_fadeMaxDist; // 0x1ec
-	float  	m_flFadeScale; // 0x1f0
-	unsigned char _0x1f4[0x4];
-	int    	m_iParentAttachment; // 0x1f8
-	unsigned char _0x1fc[0x20];
-	CCollisionProperty	m_Collision; // 0x21c
-	unsigned char _0x260[0x18];
-	CGlowProperty	m_Glow; // 0x278
-	unsigned char _0x290[0x3c];
-	int    	m_bGlowBackfaceMult; // 0x2cc
-	float  	m_flElasticity; // 0x2d0
-	float  	m_flShadowCastDistance; // 0x2d4
-	unsigned char _0x2d8[0xa8];
-	int    	m_CollisionGroup; // 0x380
-	unsigned char _0x384[0x261];
-	int    	m_bSimulatedEveryTick; // 0x5e5
-	int    	m_bAnimatedEveryTick; // 0x5e6
-	int    	m_bAlternateSorting; // 0x5e7
-	int    	m_nMinCPULevel; // 0x5e8
-	int    	m_nMaxCPULevel; // 0x5e9
-	int    	m_nMinGPULevel; // 0x5ea
-	int    	m_nMaxGPULevel; // 0x5eb
-	int    	m_iTextureFrameIndex; // 0x5ec
-	unsigned char _0x5f0[0x8];
-	int    	m_hEffectEntity; // 0x5f8
-};
-
-
-class C_BaseCombatWeapon
-{
-public:
-	virtual void *sub_10019D90() = 0;
-	virtual void *sub_100420F0() = 0;
-	virtual void *sub_10042110() = 0;
-	virtual void *sub_100194D0() = 0;
-	virtual void *sub_100194E0() = 0;
-	virtual void *sub_100194F0() = 0;
-	virtual void *sub_10019500() = 0;
-	virtual void *sub_10019510() = 0;
-	virtual void *sub_10019520() = 0;
-	virtual void *sub_100414B0() = 0;
-	virtual void *sub_10042070() = 0;
-	virtual void *C_BaseEntity__GetAbsOrigin() = 0;
-	virtual void *C_BaseEntity__GetAbsAngles() = 0;
-	virtual void *sub_1002BAD0() = 0;
-	virtual void *sub_10039EE0() = 0;
-	virtual void *sub_10043480() = 0;
-	virtual void *sub_10043270() = 0;
-	virtual void *sub_100158F0() = 0;
-	virtual void *sub_100158E0() = 0;
-	virtual void *sub_1001CC10() = 0;
-	virtual void *sub_1001A1E0() = 0;
-	virtual void *sub_100194A0() = 0;
-	virtual void *sub_1001B830() = 0;
-	virtual void *sub_1001A1F0() = 0;
-	virtual void *sub_1001A200() = 0;
-	virtual void *C_BaseEntity__TraceAttack() = 0;
-	virtual void *sub_1001A210() = 0;
-	virtual void *sub_10016190() = 0;
-	virtual void *sub_1001A2D0() = 0;
-	virtual void *sub_1001A2F0() = 0;
-	virtual void *sub_1001A300() = 0;
-	virtual void *sub_100172C0() = 0;
-	virtual void *nullsub_170() = 0;
-	virtual void *sub_10017380() = 0;
-	virtual void *j_nullsub_171() = 0;
-	virtual void *nullsub_172() = 0;
-	virtual void *sub_1001A010() = 0;
-	virtual void *sub_10019FA0() = 0;
-	virtual void *C_BaseEntity__KeyValue() = 0;
-	virtual void *C_BaseEntity__GetKeyValue() = 0;
-	virtual void *nullsub_173() = 0;
-	virtual void *sub_100487C0() = 0;
-	virtual void *sub_10019890() = 0;
-	virtual void *unknown_0() = 0;
-	virtual void *sub_10031930() = 0;
-	virtual void *sub_10019530() = 0;
-	virtual void *sub_10030B50() = 0;
-	virtual void *sub_10030BE0() = 0;
-	virtual void *sub_10043470() = 0;
-	virtual void *sub_100430D0() = 0;
-	virtual void *sub_1004CD20() = 0;
-	virtual void *sub_10040BB0() = 0;
-	virtual void *nullsub_174() = 0;
-	virtual void *unknown_1() = 0;
-	virtual void *sub_100427B0() = 0;
-	virtual void *sub_10043280() = 0;
-	virtual void *sub_100474F0() = 0;
-	virtual void *sub_10040C00() = 0;
-	virtual void *sub_10040BA0() = 0;
-	virtual void *sub_10019950() = 0;
-	virtual void *sub_10044FE0() = 0;
-	virtual void *sub_10047500() = 0;
-	virtual void *sub_1001A150() = 0;
-	virtual void *sub_1001A120() = 0;
-	virtual void *sub_1002E490() = 0;
-	virtual void *sub_1002D580() = 0;
-	virtual void *sub_100421C0() = 0;
-	virtual void *sub_100495A0() = 0;
-	virtual void *sub_100495E0() = 0;
-	virtual void *sub_10019830() = 0;
-	virtual void *sub_10019850() = 0;
-	virtual void *sub_1001BEE0() = 0;
-	virtual void *nullsub_175() = 0;
-	virtual void *sub_10019810() = 0;
-	virtual void *sub_100197F0() = 0;
-	virtual void *sub_10040D20() = 0;
-	virtual void *sub_10040DF0() = 0;
-	virtual void *sub_10040E30() = 0;
-	virtual void *sub_10042B10() = 0;
-	virtual void *unknown_2() = 0;
-	virtual void *unknown_3() = 0;
-	virtual void *sub_10042B30() = 0;
-	virtual void *sub_10042B40() = 0;
-	virtual void *sub_10042B80() = 0;
-	virtual void *sub_100195B0() = 0;
-	virtual void *sub_100195C0() = 0;
-	virtual void *sub_100195D0() = 0;
-	virtual void *sub_100195E0() = 0;
-	virtual void *sub_100195F0() = 0;
-	virtual void *sub_10019600() = 0;
-	virtual void *sub_100420C0() = 0;
-	virtual void *sub_100445A0() = 0;
-	virtual void *sub_1004D170() = 0;
-	virtual void *C_BaseAnimating__Simulate() = 0;
-	virtual void *sub_10019610() = 0;
-	virtual void *sub_100319C0() = 0;
-	virtual void *sub_10042780() = 0;
-	virtual void *sub_10042520() = 0;
-	virtual void *sub_10041120() = 0;
-	virtual void *sub_1002C740() = 0;
-	virtual void *sub_1002D8D0() = 0;
-	virtual void *sub_1002E400() = 0;
-	virtual void *sub_1004ED10() = 0;
-	virtual void *sub_1003B210() = 0;
-	virtual void *nullsub_9() = 0;
-	virtual void *nullsub_10() = 0;
-	virtual void *sub_1003B730() = 0;
-	virtual void *sub_100344F0() = 0;
-	virtual void *sub_10042880() = 0;
-	virtual void *sub_10044700() = 0;
-	virtual void *sub_1002C220() = 0;
-	virtual void *sub_10042620() = 0;
-	virtual void *sub_10042910() = 0;
-	virtual void *nullsub_176() = 0;
-	virtual void *sub_10044A50() = 0;
-	virtual void *nullsub_177() = 0;
-	virtual void *sub_10019650() = 0;
-	virtual void *sub_10019660() = 0;
-	virtual void *sub_10019670() = 0;
-	virtual void *sub_100467C0() = 0;
-	virtual void *sub_10043070() = 0;
-	virtual void *sub_10040C30() = 0;
-	virtual void *sub_100471C0() = 0;
-	virtual void *sub_100461B0() = 0;
-	virtual void *sub_1004E2D0() = 0;
-	virtual void *sub_100331A0() = 0;
-	virtual void *sub_1001A0D0() = 0;
-	virtual void *sub_1001A8D0() = 0;
-	virtual void *sub_1001A950() = 0;
-	virtual void *sub_10019680() = 0;
-	virtual void *sub_10019690() = 0;
-	virtual void *sub_10043420() = 0;
-	virtual void *sub_100196B0() = 0;
-	virtual void *sub_1004C230() = 0;
-	virtual void *sub_100196C0() = 0;
-	virtual void *sub_100196D0() = 0;
-	virtual void *sub_101653F0() = 0;
-	virtual void *nullsub_22() = 0;
-	virtual void *sub_10164EC0() = 0;
-	virtual void *nullsub_178() = 0;
-	virtual void *sub_10165410() = 0;
-	virtual void *nullsub_179() = 0;
-	virtual void *sub_101686F0() = 0;
-	virtual void *sub_100196F0() = 0;
-	virtual void *sub_10019700() = 0;
-	virtual void *sub_10019710() = 0;
-	virtual void *sub_10019720() = 0;
-	virtual void *sub_10019730() = 0;
-	virtual void *sub_10019740() = 0;
-	virtual void *sub_10019750() = 0;
-	virtual void *sub_10019760() = 0;
-	virtual void *sub_10019960() = 0;
-	virtual void *sub_10019970() = 0;
-	virtual void *sub_10019770() = 0;
-	virtual void *sub_10019780() = 0;
-	virtual void *C_BaseEntity__EyePosition() = 0;
-	virtual void *sub_10019DF0() = 0;
-	virtual void *sub_10019E00() = 0;
-	virtual void *sub_10019E10() = 0;
-	virtual void *sub_1001A090() = 0;
-	virtual void *sub_10019870() = 0;
-	virtual const Vector &GetViewOffset() = 0;
-};
-
-
-class C_BaseViewModel
-{
-public:
-	virtual void *sub_10023470() = 0;
-	virtual void *sub_100420F0() = 0;
-	virtual void *sub_10042110() = 0;
-	virtual void *sub_100194D0() = 0;
-	virtual void *sub_100194E0() = 0;
-	virtual void *sub_100194F0() = 0;
-	virtual void *sub_10019500() = 0;
-	virtual void *sub_10019510() = 0;
-	virtual void *sub_10019520() = 0;
-	virtual void *sub_10034210() = 0;
-	virtual void *sub_10042070() = 0;
-	virtual void *C_BaseEntity__GetAbsOrigin() = 0;
-	virtual void *C_BaseEntity__GetAbsAngles() = 0;
-	virtual void *sub_1002BAD0() = 0;
-	virtual void *sub_10039EE0() = 0;
-	virtual void *sub_10043480() = 0;
-	virtual void *sub_10043270() = 0;
-	virtual void *sub_10022750() = 0;
-	virtual void *sub_10022770() = 0;
-	virtual void *sub_1001CC10() = 0;
-	virtual void *sub_1001A1E0() = 0;
-	virtual void *sub_100194A0() = 0;
-	virtual void *sub_1001B830() = 0;
-	virtual void *sub_1001A1F0() = 0;
-	virtual void *sub_1001A200() = 0;
-	virtual void *C_BaseEntity__TraceAttack() = 0;
-	virtual void *sub_1001A210() = 0;
-	virtual void *sub_1001A230() = 0;
-	virtual void *sub_1001A2D0() = 0;
-	virtual void *sub_1001A2F0() = 0;
-	virtual void *sub_1001A300() = 0;
-	virtual void *sub_10022790() = 0;
-	virtual void *nullsub_170() = 0;
-	virtual void *nullsub_220() = 0;
-	virtual void *nullsub_171() = 0;
-	virtual void *nullsub_172() = 0;
-	virtual void *sub_1001A010() = 0;
-	virtual void *sub_10019FA0() = 0;
-	virtual void *C_BaseEntity__KeyValue() = 0;
-	virtual void *C_BaseEntity__GetKeyValue() = 0;
-	virtual void *nullsub_173() = 0;
-	virtual void *sub_100487C0() = 0;
-	virtual void *sub_10019890() = 0;
-	virtual void *unknown_0() = 0;
-	virtual void *sub_10031930() = 0;
-	virtual void *sub_10019530() = 0;
-	virtual void *sub_10030B50() = 0;
-	virtual void *sub_10030BE0() = 0;
-	virtual void *sub_10043470() = 0;
-	virtual void *sub_100430D0() = 0;
-	virtual void *sub_1004CD20() = 0;
-	virtual void *sub_10049060() = 0;
-	virtual void *nullsub_174() = 0;
-	virtual void *unknown_1() = 0;
-	virtual void *sub_100427B0() = 0;
-	virtual void *sub_10043280() = 0;
-	virtual void *sub_100474F0() = 0;
-	virtual void *C_BaseEntity__OnRestore() = 0;
-	virtual void *sub_100232E0() = 0;
-	virtual void *sub_10019950() = 0;
-	virtual void *sub_10044FE0() = 0;
-	virtual void *sub_10047500() = 0;
-	virtual void *sub_1001A150() = 0;
-	virtual void *sub_1001A120() = 0;
-	virtual void *sub_1002E490() = 0;
-	virtual void *sub_1002D580() = 0;
-	virtual void *sub_100421C0() = 0;
-	virtual void *sub_100495A0() = 0;
-	virtual void *sub_100495E0() = 0;
-	virtual void *sub_10019830() = 0;
-	virtual void *sub_10019850() = 0;
-	virtual void *sub_1001BEE0() = 0;
-	virtual void *nullsub_175() = 0;
-	virtual void *sub_10019810() = 0;
-	virtual void *sub_100197F0() = 0;
-	virtual void *sub_10022D70() = 0;
-	virtual void *sub_10022DB0() = 0;
-	virtual void *sub_1002F7F0() = 0;
-	virtual void *sub_10042B10() = 0;
-	virtual void *unknown_2() = 0;
-	virtual void *unknown_3() = 0;
-	virtual void *sub_10042B30() = 0;
-	virtual void *sub_10042B40() = 0;
-	virtual void *sub_10042B80() = 0;
-	virtual void *sub_100195B0() = 0;
-	virtual void *sub_100195C0() = 0;
-	virtual void *sub_100195D0() = 0;
-	virtual void *sub_100195E0() = 0;
-	virtual void *sub_100195F0() = 0;
-	virtual void *sub_10019600() = 0;
-	virtual void *sub_100420C0() = 0;
-	virtual void *sub_100445A0() = 0;
-	virtual void *sub_1004D170() = 0;
-	virtual void *C_BaseAnimating__Simulate() = 0;
-	virtual void *sub_10019610() = 0;
-	virtual void *sub_100319C0() = 0;
-	virtual void *sub_10042780() = 0;
-	virtual void *sub_1006AC30() = 0;
-	virtual void *sub_100322D0() = 0;
-	virtual void *sub_1002C740() = 0;
-	virtual void *sub_1002D8D0() = 0;
-	virtual void *sub_100232F0() = 0;
-	virtual void *sub_1004ED10() = 0;
-	virtual void *sub_1006AC70() = 0;
-	virtual void *nullsub_9() = 0;
-	virtual void *nullsub_10() = 0;
-	virtual void *sub_1003B730() = 0;
-	virtual void *sub_1006B1F0() = 0;
-	virtual void *sub_10042880() = 0;
-	virtual void *sub_10044700() = 0;
-	virtual void *sub_1002C220() = 0;
-	virtual void *sub_10042620() = 0;
-	virtual void *sub_10042910() = 0;
-	virtual void *nullsub_176() = 0;
-	virtual void *sub_10044A50() = 0;
-	virtual void *nullsub_177() = 0;
-	virtual void *sub_10019650() = 0;
-	virtual void *sub_10019660() = 0;
-	virtual void *sub_10019670() = 0;
-	virtual void *sub_100467C0() = 0;
-	virtual void *sub_10043070() = 0;
-	virtual void *sub_10022780() = 0;
-	virtual void *sub_100471C0() = 0;
-	virtual void *sub_1006AF10() = 0;
-	virtual void *sub_1004E2D0() = 0;
-	virtual void *sub_100331A0() = 0;
-	virtual void *sub_1001A0D0() = 0;
-	virtual void *sub_1001A8D0() = 0;
-	virtual void *sub_1001A950() = 0;
-	virtual void *sub_10019680() = 0;
-	virtual void *sub_10019690() = 0;
-	virtual void *sub_10043420() = 0;
-	virtual void *sub_100196B0() = 0;
-	virtual void *sub_1004C230() = 0;
-	virtual void *sub_100196C0() = 0;
-	virtual void *sub_100196D0() = 0;
-	virtual void *sub_101653F0() = 0;
-	virtual void *nullsub_22() = 0;
-	virtual void *sub_10164EC0() = 0;
-	virtual void *nullsub_178() = 0;
-	virtual void *sub_10165410() = 0;
-	virtual void *nullsub_179() = 0;
-	virtual void *sub_101686F0() = 0;
-	virtual void *sub_100196F0() = 0;
-	virtual void *sub_10019700() = 0;
-	virtual void *sub_10019710() = 0;
-	virtual void *sub_10019720() = 0;
-	virtual void *sub_10019730() = 0;
-	virtual void *sub_10019740() = 0;
-	virtual void *sub_10019750() = 0;
-	virtual void *sub_10019760() = 0;
-	virtual void *sub_1001E000() = 0;
-	virtual void *sub_1001E010() = 0;
-	virtual void *sub_10019770() = 0;
-	virtual void *sub_10019780() = 0;
-	virtual void *C_BaseEntity__EyePosition() = 0;
-	virtual void *sub_10019DF0() = 0;
-	virtual void *sub_10019E00() = 0;
-	virtual void *sub_10019E10() = 0;
-	virtual void *sub_1001A090() = 0;
-	virtual void *sub_10019870() = 0;
-	virtual void *C_BaseEntity__GetViewOffset() = 0;
-	virtual void *C_BaseEntity__SetViewOffset() = 0;
-	virtual void *C_BaseEntity__GetGroundVelocityToApply() = 0;
-	virtual void *C_BaseEntity__ShouldInterpolate() = 0;
-	virtual void *C_BaseEntity__BoneMergeFastCullBloat() = 0;
-	virtual void *sub_10043080() = 0;
-	virtual void *C_BaseEntity__GetShadowUseOtherEntity() = 0;
-	virtual void *C_BaseEntity__SetShadowUseOtherEntity() = 0;
-	virtual void *sub_100197E0() = 0;
-	virtual void *sub_10019930() = 0;
-	virtual void *nullsub_180() = 0;
-	virtual void *sub_1006AF40() = 0;
-	virtual void *C_BaseAnimating__SetBoneController() = 0;
-	virtual void *C_BaseAnimating__GetPoseParameters() = 0;
-	virtual void *sub_10039850() = 0;
-	virtual void *sub_1006ADC0() = 0;
-	virtual void *sub_100334A0() = 0;
-	virtual void *sub_10033550() = 0;
-	virtual void *sub_10030150() = 0;
-	virtual void *sub_1002FD00() = 0;
-	virtual void *sub_1002BEA0() = 0;
-	virtual void *sub_10033F70() = 0;
-	virtual void *sub_1003E610() = 0;
-	virtual void *sub_1006AFA0() = 0;
-	virtual void *sub_1002DD30() = 0;
-	virtual void *C_BaseAnimating__DispatchMuzzleEffect() = 0;
-	virtual void *sub_1003A3C0() = 0;
-	virtual void *sub_1003C050() = 0;
-	virtual void *sub_1003BDF0() = 0;
-	virtual void *sub_1003E390() = 0;
-	virtual void *nullsub_79() = 0;
-	virtual void *sub_1003AD80() = 0;
-	virtual void *sub_1003CF70() = 0;
-	virtual void *sub_1002BFE0() = 0;
-	virtual void *sub_1002F590() = 0;
-	virtual void *sub_1002B8D0() = 0;
-	virtual void *C_BaseAnimating__GetRagdollInitBoneArrays() = 0;
-	virtual void *sub_100345B0() = 0;
-	virtual void *sub_100346C0() = 0;
-	virtual void *sub_100314E0() = 0;
-	virtual void *sub_1002C000() = 0;
-	virtual void *sub_1002E740() = 0;
-	virtual void *sub_1002BFF0() = 0;
-	virtual void *nullsub_181() = 0;
-	virtual void *sub_100198D0() = 0;
-	virtual void *C_BaseViewModel__UncorrectViewModelAttachment() = 0;
-	virtual void *sub_1002C400() = 0;
-	virtual void *nullsub_221() = 0;
-	virtual void *nullsub_183() = 0;
-	virtual void *sub_10019900() = 0;
-	virtual void *sub_10023330() = 0;
-	virtual void *sub_10023300() = 0;
-	virtual void *sub_10019910() = 0;
-	virtual void *sub_1006ACC0() = 0;
-	virtual void *sub_1002BAC0() = 0;
-	virtual void *sub_1002B9B0() = 0;
-	virtual void *C_BaseAnimating__ComputeStencilState() = 0;
-	virtual void *C_BaseAnimating__LastBoneChangedTime() = 0;
-	virtual void *sub_10022F50() = 0;
-	virtual void *sub_10022E30() = 0;
-	virtual void *sub_100223E0() = 0;
-	virtual void *C_BaseViewModel__CalcViewModelView() = 0;
-	virtual void *nullsub_222() = 0;
-	virtual void *sub_10023350() = 0;
-	virtual void *sub_100223D0() = 0;
-	virtual void *sub_10022820() = 0;
-	virtual C_BaseCombatWeapon *GetOwningWeapon() = 0;
-};
-
-class CBasePlayer
-{
-public:
-	virtual void *fn0() = 0;
-	virtual void *fn1() = 0;
-	virtual void *fn2() = 0;
-	virtual void *fn3() = 0;
-	virtual void *fn4() = 0;
-	virtual void *fn5() = 0;
-	virtual void *fn6() = 0;
-	virtual void *fn7() = 0;
-	virtual void *fn8() = 0;
-	virtual void *fn9() = 0;
-	virtual void *fn10() = 0;
-	virtual const Vector & GetAbsOrigin() = 0;
-	virtual const QAngle & GetAbsAngles() = 0;
-	virtual void *sub_1002BAD0() = 0;
-	virtual void *sub_1004F000() = 0;
-	virtual void *sub_10043480() = 0;
-	virtual void *sub_10043270() = 0;
-	virtual void *sub_10063390() = 0;
-	virtual void *sub_100633D0() = 0;
-	virtual void *sub_1001CC10() = 0;
-	virtual void *sub_1001A1E0() = 0;
-	virtual void *sub_100194A0() = 0;
-	virtual void *sub_1001B830() = 0;
-	virtual void *sub_1001A1F0() = 0;
-	virtual void *sub_1001A200() = 0;
-	virtual void *C_BaseEntity__TraceAttack() = 0;
-	virtual void *sub_1001A210() = 0;
-	virtual void *sub_10020C00() = 0;
-	virtual void *sub_1001A2D0() = 0;
-	virtual void *sub_10011D30() = 0;
-	virtual void *sub_1001F240() = 0;
-	virtual void *sub_10063B90() = 0;
-	virtual void *nullsub_170() = 0;
-	virtual void *nullsub_70() = 0;
-	virtual void *nullsub_171() = 0;
-	virtual void *nullsub_172() = 0;
-	virtual void *sub_1001A010() = 0;
-	virtual void *sub_10019FA0() = 0;
-	virtual void *C_BaseEntity__KeyValue() = 0;
-	virtual void *C_BaseEntity__GetKeyValue() = 0;
-	virtual void *nullsub_173() = 0;
-	virtual void *sub_100487C0() = 0;
-	virtual void *sub_10019890() = 0;
-	virtual void *unknown_0() = 0;
-	virtual void *sub_10031930() = 0;
-	virtual void *sub_10019530() = 0;
-	virtual void *sub_10030B50() = 0;
-	virtual void *sub_10030BE0() = 0;
-	virtual void *sub_10043470() = 0;
-	virtual void *sub_100430D0() = 0;
-	virtual void *sub_1004CD20() = 0;
-	virtual void *sub_10049060() = 0;
-	virtual void *nullsub_174() = 0;
-	virtual void *unknown_1() = 0;
-	virtual void *sub_100427B0() = 0;
-	virtual void *sub_10043280() = 0;
-	virtual void *sub_100474F0() = 0;
-	virtual void *C_BasePlayer__OnRestore() = 0;
-	virtual void *sub_100432A0() = 0;
-	virtual void *sub_10019950() = 0;
-	virtual void *sub_10044FE0() = 0;
-	virtual void *sub_10047500() = 0;
-	virtual void *sub_1001A150() = 0;
-	virtual void *sub_1001A120() = 0;
-	virtual void *sub_1002E490() = 0;
-	virtual void *sub_1002D580() = 0;
-	virtual void *sub_100421C0() = 0;
-	virtual void *sub_100495A0() = 0;
-	virtual void *sub_100495E0() = 0;
-	virtual void *sub_10019830() = 0;
-	virtual void *sub_10019850() = 0;
-	virtual void *sub_1001BEE0() = 0;
-	virtual void *nullsub_175() = 0;
-	virtual void *sub_10019810() = 0;
-	virtual void *sub_100197F0() = 0;
-	virtual void *sub_1002BA20() = 0;
-	virtual void *sub_1002FA60() = 0;
-	virtual void *sub_1002F7F0() = 0;
-	virtual void *sub_10042B10() = 0;
-	virtual void *unknown_2() = 0;
-	virtual void *unknown_3() = 0;
-	virtual void *sub_10042B30() = 0;
-	virtual void *sub_10042B40() = 0;
-	virtual void *sub_10042B80() = 0;
-	virtual void *sub_100195B0() = 0;
-	virtual void *sub_100195C0() = 0;
-	virtual void *sub_100195D0() = 0;
-	virtual void *sub_100195E0() = 0;
-	virtual void *sub_100195F0() = 0;
-	virtual void *sub_10019600() = 0;
-	virtual void *sub_100420C0() = 0;
-	virtual void *sub_100445A0() = 0;
-	virtual void *sub_1004D170() = 0;
-	virtual void *sub_100691D0() = 0;
-	virtual void *sub_10019610() = 0;
-	virtual void *sub_100319C0() = 0;
-	virtual void *sub_10042780() = 0;
-	virtual void *sub_10042520() = 0;
-	virtual void *sub_100645B0() = 0;
-	virtual void *sub_1002C740() = 0;
-	virtual void *sub_1002D8D0() = 0;
-	virtual void *sub_1002E400() = 0;
-	virtual void *sub_1004ED10() = 0;
-	virtual void *sub_1003FF10() = 0;
-	virtual void *sub_10040530() = 0;
-	virtual void *sub_100406A0() = 0;
-	virtual void *sub_1003B730() = 0;
-	virtual void *sub_100344F0() = 0;
-	virtual void *sub_10042880() = 0;
-	virtual void *sub_10044700() = 0;
-	virtual void *sub_1002C220() = 0;
-	virtual void *sub_10042620() = 0;
-	virtual void *sub_10042910() = 0;
-	virtual void *nullsub_176() = 0;
-	virtual void *sub_10044A50() = 0;
-	virtual void *nullsub_177() = 0;
-	virtual void *unknown_4() = 0;
-	virtual void *sub_10019660() = 0;
-	virtual void *sub_10019670() = 0;
-	virtual void *sub_100467C0() = 0;
-	virtual void *sub_10043070() = 0;
-	virtual void *sub_1004C1C0() = 0;
-	virtual void *sub_100471C0() = 0;
-	virtual void *sub_10063640() = 0;
-	virtual void *sub_1004E2D0() = 0;
-	virtual void *sub_100331A0() = 0;
-	virtual void *sub_1001A0D0() = 0;
-	virtual void *sub_1001A8D0() = 0;
-	virtual void *sub_1001A950() = 0;
-	virtual void *sub_10063610() = 0;
-	virtual void *sub_10019690() = 0;
-	virtual void *sub_10068110() = 0;
-	virtual void *sub_100196B0() = 0;
-	virtual void *sub_1004C230() = 0;
-	virtual void *sub_100196C0() = 0;
-	virtual void *sub_100196D0() = 0;
-	virtual void *sub_101653F0() = 0;
-	virtual void *nullsub_22() = 0;
-	virtual void *sub_10164EC0() = 0;
-	virtual void *nullsub_178() = 0;
-	virtual void *sub_10069930() = 0;
-	virtual void *nullsub_179() = 0;
-	virtual void *sub_100673C0() = 0;
-	virtual void *IsPlayer() = 0;
-	virtual void *sub_1001E040() = 0;
-	virtual void *sub_1001E050() = 0;
-	virtual void *sub_10019720() = 0;
-	virtual void *IsNPC() = 0;
-	virtual void *sub_10019740() = 0;
-	virtual void *sub_10019750() = 0;
-	virtual void *sub_10019760() = 0;
-	virtual void *sub_1001E000() = 0;
-	virtual void *sub_1001E010() = 0;
-	virtual void *sub_10019770() = 0;
-	virtual void *sub_10019780() = 0;
-	virtual Vector EyePosition() = 0;
-	virtual const QAngle &EyeAngles() = 0;
-	virtual void *sub_1001ECA0() = 0;
-	virtual void *sub_10019E10() = 0;
-	virtual void *sub_1001A090() = 0;
-	virtual void *sub_10019870() = 0;
-	virtual void *sub_10019E30() = 0;
-	virtual void *C_BaseEntity__SetViewOffset() = 0;
-	virtual void *C_BaseEntity__GetGroundVelocityToApply() = 0;
-	virtual void *C_BasePlayer__ShouldInterpolate() = 0;
-	virtual void *C_BaseEntity__BoneMergeFastCullBloat() = 0;
-	virtual void *sub_10043080() = 0;
-	virtual void *C_BaseEntity__GetShadowUseOtherEntity() = 0;
-	virtual void *C_BaseEntity__SetShadowUseOtherEntity() = 0;
-	virtual void *sub_100197E0() = 0;
-	virtual void *sub_10019930() = 0;
-	virtual void *nullsub_180() = 0;
-	virtual void *C_BaseAnimating__GetBoneControllers() = 0;
-	virtual void *C_BaseAnimating__SetBoneController() = 0;
-	virtual void *C_BaseAnimating__GetPoseParameters() = 0;
-	virtual void *sub_10039850() = 0;
-	virtual void *sub_1002F430() = 0;
-	virtual void *sub_100334A0() = 0;
-	virtual void *sub_10033550() = 0;
-	virtual void *sub_10030150() = 0;
-	virtual void *sub_1002FD00() = 0;
-	virtual void *sub_1002BEA0() = 0;
-	virtual void *sub_10033F70() = 0;
-	virtual void *sub_1003E610() = 0;
-	virtual void *sub_10038770() = 0;
-	virtual void *sub_1002DD30() = 0;
-	virtual void *C_BaseAnimating__DispatchMuzzleEffect() = 0;
-	virtual void *sub_1003A3C0() = 0;
-	virtual void *sub_1004EFD0() = 0;
-	virtual void *sub_1003BDF0() = 0;
-	virtual void *sub_1003E390() = 0;
-	virtual void *nullsub_79() = 0;
-	virtual void *sub_1003AD80() = 0;
-	virtual void *sub_1003CF70() = 0;
-	virtual void *sub_1002BFE0() = 0;
-	virtual void *sub_1002F590() = 0;
-	virtual void *sub_1002B8D0() = 0;
-	virtual void *C_BasePlayer__GetRagdollInitBoneArrays() = 0;
-	virtual void *sub_100345B0() = 0;
-	virtual void *sub_100346C0() = 0;
-	virtual void *sub_100314E0() = 0;
-	virtual void *sub_1002C000() = 0;
-	virtual void *sub_1002E740() = 0;
-	virtual void *sub_1002BFF0() = 0;
-	virtual void *nullsub_181() = 0;
-	virtual void *sub_100198D0() = 0;
-	virtual void *nullsub_182() = 0;
-	virtual void *C_BasePlayer__DoMuzzleFlash() = 0;
-	virtual void *C_BaseAnimating__ProcessMuzzleFlashEvent() = 0;
-	virtual void *nullsub_183() = 0;
-	virtual void *sub_10019900() = 0;
-	virtual void *sub_1002C7B0() = 0;
-	virtual void *sub_1002BAB0() = 0;
-	virtual void *sub_10019910() = 0;
-	virtual void *nullsub_184() = 0;
-	virtual void *sub_1002BAC0() = 0;
-	virtual void *sub_1002B9B0() = 0;
-	virtual void *C_BaseAnimating__ComputeStencilState() = 0;
-	virtual void *C_BaseAnimating__LastBoneChangedTime() = 0;
-	virtual void *sub_1004F2E0() = 0;
-	virtual void *sub_1001E020() = 0;
-	virtual void *sub_1001E030() = 0;
-	virtual void *sub_1004F430() = 0;
-	virtual void *sub_1004F1F0() = 0;
-	virtual void *sub_1004F170() = 0;
-	virtual void *sub_1004F1C0() = 0;
-	virtual void *sub_10012380() = 0;
-	virtual void *sub_100122E0() = 0;
-	virtual void *sub_10012620() = 0;
-	virtual void *sub_10012430() = 0;
-	virtual void *sub_10012DE0() = 0;
-	virtual void *sub_10011DC0() = 0;
-	virtual void *nullsub_205() = 0;
-	virtual void *sub_10012EB0() = 0;
-	virtual void *sub_1001E070() = 0;
-	virtual void *sub_1001E080() = 0;
-	virtual void *sub_1001E090() = 0;
-	virtual void *C_BaseCombatCharacter__GetFootstepRunThreshold() = 0;
-	virtual void *C_BaseCombatCharacter__GetClass() = 0;
-	virtual void *sub_1001E0C0() = 0;
-	virtual void *sub_10069870() = 0;
-	virtual void *sub_10040B90() = 0;
-	virtual void *sub_1001ED80() = 0;
-	virtual void *sub_10013330() = 0;
-	virtual void *sub_10012A90() = 0;
-	virtual C_BaseCombatWeapon *GetActiveWeapon() = 0;
-	virtual void *sub_10021E00() = 0;
-	virtual void *nullsub_240() = 0;
-	virtual void *sub_10021980() = 0;
-	virtual void *CalcViewModelView(const Vector &eyeOrigin, const QAngle &eyeAngles) = 0;
-	
-	char pad_0000[252]; //0x0004
-	Vector m_vecVelocity; //0x0100
-	char pad_010C[56]; //0x010C
-	int m_hGroundEntity; //0x0144
-	char pad_0148[4872]; //0x0148
-	int m_iObserverMode; //0x1450
-}; //Size: 0x1454
-static_assert(sizeof(CBasePlayer) == 0x1454);
-
-class C_TerrorViewModel
-{
-public:
-	virtual void *sub_10287530() = 0;
-	virtual void *sub_100420F0() = 0;
-	virtual void *sub_10042110() = 0;
-	virtual void *sub_100194D0() = 0;
-	virtual void *sub_100194E0() = 0;
-	virtual void *sub_100194F0() = 0;
-	virtual void *sub_10019500() = 0;
-	virtual void *sub_10019510() = 0;
-	virtual void *sub_10019520() = 0;
-	virtual void *sub_10034210() = 0;
-	virtual void *sub_10042070() = 0;
-	virtual void *C_BaseEntity__GetAbsOrigin() = 0;
-	virtual void *C_BaseEntity__GetAbsAngles() = 0;
-	virtual void *sub_1002BAD0() = 0;
-	virtual void *sub_10039EE0() = 0;
-	virtual void *sub_10043480() = 0;
-	virtual void *sub_10043270() = 0;
-	virtual void *sub_10286010() = 0;
-	virtual void *sub_10022770() = 0;
-	virtual void *sub_1001CC10() = 0;
-	virtual void *sub_1001A1E0() = 0;
-	virtual void *sub_100194A0() = 0;
-	virtual void *sub_1001B830() = 0;
-	virtual void *sub_1001A1F0() = 0;
-	virtual void *sub_1001A200() = 0;
-	virtual void *C_BaseEntity__TraceAttack() = 0;
-	virtual void *sub_1001A210() = 0;
-	virtual void *sub_1001A230() = 0;
-	virtual void *sub_1001A2D0() = 0;
-	virtual void *sub_1001A2F0() = 0;
-	virtual void *sub_1001A300() = 0;
-	virtual void *sub_10022790() = 0;
-	virtual void *nullsub_170() = 0;
-	virtual void *sub_102860A0() = 0;
-	virtual void *nullsub_171() = 0;
-	virtual void *nullsub_172() = 0;
-	virtual void *sub_1001A010() = 0;
-	virtual void *sub_10019FA0() = 0;
-	virtual void *C_BaseEntity__KeyValue() = 0;
-	virtual void *C_BaseEntity__GetKeyValue() = 0;
-	virtual void *nullsub_173() = 0;
-	virtual void *sub_100487C0() = 0;
-	virtual void *sub_10019890() = 0;
-	virtual void *unknown_0() = 0;
-	virtual void *sub_10031930() = 0;
-	virtual void *sub_10019530() = 0;
-	virtual void *sub_10030B50() = 0;
-	virtual void *sub_10030BE0() = 0;
-	virtual void *sub_10043470() = 0;
-	virtual void *sub_100430D0() = 0;
-	virtual void *sub_1004CD20() = 0;
-	virtual void *sub_10049060() = 0;
-	virtual void *sub_10286A30() = 0;
-	virtual void *unknown_1() = 0;
-	virtual void *sub_100427B0() = 0;
-	virtual void *sub_10043280() = 0;
-	virtual void *sub_100474F0() = 0;
-	virtual void *C_BaseEntity__OnRestore() = 0;
-	virtual void *sub_100232E0() = 0;
-	virtual void *sub_10019950() = 0;
-	virtual void *sub_10044FE0() = 0;
-	virtual void *sub_10047500() = 0;
-	virtual void *sub_1001A150() = 0;
-	virtual void *sub_1001A120() = 0;
-	virtual void *sub_1002E490() = 0;
-	virtual void *sub_1002D580() = 0;
-	virtual void *sub_100421C0() = 0;
-	virtual void *sub_100495A0() = 0;
-	virtual void *sub_100495E0() = 0;
-	virtual void *sub_10019830() = 0;
-	virtual void *sub_10019850() = 0;
-	virtual void *sub_1001BEE0() = 0;
-	virtual void *nullsub_175() = 0;
-	virtual void *sub_10019810() = 0;
-	virtual void *sub_100197F0() = 0;
-	virtual void *sub_10022D70() = 0;
-	virtual void *sub_10022DB0() = 0;
-	virtual void *sub_1002F7F0() = 0;
-	virtual void *sub_10042B10() = 0;
-	virtual void *unknown_2() = 0;
-	virtual void *unknown_3() = 0;
-	virtual void *sub_10042B30() = 0;
-	virtual void *sub_10042B40() = 0;
-	virtual void *sub_10042B80() = 0;
-	virtual void *sub_100195B0() = 0;
-	virtual void *sub_100195C0() = 0;
-	virtual void *sub_100195D0() = 0;
-	virtual void *sub_100195E0() = 0;
-	virtual void *sub_100195F0() = 0;
-	virtual void *sub_10019600() = 0;
-	virtual void *sub_100420C0() = 0;
-	virtual void *sub_100445A0() = 0;
-	virtual void *sub_1004D170() = 0;
-	virtual void *C_TerrorViewModel__Simulate() = 0;
-	virtual void *sub_10019610() = 0;
-	virtual void *sub_100319C0() = 0;
-	virtual void *sub_10042780() = 0;
-	virtual void *sub_1006AC30() = 0;
-	virtual void *sub_100322D0() = 0;
-	virtual void *sub_1002C740() = 0;
-	virtual void *sub_1002D8D0() = 0;
-	virtual void *sub_100232F0() = 0;
-	virtual void *sub_1004ED10() = 0;
-	virtual void *sub_10286E70() = 0;
-	virtual void *sub_10287560() = 0;
-	virtual void *sub_102876A0() = 0;
-	virtual void *sub_1003B730() = 0;
-	virtual void *sub_1006B1F0() = 0;
-	virtual void *sub_10042880() = 0;
-	virtual void *sub_10044700() = 0;
-	virtual void *sub_1002C220() = 0;
-	virtual void *sub_10042620() = 0;
-	virtual void *sub_10042910() = 0;
-	virtual void *nullsub_176() = 0;
-	virtual void *sub_10044A50() = 0;
-	virtual void *nullsub_177() = 0;
-	virtual void *sub_10019650() = 0;
-	virtual void *sub_10019660() = 0;
-	virtual void *sub_10019670() = 0;
-	virtual void *sub_100467C0() = 0;
-	virtual void *sub_10043070() = 0;
-	virtual void *sub_10022780() = 0;
-	virtual void *sub_100471C0() = 0;
-	virtual void *sub_1006AF10() = 0;
-	virtual void *sub_1004E2D0() = 0;
-	virtual void *sub_100331A0() = 0;
-	virtual void *sub_1001A0D0() = 0;
-	virtual void *sub_1001A8D0() = 0;
-	virtual void *sub_1001A950() = 0;
-	virtual void *sub_1017A4E0() = 0;
-	virtual void *sub_10019690() = 0;
-	virtual void *sub_10043420() = 0;
-	virtual void *sub_100196B0() = 0;
-	virtual void *sub_1004C230() = 0;
-	virtual void *sub_100196C0() = 0;
-	virtual void *sub_100196D0() = 0;
-	virtual void *sub_101653F0() = 0;
-	virtual void *nullsub_22() = 0;
-	virtual void *sub_10164EC0() = 0;
-	virtual void *nullsub_178() = 0;
-	virtual void *sub_10165410() = 0;
-	virtual void *nullsub_179() = 0;
-	virtual void *sub_101686F0() = 0;
-	virtual void *IsPlayer() = 0;
-	virtual void *sub_10019700() = 0;
-	virtual void *sub_10019710() = 0;
-	virtual void *sub_10019720() = 0;
-	virtual void *IsNPC() = 0;
-	virtual void *sub_10019740() = 0;
-	virtual void *sub_10019750() = 0;
-	virtual void *sub_10019760() = 0;
-	virtual void *sub_1001E000() = 0;
-	virtual void *sub_1001E010() = 0;
-	virtual void *sub_10019770() = 0;
-	virtual void *sub_10019780() = 0;
-	virtual void *C_BaseEntity__EyePosition() = 0;
-	virtual void *sub_10019DF0() = 0;
-	virtual void *sub_10019E00() = 0;
-	virtual void *sub_10019E10() = 0;
-	virtual void *sub_1001A090() = 0;
-	virtual void *sub_10019870() = 0;
-	virtual void *C_BaseEntity__GetViewOffset() = 0;
-	virtual void *C_BaseEntity__SetViewOffset() = 0;
-	virtual void *C_BaseEntity__GetGroundVelocityToApply() = 0;
-	virtual void *C_BaseEntity__ShouldInterpolate() = 0;
-	virtual void *C_BaseEntity__BoneMergeFastCullBloat() = 0;
-	virtual void *sub_10043080() = 0;
-	virtual void *C_BaseEntity__GetShadowUseOtherEntity() = 0;
-	virtual void *C_BaseEntity__SetShadowUseOtherEntity() = 0;
-	virtual void *sub_100197E0() = 0;
-	virtual void *sub_10019930() = 0;
-	virtual void *nullsub_180() = 0;
-	virtual void *sub_1006AF40() = 0;
-	virtual void *C_BaseAnimating__SetBoneController() = 0;
-	virtual void *C_BaseAnimating__GetPoseParameters() = 0;
-	virtual void *sub_10039850() = 0;
-	virtual void *sub_1006ADC0() = 0;
-	virtual void *sub_100334A0() = 0;
-	virtual void *sub_10033550() = 0;
-	virtual void *sub_10030150() = 0;
-	virtual void *sub_1002FD00() = 0;
-	virtual void *sub_1002BEA0() = 0;
-	virtual void *sub_10033F70() = 0;
-	virtual void *sub_1003E610() = 0;
-	virtual void *sub_1006AFA0() = 0;
-	virtual void *sub_1002DD30() = 0;
-	virtual void *C_BaseAnimating__DispatchMuzzleEffect() = 0;
-	virtual void *sub_1003A3C0() = 0;
-	virtual void *sub_1003C050() = 0;
-	virtual void *sub_1003BDF0() = 0;
-	virtual void *sub_1003E390() = 0;
-	virtual void *nullsub_79() = 0;
-	virtual void *sub_1003AD80() = 0;
-	virtual void *sub_1003CF70() = 0;
-	virtual void *sub_1002BFE0() = 0;
-	virtual void *sub_1002F590() = 0;
-	virtual void *sub_1002B8D0() = 0;
-	virtual void *C_BaseAnimating__GetRagdollInitBoneArrays() = 0;
-	virtual void *sub_100345B0() = 0;
-	virtual void *sub_100346C0() = 0;
-	virtual void *sub_100314E0() = 0;
-	virtual void *sub_1002C000() = 0;
-	virtual void *sub_1002E740() = 0;
-	virtual void *sub_1002BFF0() = 0;
-	virtual void *nullsub_181() = 0;
-	virtual void *sub_100198D0() = 0;
-	virtual void *C_BaseViewModel__UncorrectViewModelAttachment() = 0;
-	virtual void *sub_1002C400() = 0;
-	virtual void *nullsub_221() = 0;
-	virtual void *nullsub_183() = 0;
-	virtual void *sub_10019900() = 0;
-	virtual void *sub_10023330() = 0;
-	virtual void *sub_10023300() = 0;
-	virtual void *sub_10019910() = 0;
-	virtual void *sub_1006ACC0() = 0;
-	virtual void *sub_1002BAC0() = 0;
-	virtual void *sub_1002B9B0() = 0;
-	virtual void *C_BaseAnimating__ComputeStencilState() = 0;
-	virtual void *C_BaseAnimating__LastBoneChangedTime() = 0;
-	virtual void *sub_10022F50() = 0;
-	virtual void *sub_10022E30() = 0;
-	virtual void *sub_102860E0() = 0;
-	virtual void *CalcViewModelView(CBasePlayer *owner, const Vector &eyePosition, const QAngle &eyeAngles) = 0;
-	virtual void *nullsub_222() = 0;
-	virtual void *sub_10023350() = 0;
-	virtual void *sub_100223D0() = 0;
-	virtual void *sub_10022820() = 0;
-	virtual void *C_BaseViewModel__GetOwningWeapon() = 0;
-	virtual void *sub_1006B8B0() = 0;
-	virtual void *sub_102860F0() = 0;
-};
-
 class IHandleEntity
 {
 public:
@@ -2218,8 +1230,601 @@ public:
 	// Gets the interface to the collideable + networkable representation of the entity
 	virtual void *GetCollideable() = 0;
 	virtual void *GetNetworkable() = 0;
-	virtual CBaseEntity *GetBaseEntity() = 0;
+	virtual void *GetBaseEntity() = 0;
 };
+
+class IClientUnknown : public IHandleEntity
+{
+public:
+	virtual void *GetCollideable() = 0;
+	virtual void *GetClientNetworkable() = 0;
+	virtual void *GetClientRenderable() = 0;
+	virtual void *GetIClientEntity() = 0;
+	virtual void *GetBaseEntity() = 0;
+	virtual void *GetClientThinkable() = 0;
+	virtual void *GetClientModelRenderable() = 0;
+	virtual void *GetClientAlphaProperty() = 0;
+};
+
+class IClientEntity : public IClientUnknown
+{
+	virtual Vector &GetAbsOrigin() = 0;
+	virtual QAngle &GetAbsAngles() = 0;
+	virtual void *GetMouth() = 0;
+	virtual bool GetSoundSpatialization() = 0;
+	virtual bool IsBlurred() = 0;
+};
+
+class C_BaseEntity : public IClientEntity
+{
+public:
+	virtual ~C_BaseEntity() = 0;
+	virtual void *GetDataDescMap() = 0;
+	virtual void *YouForgotToImplementOrDeclareClientClass() = 0;
+	virtual void *GetPredDescMap() = 0;
+	virtual void *FireBullets() = 0;
+	virtual void *sub_1001A1E0() = 0;
+	virtual void *sub_100194A0() = 0;
+	virtual void *sub_1001B830() = 0;
+	virtual void *sub_1001A1F0() = 0;
+	virtual void *sub_1001A200() = 0;
+	virtual void *TraceAttack() = 0;
+	virtual void *sub_1001A210() = 0;
+	virtual void *sub_1001A230() = 0;
+	virtual void *sub_1001A2D0() = 0;
+	virtual void *sub_1001A2F0() = 0;
+	virtual void *sub_1001A300() = 0;
+	virtual void *nullsub_7() = 0;
+	virtual void *nullsub_170() = 0;
+	virtual void *nullsub_70() = 0;
+	virtual void *nullsub_171() = 0;
+	virtual void *nullsub_172() = 0;
+	virtual void *sub_1001A010() = 0;
+	virtual void *sub_10019FA0() = 0;
+	virtual void *KeyValue() = 0;
+	virtual void *GetKeyValue () = 0;
+	virtual void *nullsub_173() = 0;
+	virtual void *sub_100487C0() = 0;
+	virtual void *loc_1001EA50() = 0;
+	virtual void *fn0() = 0;
+	virtual void *sub_1004CBC0() = 0;
+	virtual void *sub_10019530() = 0;
+	virtual void *sub_10042370() = 0;
+	virtual void *sub_10042380() = 0;
+	virtual void *sub_10043470() = 0;
+	virtual void *sub_100430D0() = 0;
+	virtual void *sub_1004CD20() = 0;
+	virtual void *sub_10049060() = 0;
+	virtual void *nullsub_174() = 0;
+	virtual void *fn1() = 0;
+	virtual void *sub_100427B0() = 0;
+	virtual void *sub_10043280() = 0;
+	virtual void *sub_100474F0() = 0;
+	virtual void *OnRestore() = 0;
+	virtual void *sub_100432A0() = 0;
+	virtual void *sub_10019950() = 0;
+	virtual void *sub_10044FE0() = 0;
+	virtual void *sub_10047500() = 0;
+	virtual void *sub_1001A150() = 0;
+	virtual void *sub_1001A120() = 0;
+	virtual void *sub_1001DA90() = 0;
+	virtual void *sub_10043E80() = 0;
+	virtual void *sub_100421C0() = 0;
+	virtual void *sub_100495A0() = 0;
+	virtual void *sub_100495E0() = 0;
+	virtual void *sub_10019830() = 0;
+	virtual void *sub_10019850() = 0;
+	virtual void *sub_1001BEE0() = 0;
+	virtual void *nullsub_175() = 0;
+	virtual void *sub_10019810() = 0;
+	virtual void *sub_100197F0() = 0;
+	virtual void *sub_100425D0() = 0;
+	virtual void *sub_10048AF0() = 0;
+	virtual void *locret_1001EA80() = 0;
+	virtual void *sub_10042B10() = 0;
+	virtual void *fn2() = 0;
+	virtual void *fn3() = 0;
+	virtual void *sub_10042B30() = 0;
+	virtual void *sub_10042B40() = 0;
+	virtual void *sub_10042B80() = 0;
+	virtual void *sub_100195B0() = 0;
+	virtual void *sub_100195C0() = 0;
+	virtual void *sub_100195D0() = 0;
+	virtual void *sub_100195E0() = 0;
+	virtual void *sub_100195F0() = 0;
+	virtual void *sub_10019600() = 0;
+	virtual void *sub_100420C0() = 0;
+	virtual void *sub_100445A0() = 0;
+	virtual void *sub_1004D170() = 0;
+	virtual void *loc_1001EA90() = 0;
+	virtual void *sub_10019610() = 0;
+	virtual void *sub_100428C0() = 0;
+	virtual void *sub_10042780() = 0;
+	virtual void *sub_10042520() = 0;
+	virtual void *sub_100475B0() = 0;
+	virtual void *nullsub_13() = 0;
+	virtual void *sub_100465F0() = 0;
+	virtual void *sub_10042790() = 0;
+	virtual void *sub_1004ED10() = 0;
+	virtual void *sub_10044690() = 0;
+	virtual void *nullsub_9() = 0;
+	virtual void *nullsub_10() = 0;
+	virtual void *sub_10047260() = 0;
+	virtual void *sub_1004DDB0() = 0;
+	virtual void *sub_10042880() = 0;
+	virtual void *sub_10044700() = 0;
+	virtual void *sub_1004B620() = 0;
+	virtual void *sub_10042620() = 0;
+	virtual void *sub_10042910() = 0;
+	virtual void *nullsub_176() = 0;
+	virtual void *sub_10044A50() = 0;
+	virtual void *nullsub_177() = 0;
+	virtual void *sub_10019650() = 0;
+	virtual void *sub_10019660() = 0;
+	virtual void *sub_10019670() = 0;
+	virtual void *sub_100467C0() = 0;
+	virtual void *sub_10043070() = 0;
+	virtual void *sub_1004C1C0() = 0;
+	virtual void *sub_100471C0() = 0;
+	virtual void *sub_100461B0() = 0;
+	virtual void *sub_1004E2D0() = 0;
+	virtual void *sub_100491E0() = 0;
+	virtual void *sub_1001A0D0() = 0;
+	virtual void *sub_1001A8D0() = 0;
+	virtual void *sub_1001A950() = 0;
+	virtual void *sub_10019680() = 0;
+	virtual void *sub_10019690() = 0;
+	virtual void *sub_10043420() = 0;
+	virtual void *sub_100196B0() = 0;
+	virtual void *sub_1004C230() = 0;
+	virtual void *sub_100196C0() = 0;
+	virtual void *sub_100196D0() = 0;
+	virtual void *sub_101653F0() = 0;
+	virtual void *nullsub_22() = 0;
+	virtual void *sub_10164EC0() = 0;
+	virtual void *nullsub_178() = 0;
+	virtual void *sub_10165410() = 0;
+	virtual void *nullsub_179() = 0;
+	virtual void *sub_101686F0() = 0;
+	virtual void *IsPlayer() = 0;
+	virtual void *sub_10019700() = 0;
+	virtual void *sub_10019710() = 0;
+	virtual void *sub_10019720() = 0;
+	virtual void *MyInfectedRagdollPointer() = 0;
+	virtual void *IsNPC() = 0;
+	virtual void *sub_10019750() = 0;
+	virtual void *sub_10019760() = 0;
+	virtual void *sub_1001E000() = 0;
+	virtual void *sub_1001E010() = 0;
+	virtual void *sub_10019770() = 0;
+	virtual void *sub_10019780() = 0;
+	virtual Vector EyePosition() = 0;
+	virtual void *sub_10019DF0() = 0;
+	virtual void *sub_10019E00() = 0;
+	virtual void *sub_10019E10() = 0;
+	virtual void *sub_1001A090() = 0;
+	virtual void *sub_10019870() = 0;
+	virtual void *GetViewOffset() = 0;
+	virtual void *SetViewOffset() = 0;
+	virtual void *GetGroundVelocityToApply() = 0;
+	virtual void *ShouldInterpolate() = 0;
+	virtual void *BoneMergeFastCullBloat() = 0;
+	virtual void *sub_10043080() = 0;
+	virtual void *GetShadowUseOtherEntity() = 0;
+	virtual void *SetShadowUseOtherEntity() = 0;
+	virtual void *sub_100197E0() = 0;
+	virtual void *loc_1001EAC0() = 0;
+	virtual void *nullsub_180() = 0;
+};
+
+class C_BaseAnimating : public C_BaseEntity
+{
+public:
+	virtual ~C_BaseAnimating() = 0;
+	virtual void *GetBoneControllers() = 0;
+	virtual void *SetBoneController() = 0;
+	virtual void *GetPoseParameters() = 0;
+	virtual void *sub_10039850() = 0;
+	virtual void *sub_1002F430() = 0;
+	virtual void *sub_100334A0() = 0;
+	virtual void *sub_10033550() = 0;
+	virtual void *sub_10030150() = 0;
+	virtual void *sub_1002FD00() = 0;
+	virtual void *sub_1002BEA0() = 0;
+	virtual void *sub_10033F70() = 0;
+	virtual void *sub_10034280() = 0;
+	virtual void *sub_10038770() = 0;
+	virtual void *sub_1002DD30() = 0;
+	virtual void *DispatchMuzzleEffect() = 0;
+	virtual void *sub_1003A3C0() = 0;
+	virtual void *sub_1003C050() = 0;
+	virtual void *sub_1003BDF0() = 0;
+	virtual void *nullsub_5() = 0;
+	virtual void *nullsub_79() = 0;
+	virtual void *sub_1003AD80() = 0;
+	virtual void *sub_1003CF70() = 0;
+	virtual void *sub_1002BFE0() = 0;
+	virtual void *sub_1002F590() = 0;
+	virtual void *sub_1002B8D0() = 0;
+	virtual void *GetRagdollInitBoneArrays() = 0;
+	virtual void *sub_100345B0() = 0;
+	virtual void *sub_100346C0() = 0;
+	virtual void *sub_100314E0() = 0;
+	virtual void *sub_1002C000() = 0;
+	virtual void *sub_1002E740() = 0;
+	virtual void *sub_1002BFF0() = 0;
+	virtual void *nullsub_181() = 0;
+	virtual void *sub_100198D0() = 0;
+	virtual void *nullsub_182() = 0;
+	virtual void *sub_1002C400() = 0;
+	virtual void *ProcessMuzzleFlashEvent() = 0;
+	virtual void *nullsub_183() = 0;
+	virtual void *sub_10019900() = 0;
+	virtual void *sub_1002C7B0() = 0;
+	virtual void *sub_1002BAB0() = 0;
+	virtual void *sub_10019910() = 0;
+	virtual void *nullsub_184() = 0;
+	virtual void *sub_1002BAC0() = 0;
+	virtual void *sub_1002B9B0() = 0;
+	virtual void *ComputeStencilState() = 0;
+	virtual void *LastBoneChangedTime() = 0;
+};
+
+class C_BaseAnimatingOverlay : public C_BaseAnimating
+{
+public:
+	virtual ~C_BaseAnimatingOverlay() = 0;
+};
+
+class C_BaseFlex : public C_BaseAnimatingOverlay
+{
+public:
+	virtual ~C_BaseFlex() = 0;
+	virtual void *sub_1004F2E0() = 0;
+	virtual void *sub_1001E020() = 0;
+	virtual void *sub_1001E030() = 0;
+	virtual void *sub_1004F430() = 0;
+	virtual void *sub_1004F1F0() = 0;
+	virtual void *sub_1004F170() = 0;
+	virtual void *sub_1004F1C0() = 0;
+};
+
+class C_BaseCombatCharacter : public C_BaseFlex
+{
+public:
+	virtual ~C_BaseCombatCharacter() = 0;
+	virtual void *sub_10012380() = 0;
+	virtual void *sub_100122E0() = 0;
+	virtual void *sub_10012620() = 0;
+	virtual void *sub_10012430() = 0;
+	virtual void *sub_10012DE0() = 0;
+	virtual void *sub_10011DC0() = 0;
+	virtual void *nullsub_205() = 0;
+	virtual void *sub_10012EB0() = 0;
+	virtual void *sub_1001E070() = 0;
+	virtual void *sub_1001E080() = 0;
+	virtual void *sub_1001E090() = 0;
+	virtual void *GetFootstepRunThreshold() = 0;
+	virtual void *GetClass() = 0;
+	virtual void *sub_1001E0C0() = 0;
+	virtual void *sub_1001E0A0() = 0;
+	virtual void *sub_10040B90() = 0;
+	virtual void *sub_10012980() = 0;
+	virtual void *sub_10013330() = 0;
+	virtual void *Weapon_GetSlot(int i) = 0;
+	virtual C_BaseCombatWeapon *GetActiveWeapon() = 0;
+};
+
+class C_BasePlayer : public C_BaseCombatCharacter
+{
+public:
+	virtual ~C_BasePlayer() = 0;
+	virtual void *sub_10021E00() = 0;
+	virtual void *nullsub_240() = 0;
+	virtual void *sub_10021980() = 0;
+	virtual void *CalcViewModelView() = 0;
+	virtual void *sub_1001F0F0() = 0;
+	virtual void *sub_10069800() = 0;
+	virtual void *sub_1001F290() = 0;
+	virtual void *sub_1001F270() = 0;
+	virtual void *sub_1001ED40() = 0;
+	virtual void *nullsub_241() = 0;
+	virtual void *sub_100648E0() = 0;
+	virtual void *sub_10065CB0() = 0;
+	virtual void *sub_1001FB30() = 0;
+	virtual void *nullsub_242() = 0;
+	virtual void *sub_100636B0() = 0;
+	virtual void *sub_10069820() = 0;
+	virtual void *sub_100211C0() = 0;
+	virtual void *sub_100636F0() = 0;
+	virtual void *nullsub_243() = 0;
+	virtual void *nullsub_244() = 0;
+	virtual void *sub_10063CC0() = 0;
+	virtual void *sub_10063C70() = 0;
+	virtual void *sub_10069880() = 0;
+	virtual void *sub_10063810() = 0;
+	virtual void *nullsub_245() = 0;
+	virtual void *sub_10069890() = 0;
+	virtual void *sub_100698A0() = 0;
+	virtual void *sub_100698B0() = 0;
+	virtual void *sub_100698C0() = 0;
+	virtual void *sub_100698D0() = 0;
+	virtual void *sub_100EC8B0() = 0;
+	virtual void *sub_10069A40() = 0;
+	virtual void *sub_100634D0() = 0;
+	virtual void *sub_10067B70() = 0;
+	virtual void *sub_100698E0() = 0;
+	virtual void *sub_100698F0() = 0;
+	virtual void *sub_10069900() = 0;
+	virtual void *sub_10063540() = 0;
+	virtual void *sub_10063490() = 0;
+	virtual void *sub_1001F360() = 0;
+	virtual void *sub_10020D90() = 0;
+	virtual void *sub_10063840() = 0;
+	virtual void *sub_10069170() = 0;
+	virtual void *sub_10064530() = 0;
+	virtual void *sub_1001FFF0() = 0;
+	virtual void *sub_10020110() = 0;
+	virtual void *sub_1001EE20() = 0;
+	virtual void *sub_1001F940() = 0;
+	virtual void *sub_10020F90() = 0;
+	virtual void *sub_10069940() = 0;
+	virtual void *sub_1001EE50() = 0;
+	virtual void *sub_10069A50() = 0;
+	virtual void *sub_1001EF00() = 0;
+	virtual void *sub_1001EE70() = 0;
+	virtual void *sub_100672A0() = 0;
+	virtual void *sub_100674C0() = 0;
+	virtual void *sub_1001FAC0() = 0;
+	virtual void *sub_10069950() = 0;
+	virtual void *sub_10021880() = 0;
+	virtual void *nullsub_246() = 0;
+	virtual char *GetCharacterDisplayName() = 0;
+	virtual void *sub_1001F3A0() = 0;
+	virtual void *sub_1001F430() = 0;
+	virtual void *sub_10065850() = 0;
+	virtual void *nullsub_247() = 0;
+	virtual void *sub_10064940() = 0;
+	virtual void *sub_10063700() = 0;
+	virtual void *sub_100692A0() = 0;
+	virtual void *sub_1001F4C0() = 0;
+	virtual void *sub_10022020() = 0;
+	virtual void *sub_1001ECB0() = 0;
+	virtual void *sub_1001F850() = 0;
+	virtual void *sub_1001F8B0() = 0;
+	virtual void *nullsub_248() = 0;
+	virtual void *sub_100699B0() = 0;
+	virtual void *sub_100699C0() = 0;
+	virtual void *sub_10063820() = 0;
+	virtual void *sub_100699D0() = 0;
+	virtual void *nullsub_249() = 0;
+	virtual void *sub_1001F020() = 0;
+	virtual void *sub_10066250() = 0;
+	virtual void *sub_10066350() = 0;
+	virtual void *sub_10066C00() = 0;
+	virtual void *sub_10066EB0() = 0;
+	virtual void *sub_10064130() = 0;
+	virtual void *sub_10066780() = 0;
+	virtual void *sub_100633E0() = 0;
+	virtual void *sub_10063410() = 0;
+	virtual void *sub_100699F0() = 0;
+	virtual void *sub_10069A00() = 0;
+	virtual void *sub_10069A10() = 0;
+	virtual void *sub_10069A20() = 0;
+	virtual void *sub_10069A30() = 0;
+
+
+	char pad_0000[252]; //0x0004
+	Vector m_vecVelocity; //0x0100
+	char pad_010C[56]; //0x010C
+	int m_hGroundEntity; //0x0144
+	char pad_0148[4872]; //0x0148
+	int m_iObserverMode; //0x1450
+}; //Size: 0x1454
+static_assert(sizeof(C_BasePlayer) == 0x1454);
+
+
+
+class C_BaseCombatWeapon : public C_BaseAnimating
+{
+public:
+	virtual ~C_BaseCombatWeapon() = 0;
+	virtual void *sub_10019980() = 0;
+	virtual void *sub_10019990() = 0;
+	virtual void *sub_100199A0() = 0;
+	virtual void Equip(void* pOwner) = 0;
+	virtual void *nullsub_45() = 0;
+	virtual void *sub_10017850() = 0;
+	virtual void *sub_100155A0() = 0;
+	virtual void *sub_100155B0() = 0;
+	virtual void *sub_100155D0() = 0;
+	virtual void *sub_100160D0() = 0;
+	virtual void *nullsub_185() = 0;
+	virtual void *nullsub_4() = 0;
+	virtual void *sub_10016350() = 0;
+	virtual void *nullsub_186() = 0;
+	virtual void *nullsub_187() = 0;
+	virtual void *sub_100163A0() = 0;
+	virtual void *nullsub_188() = 0;
+	virtual void *nullsub_189() = 0;
+	virtual void *sub_10017890() = 0;
+	virtual void *sub_100170D0() = 0;
+	virtual void *sub_10016500() = 0;
+	virtual void *sub_100199B0() = 0;
+	virtual void *sub_100165D0() = 0;
+	virtual void *sub_10015E60() = 0;
+	virtual void *sub_100176C0() = 0;
+	virtual void *sub_10015E80() = 0;
+	virtual void *sub_10016680() = 0;
+	virtual void *sub_100166D0() = 0;
+	virtual void *sub_10016750() = 0;
+	virtual void *sub_100199C0() = 0;
+	virtual void *sub_10018970() = 0;
+	virtual void *sub_100199D0() = 0;
+	virtual void *sub_10015EA0() = 0;
+	virtual void *sub_10018BC0() = 0;
+	virtual void *sub_100199E0() = 0;
+	virtual void *sub_100167D0() = 0;
+	virtual void *sub_10016860() = 0;
+	virtual void *sub_100178B0() = 0;
+	virtual void *sub_10015660() = 0;
+	virtual void *sub_100170E0() = 0;
+	virtual void *sub_10017A40() = 0;
+	virtual void *sub_10017E40() = 0;
+	virtual void *nullsub_190() = 0;
+	virtual void *sub_100157E0() = 0;
+	virtual void *sub_100156D0() = 0;
+	virtual void *nullsub_191() = 0;
+	virtual void *sub_10019A10() = 0;
+	virtual void *sub_10018160() = 0;
+	virtual void *sub_10018380() = 0;
+	virtual void *sub_100184F0() = 0;
+	virtual void *sub_10018120() = 0;
+	virtual void *sub_10018520() = 0;
+	virtual void *nullsub_192() = 0;
+	virtual void *sub_10016E80() = 0;
+	virtual void *sub_10018DD0() = 0;
+	virtual void *sub_10015810() = 0;
+	virtual void *sub_10015820() = 0;
+	virtual void *sub_10015670() = 0;
+	virtual void *sub_100157D0() = 0;
+	virtual void *sub_10019A30() = 0;
+	virtual void *sub_10015740() = 0;
+	virtual void *sub_10019A40() = 0;
+	virtual void *sub_10015750() = 0;
+	virtual void *sub_10019A70() = 0;
+	virtual void *sub_100157A0() = 0;
+	virtual void *sub_10019A80() = 0;
+	virtual void *sub_10019A90() = 0;
+	virtual void *sub_10019AA0() = 0;
+	virtual void *sub_10019AB0() = 0;
+	virtual void *sub_10019AC0() = 0;
+	virtual void *sub_100169B0() = 0;
+	virtual void *sub_10016B70() = 0;
+	virtual void *sub_10015790() = 0;
+	virtual void *sub_10019B00() = 0;
+	virtual void *sub_10019B10() = 0;
+	virtual void *sub_10019B20() = 0;
+	virtual void *sub_10019B30() = 0;
+	virtual void *sub_10019B40() = 0;
+	virtual void *sub_10016450() = 0;
+	virtual void *nullsub_193() = 0;
+	virtual void *sub_10015840() = 0;
+	virtual void *nullsub_194() = 0;
+	virtual void *nullsub_195() = 0;
+	virtual void *sub_10019B60() = 0;
+	virtual void *sub_10015850() = 0;
+	virtual void *sub_10015860() = 0;
+	virtual void *sub_10019B70() = 0;
+	virtual void *sub_10019B80() = 0;
+	virtual void *sub_10019B90() = 0;
+	virtual void *sub_100151C0() = 0;
+	virtual void *sub_100151E0() = 0;
+	virtual void *sub_10015200() = 0;
+	virtual void *sub_10015240() = 0;
+	virtual void *sub_10015260() = 0;
+	virtual void *sub_10015280() = 0;
+	virtual void *sub_100152A0() = 0;
+	virtual void *sub_10015310() = 0;
+	virtual void *sub_10015330() = 0;
+	virtual void *sub_10015350() = 0;
+	virtual void *sub_10015370() = 0;
+	virtual int GetSlot() = 0;
+	virtual int GetPosition() = 0;
+	virtual char *GetName() = 0;
+	virtual char *GetPrintName() = 0;
+	virtual char *GetShootSound(int index) = 0;
+	virtual void *sub_10015580() = 0;
+	virtual void *sub_100152C0() = 0;
+	virtual void *sub_100152F0() = 0;
+	virtual void *sub_100152E0() = 0;
+	virtual void *nullsub_196() = 0;
+	virtual void *sub_10015190() = 0;
+	virtual void *sub_10019CD0() = 0;
+	virtual void *sub_10019CE0() = 0;
+	virtual void *sub_100153F0() = 0;
+	virtual void *sub_10015410() = 0;
+	virtual void *sub_10015430() = 0;
+	virtual void *sub_10015450() = 0;
+	virtual void *sub_10015470() = 0;
+	virtual void *sub_100154D0() = 0;
+	virtual void *sub_100154F0() = 0;
+	virtual void *sub_10015510() = 0;
+	virtual void *sub_10015530() = 0;
+	virtual void *sub_10015490() = 0;
+	virtual void *sub_100154B0() = 0;
+	virtual void *sub_10015870() = 0;
+	virtual void *sub_10019BB0() = 0;
+	virtual void *sub_10019BC0() = 0;
+	virtual void *sub_100157B0() = 0;
+	virtual void *sub_100157C0() = 0;
+	virtual void *sub_10019BD0() = 0;
+	virtual void *sub_10040C60() = 0;
+	virtual void *nullsub_197() = 0;
+	virtual void *sub_10040E80() = 0;
+	virtual void *sub_10019BE0() = 0;
+	virtual void *sub_10040CA0() = 0;
+	virtual void *sub_10040FF0() = 0;
+	virtual void *sub_10040CF0() = 0;
+	virtual void *nullsub_198() = 0;
+	virtual void *nullsub_199() = 0;
+	virtual void *nullsub_200() = 0;
+	virtual void *fn0() = 0;
+	virtual void *sub_10019C30() = 0;
+	virtual void *nullsub_201() = 0;
+	virtual void *sub_10040E70() = 0;
+	virtual void *sub_10041020() = 0;
+	virtual void *nullsub_202() = 0;
+	virtual void *sub_10019C60() = 0;
+	virtual void *sub_10019C70() = 0;
+	virtual void *sub_10019C80() = 0;
+	virtual void HideThink() = 0;
+	virtual void *nullsub_203() = 0;
+	virtual void *nullsub_204() = 0;
+};
+
+class C_WeaponCSBase : public C_BaseCombatWeapon
+{
+public:
+	virtual ~C_WeaponCSBase() = 0;
+	virtual bool unknown0() = 0;
+	virtual bool IsHelpingHandExtended() = 0;
+	virtual void *sub_102316A0() = 0;
+	virtual char IsAttacking() = 0;
+	virtual void *unknown_libname_20() = 0;
+	virtual void *sub_10231290() = 0;
+	virtual void *sub_10230AB0() = 0;
+	virtual void *sub_102314E0() = 0;
+	virtual int IsAwp() = 0;
+	virtual bool CanZoom() = 0;
+	virtual bool HasScope() = 0;
+	virtual void *CycleZoom() = 0;
+	virtual void *sub_10231AC0() = 0;
+	virtual int GetWeaponID() = 0;
+	virtual void *sub_10230B00() = 0;
+	virtual void *sub_102325B0() = 0;
+	virtual void *sub_10230B10() = 0;
+	virtual void *sub_10230B20() = 0;
+	virtual void *sub_10231F60() = 0;
+	virtual void *sub_10231BE0() = 0;
+	virtual void *sub_10231760() = 0;
+	virtual void *sub_10231740() = 0;
+	virtual void *sub_10230B30() = 0;
+	virtual void *sub_10230B40() = 0;
+	virtual void *sub_10230B50() = 0;
+	virtual void *sub_10231860() = 0;
+	virtual void *sub_10231880() = 0;
+	virtual void *sub_10230B70() = 0;
+	virtual void *sub_102315E0() = 0;
+	virtual void *sub_10230BC0() = 0;
+	virtual void *sub_102315D0() = 0;
+	virtual void *sub_102318A0() = 0;
+	virtual void *sub_10230B80() = 0;
+	virtual void *sub_10230B90() = 0;
+	virtual void *sub_10230BA0() = 0;
+	virtual void *sub_10230BB0() = 0;
+};
+
 
 class CBaseEdict
 {

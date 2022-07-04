@@ -226,7 +226,7 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 	tEntindex oEntindex = (tEntindex)(m_Game->m_Offsets->CBaseEntity_entindex.address);
 
 	IServerUnknown * pUnknown = player->m_pUnk;
-	CBasePlayer *pPlayer = (CBasePlayer*)pUnknown->GetBaseEntity();
+	C_BasePlayer *pPlayer = (C_BasePlayer*)pUnknown->GetBaseEntity();
 
 	int index = oEntindex(pPlayer);
 	m_Game->m_CurrentUsercmdID = index;
