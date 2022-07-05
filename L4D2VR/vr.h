@@ -62,8 +62,10 @@ public:
 	Vector m_RightControllerForward;
 	Vector m_RightControllerRight;
 	Vector m_RightControllerUp;
-	Vector m_RightControllerForwardCorrected;
-	Vector m_RightControllerUpCorrected;
+
+	Vector m_ViewmodelForward;
+	Vector m_ViewmodelRight;
+	Vector m_ViewmodelUp;
 
 	Vector m_HmdPosAbs = { 0,0,0 };
 	Vector m_HmdPosAbsPrev = { 0,0,0 };
@@ -84,6 +86,9 @@ public:
 	QAngle m_LeftControllerAngAbs;
 	Vector m_RightControllerPosAbs;											
 	QAngle m_RightControllerAngAbs;
+
+	Vector m_ViewmodelPosOffset;
+	QAngle m_ViewmodelAngOffset;
 
 	float m_Ipd;																	
 	float m_EyeZ;

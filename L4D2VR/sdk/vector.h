@@ -652,6 +652,12 @@ FORCEINLINE  Vector &Vector::operator+=(const Vector &v)
 	return *this;
 }
 
+FORCEINLINE  Vector &Vector::operator-=(const Vector &v)
+{
+	x -= v.x; y -= v.y; z -= v.z;
+	return *this;
+}
+
 inline Vector Vector::operator-(const Vector &v) const
 {
 	Vector res;
@@ -726,6 +732,17 @@ inline vec_t VectorNormalize(Vector &v)
 		v.x = v.y = 0.0f; v.z = 1.0f;
 	}
 	return l;
+}
+
+inline Vector VectorRotate(Vector &v, Vector &k, float degrees)
+{
+	// Rodrigues rotation
+	float radians = degrees * 3.14159265 / 180;
+
+	Vector crossProduct;
+	CrossProduct(k, v, crossProduct);
+
+	return v*cos(radians) + crossProduct * sin(radians) + k * DotProduct(k,v) * (1-cos(radians));
 }
 
 inline void VectorPivotXY(Vector &point, const Vector &pivot, float degrees)

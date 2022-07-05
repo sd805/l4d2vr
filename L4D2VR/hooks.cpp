@@ -192,8 +192,8 @@ int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	// Server host
 	if (m_VR->m_IsVREnabled && playerId == m_Game->m_EngineClient->GetLocalPlayer())
 	{
-		vecNewOrigin = m_VR->GetRecommendedViewmodelAbsPos();
-		vecNewAngles = m_VR->GetRecommendedViewmodelAbsAngle();
+		vecNewOrigin = m_VR->GetRightControllerAbsPos();
+		vecNewAngles = m_VR->GetRightControllerAbsAngle();
 	}
 	// Clients
 	else if (m_Game->m_PlayersVRInfo[playerId].isUsingVR)
@@ -212,8 +212,8 @@ int Hooks::dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	
 	if (m_VR->m_IsVREnabled && playerId == m_Game->m_EngineClient->GetLocalPlayer())
 	{
-		vecNewOrigin = m_VR->GetRecommendedViewmodelAbsPos();
-		vecNewAngles = m_VR->GetRecommendedViewmodelAbsAngle();
+		vecNewOrigin = m_VR->GetRightControllerAbsPos();
+		vecNewAngles = m_VR->GetRightControllerAbsAngle();
 	}
 
 	return hkClientFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
@@ -284,11 +284,11 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		// Signal to the server that this CUserCmd has VR info
 		to->tick_count *= -1;
 
-		QAngle controllerAngles = m_VR->GetRecommendedViewmodelAbsAngle();
+		QAngle controllerAngles = m_VR->GetRightControllerAbsAngle();
 		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
 		to->mousedy = controllerAngles.y * 10;
 
-		Vector controllerPos = m_VR->GetRecommendedViewmodelAbsPos();
+		Vector controllerPos = m_VR->GetRightControllerAbsPos();
 		to->viewangles.z = controllerPos.x;
 		to->upmove = controllerPos.y;
 

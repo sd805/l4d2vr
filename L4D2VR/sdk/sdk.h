@@ -5,8 +5,15 @@
 #include <math.h>
 #include "usercmd.h"
 #include "material.h"
+#include <unordered_map>
 
 class C_BaseCombatWeapon;
+
+struct PositionAngle
+{
+	Vector position;
+	QAngle angle;
+};
 
 class IClientEntityList
 {
@@ -1515,114 +1522,6 @@ public:
 	virtual C_BaseCombatWeapon *GetActiveWeapon() = 0;
 };
 
-class C_BasePlayer : public C_BaseCombatCharacter
-{
-public:
-	virtual ~C_BasePlayer() = 0;
-	virtual void *sub_10021E00() = 0;
-	virtual void *nullsub_240() = 0;
-	virtual void *sub_10021980() = 0;
-	virtual void *CalcViewModelView() = 0;
-	virtual void *sub_1001F0F0() = 0;
-	virtual void *sub_10069800() = 0;
-	virtual void *sub_1001F290() = 0;
-	virtual void *sub_1001F270() = 0;
-	virtual void *sub_1001ED40() = 0;
-	virtual void *nullsub_241() = 0;
-	virtual void *sub_100648E0() = 0;
-	virtual void *sub_10065CB0() = 0;
-	virtual void *sub_1001FB30() = 0;
-	virtual void *nullsub_242() = 0;
-	virtual void *sub_100636B0() = 0;
-	virtual void *sub_10069820() = 0;
-	virtual void *sub_100211C0() = 0;
-	virtual void *sub_100636F0() = 0;
-	virtual void *nullsub_243() = 0;
-	virtual void *nullsub_244() = 0;
-	virtual void *sub_10063CC0() = 0;
-	virtual void *sub_10063C70() = 0;
-	virtual void *sub_10069880() = 0;
-	virtual void *sub_10063810() = 0;
-	virtual void *nullsub_245() = 0;
-	virtual void *sub_10069890() = 0;
-	virtual void *sub_100698A0() = 0;
-	virtual void *sub_100698B0() = 0;
-	virtual void *sub_100698C0() = 0;
-	virtual void *sub_100698D0() = 0;
-	virtual void *sub_100EC8B0() = 0;
-	virtual void *sub_10069A40() = 0;
-	virtual void *sub_100634D0() = 0;
-	virtual void *sub_10067B70() = 0;
-	virtual void *sub_100698E0() = 0;
-	virtual void *sub_100698F0() = 0;
-	virtual void *sub_10069900() = 0;
-	virtual void *sub_10063540() = 0;
-	virtual void *sub_10063490() = 0;
-	virtual void *sub_1001F360() = 0;
-	virtual void *sub_10020D90() = 0;
-	virtual void *sub_10063840() = 0;
-	virtual void *sub_10069170() = 0;
-	virtual void *sub_10064530() = 0;
-	virtual void *sub_1001FFF0() = 0;
-	virtual void *sub_10020110() = 0;
-	virtual void *sub_1001EE20() = 0;
-	virtual void *sub_1001F940() = 0;
-	virtual void *sub_10020F90() = 0;
-	virtual void *sub_10069940() = 0;
-	virtual void *sub_1001EE50() = 0;
-	virtual void *sub_10069A50() = 0;
-	virtual void *sub_1001EF00() = 0;
-	virtual void *sub_1001EE70() = 0;
-	virtual void *sub_100672A0() = 0;
-	virtual void *sub_100674C0() = 0;
-	virtual void *sub_1001FAC0() = 0;
-	virtual void *sub_10069950() = 0;
-	virtual void *sub_10021880() = 0;
-	virtual void *nullsub_246() = 0;
-	virtual char *GetCharacterDisplayName() = 0;
-	virtual void *sub_1001F3A0() = 0;
-	virtual void *sub_1001F430() = 0;
-	virtual void *sub_10065850() = 0;
-	virtual void *nullsub_247() = 0;
-	virtual void *sub_10064940() = 0;
-	virtual void *sub_10063700() = 0;
-	virtual void *sub_100692A0() = 0;
-	virtual void *sub_1001F4C0() = 0;
-	virtual void *sub_10022020() = 0;
-	virtual void *sub_1001ECB0() = 0;
-	virtual void *sub_1001F850() = 0;
-	virtual void *sub_1001F8B0() = 0;
-	virtual void *nullsub_248() = 0;
-	virtual void *sub_100699B0() = 0;
-	virtual void *sub_100699C0() = 0;
-	virtual void *sub_10063820() = 0;
-	virtual void *sub_100699D0() = 0;
-	virtual void *nullsub_249() = 0;
-	virtual void *sub_1001F020() = 0;
-	virtual void *sub_10066250() = 0;
-	virtual void *sub_10066350() = 0;
-	virtual void *sub_10066C00() = 0;
-	virtual void *sub_10066EB0() = 0;
-	virtual void *sub_10064130() = 0;
-	virtual void *sub_10066780() = 0;
-	virtual void *sub_100633E0() = 0;
-	virtual void *sub_10063410() = 0;
-	virtual void *sub_100699F0() = 0;
-	virtual void *sub_10069A00() = 0;
-	virtual void *sub_10069A10() = 0;
-	virtual void *sub_10069A20() = 0;
-	virtual void *sub_10069A30() = 0;
-
-
-	char pad_0000[252]; //0x0004
-	Vector m_vecVelocity; //0x0100
-	char pad_010C[56]; //0x010C
-	int m_hGroundEntity; //0x0144
-	char pad_0148[4872]; //0x0148
-	int m_iObserverMode; //0x1450
-}; //Size: 0x1454
-static_assert(sizeof(C_BasePlayer) == 0x1454);
-
 
 
 class C_BaseCombatWeapon : public C_BaseAnimating
@@ -1632,7 +1531,7 @@ public:
 	virtual void *sub_10019980() = 0;
 	virtual void *sub_10019990() = 0;
 	virtual void *sub_100199A0() = 0;
-	virtual void Equip(void* pOwner) = 0;
+	virtual void Equip(void *pOwner) = 0;
 	virtual void *nullsub_45() = 0;
 	virtual void *sub_10017850() = 0;
 	virtual void *sub_100155A0() = 0;
@@ -1786,6 +1685,66 @@ public:
 class C_WeaponCSBase : public C_BaseCombatWeapon
 {
 public:
+	enum WeaponID
+	{
+		NONE,
+		PISTOL,
+		UZI,
+		PUMPSHOTGUN,
+		AUTOSHOTGUN,
+		M16A1,
+		HUNTING_RIFLE,
+		MAC10,
+		SHOTGUN_CHROME,
+		SCAR,
+		SNIPER_MILITARY,
+		SPAS,
+		FIRST_AID_KIT,
+		MOLOTOV,
+		PIPE_BOMB,
+		PAIN_PILLS,
+		GASCAN,
+		PROPANE_TANK,
+		OXYGEN_TANK,
+		MELEE,
+		CHAINSAW,
+		GRENADE_LAUNCHER,
+		AMMO_PACK,
+		ADRENALINE,
+		DEFIBRILLATOR,
+		VOMITJAR,
+		AK47,
+		GNOME_CHOMPSKI,
+		COLA_BOTTLES,
+		FIREWORKS_BOX,
+		INCENDIARY_AMMO,
+		FRAG_AMMO,
+		MAGNUM,
+		MP5,
+		SG552,
+		AWP,
+		SCOUT,
+		M60,
+		TANK_CLAW,
+		HUNTER_CLAW,
+		CHARGER_CLAW,
+		BOOMER_CLAW,
+		SMOKER_CLAW,
+		SPITTER_CLAW,
+		JOCKEY_CLAW,
+		MACHINEGUN,
+		VOMIT,
+		SPLAT,
+		POUNCE,
+		LOUNGE,
+		PULL,
+		CHOKE,
+		ROCK,
+		PHYSICS,
+		AMMO,
+		UPGRADE_ITEM
+	};
+
 	virtual ~C_WeaponCSBase() = 0;
 	virtual bool unknown0() = 0;
 	virtual bool IsHelpingHandExtended() = 0;
@@ -1800,7 +1759,7 @@ public:
 	virtual bool HasScope() = 0;
 	virtual void *CycleZoom() = 0;
 	virtual void *sub_10231AC0() = 0;
-	virtual int GetWeaponID() = 0;
+	virtual WeaponID GetWeaponID() = 0;
 	virtual void *sub_10230B00() = 0;
 	virtual void *sub_102325B0() = 0;
 	virtual void *sub_10230B10() = 0;
@@ -1823,7 +1782,159 @@ public:
 	virtual void *sub_10230B90() = 0;
 	virtual void *sub_10230BA0() = 0;
 	virtual void *sub_10230BB0() = 0;
+
+	static inline std::unordered_map<WeaponID, PositionAngle> viewmodelOffsets
+	{
+		{ NONE,				{{20,3,0}, {0,0,0}} },
+		{ PISTOL,			{{20.5, 5, -2}, {-1, 0, 0}} },
+		{ UZI,				{{21.5, 4, -3.5}, {-1, 0.5, 0}} },
+		{ PUMPSHOTGUN,		{{14.5, 3.5, -1.5}, {-0.5, 0, 0}} },
+		{ AUTOSHOTGUN,		{{14.5, 3.5, -4}, {-1.5, -2, 0}} },
+		{ M16A1,			{{18, 5.5, -5.5}, {-1.5, -2, 0}} },
+		{ HUNTING_RIFLE,	{{15, 4, -4}, {-4.5, -5, 0}} },
+		{ MAC10,			{{22.5, 5, -4.5}, {-1, 0, 0}} },
+		{ SHOTGUN_CHROME,	{{14.5, 4, -2.5}, {-1.5, -1, 0}} },
+		{ SCAR,				{{18.5, 5, -4.5}, {-0.5, 0, 0}} },
+		{ SNIPER_MILITARY,  {{18.5, 5, -5}, {0, -1.5, 0}} },
+		{ SPAS,				{{16, 5, -4.5}, {-1.5, -2, 0}} },
+		{ AK47,				{{17.5, 5.5, -4.5}, {-0.5, 0, 0}} },
+		{ MAGNUM,			{{22, 5, -2.5}, {-0.5, 0, 0}} },
+		{ MP5,				{{18.5, 4, -4.5}, {-0.5, 0, 0}} },
+		{ SG552,			{{20, 5.5, -4.5}, {-0.5, 0, 0}} },
+		{ AWP,				{{21, 5.5, -5.5}, {-0.5, 0, 0}} },
+		{ SCOUT,			{{19.5, 5, -3.5}, {-0.5, 0, 0}} },
+		{ M60,				{{19, 5.5, -7}, {0, 0, 0}} },
+		{ GRENADE_LAUNCHER, {{14, 5, -2}, {-1, 0, 0}} }
+	};
+
+	PositionAngle GetViewmodelOffset()
+	{
+		WeaponID id = GetWeaponID();
+
+		if (viewmodelOffsets.find(id) == viewmodelOffsets.end())
+			return viewmodelOffsets[NONE];
+
+		return viewmodelOffsets[id];
+	}
 };
+
+class C_BasePlayer : public C_BaseCombatCharacter
+{
+public:
+	virtual ~C_BasePlayer() = 0;
+	virtual void *sub_10021E00() = 0;
+	virtual void *nullsub_240() = 0;
+	virtual void *sub_10021980() = 0;
+	virtual void *CalcViewModelView() = 0;
+	virtual void *sub_1001F0F0() = 0;
+	virtual void *sub_10069800() = 0;
+	virtual void *sub_1001F290() = 0;
+	virtual void *sub_1001F270() = 0;
+	virtual void *sub_1001ED40() = 0;
+	virtual void *nullsub_241() = 0;
+	virtual void *sub_100648E0() = 0;
+	virtual void *sub_10065CB0() = 0;
+	virtual void *sub_1001FB30() = 0;
+	virtual void *nullsub_242() = 0;
+	virtual void *sub_100636B0() = 0;
+	virtual void *sub_10069820() = 0;
+	virtual void *sub_100211C0() = 0;
+	virtual void *sub_100636F0() = 0;
+	virtual void *nullsub_243() = 0;
+	virtual void *nullsub_244() = 0;
+	virtual void *sub_10063CC0() = 0;
+	virtual void *sub_10063C70() = 0;
+	virtual void *sub_10069880() = 0;
+	virtual void *sub_10063810() = 0;
+	virtual void *nullsub_245() = 0;
+	virtual void *sub_10069890() = 0;
+	virtual void *sub_100698A0() = 0;
+	virtual void *sub_100698B0() = 0;
+	virtual void *sub_100698C0() = 0;
+	virtual void *sub_100698D0() = 0;
+	virtual void *sub_100EC8B0() = 0;
+	virtual void *sub_10069A40() = 0;
+	virtual void *sub_100634D0() = 0;
+	virtual void *sub_10067B70() = 0;
+	virtual void *sub_100698E0() = 0;
+	virtual void *sub_100698F0() = 0;
+	virtual void *sub_10069900() = 0;
+	virtual void *sub_10063540() = 0;
+	virtual void *sub_10063490() = 0;
+	virtual void *sub_1001F360() = 0;
+	virtual void *sub_10020D90() = 0;
+	virtual void *sub_10063840() = 0;
+	virtual void *sub_10069170() = 0;
+	virtual void *sub_10064530() = 0;
+	virtual void *sub_1001FFF0() = 0;
+	virtual void *sub_10020110() = 0;
+	virtual void *sub_1001EE20() = 0;
+	virtual void *sub_1001F940() = 0;
+	virtual void *sub_10020F90() = 0;
+	virtual void *sub_10069940() = 0;
+	virtual void *sub_1001EE50() = 0;
+	virtual void *sub_10069A50() = 0;
+	virtual void *sub_1001EF00() = 0;
+	virtual void *sub_1001EE70() = 0;
+	virtual void *sub_100672A0() = 0;
+	virtual void *sub_100674C0() = 0;
+	virtual void *sub_1001FAC0() = 0;
+	virtual void *sub_10069950() = 0;
+	virtual void *sub_10021880() = 0;
+	virtual void *nullsub_246() = 0;
+	virtual char *GetCharacterDisplayName() = 0;
+	virtual void *sub_1001F3A0() = 0;
+	virtual void *sub_1001F430() = 0;
+	virtual void *sub_10065850() = 0;
+	virtual void *nullsub_247() = 0;
+	virtual void *sub_10064940() = 0;
+	virtual void *sub_10063700() = 0;
+	virtual void *sub_100692A0() = 0;
+	virtual void *sub_1001F4C0() = 0;
+	virtual void *sub_10022020() = 0;
+	virtual void *sub_1001ECB0() = 0;
+	virtual void *sub_1001F850() = 0;
+	virtual void *sub_1001F8B0() = 0;
+	virtual void *nullsub_248() = 0;
+	virtual void *sub_100699B0() = 0;
+	virtual void *sub_100699C0() = 0;
+	virtual void *sub_10063820() = 0;
+	virtual void *sub_100699D0() = 0;
+	virtual void *nullsub_249() = 0;
+	virtual void *sub_1001F020() = 0;
+	virtual void *sub_10066250() = 0;
+	virtual void *sub_10066350() = 0;
+	virtual void *sub_10066C00() = 0;
+	virtual void *sub_10066EB0() = 0;
+	virtual void *sub_10064130() = 0;
+	virtual void *sub_10066780() = 0;
+	virtual void *sub_100633E0() = 0;
+	virtual void *sub_10063410() = 0;
+	virtual void *sub_100699F0() = 0;
+	virtual void *sub_10069A00() = 0;
+	virtual void *sub_10069A10() = 0;
+	virtual void *sub_10069A20() = 0;
+	virtual void *sub_10069A30() = 0;
+
+	PositionAngle GetViewmodelOffset()
+	{
+		C_WeaponCSBase *weapon = (C_WeaponCSBase *)GetActiveWeapon();
+		if (!weapon)
+			return PositionAngle{ {0,0,0}, {0,0,0} };
+
+		return weapon->GetViewmodelOffset();
+	}
+
+	char pad_0000[252]; //0x0004
+	Vector m_vecVelocity; //0x0100
+	char pad_010C[56]; //0x010C
+	int m_hGroundEntity; //0x0144
+	char pad_0148[4872]; //0x0148
+	int m_iObserverMode; //0x1450
+}; //Size: 0x1454
+static_assert(sizeof(C_BasePlayer) == 0x1454);
+
+
 
 
 class CBaseEdict

@@ -470,13 +470,20 @@ Vector VR::GetRightControllerAbsPos()
 
 Vector VR::GetRecommendedViewmodelAbsPos()
 {
-    return GetRightControllerAbsPos() - (m_RightControllerForwardCorrected * 20) - (m_RightControllerRight * 3);
+    Vector viewmodelPos = GetRightControllerAbsPos();
+    viewmodelPos -= m_ViewmodelForward * m_ViewmodelPosOffset.x;
+    viewmodelPos -= m_ViewmodelRight * m_ViewmodelPosOffset.y;
+    viewmodelPos -= m_ViewmodelUp * m_ViewmodelPosOffset.z;
+
+    return viewmodelPos;
 }
 
 QAngle VR::GetRecommendedViewmodelAbsAngle()
 {
     QAngle result{};
-    QAngle::VectorAngles(m_RightControllerForwardCorrected, -m_RightControllerUpCorrected, result);
+
+    QAngle::VectorAngles(m_ViewmodelForward, m_ViewmodelUp, result);
+
     return result;
 }
 
@@ -549,6 +556,7 @@ void VR::UpdateTracking(Vector viewOrigin)
         m_HmdPosAbs = m_CameraAnchor - Vector(0, 0, 64) + m_HmdPosLocalInWorld;
     }
 
+    // Reset camera if it somehow gets too far
     m_SetupOriginToHMD = m_HmdPosAbs - m_SetupOrigin;
     if (VectorLength(m_SetupOriginToHMD) > 150)
         ResetPosition();
@@ -575,29 +583,40 @@ void VR::UpdateTracking(Vector viewOrigin)
     // When using stick turning, pivot the controllers around the HMD
     VectorPivotXY(rightControllerPosCorrected, hmdPosCorrected, m_RotationOffset);
 
+    Vector rightControllerPosLocalInWorld = rightControllerPosCorrected * m_VRScale;
+
+    m_RightControllerPosAbs = m_CameraAnchor - Vector(0, 0, 64) + rightControllerPosLocalInWorld;
+
     rightControllerAngLocal.y += m_RotationOffset;
     // Wrap angle from -180 to 180
     rightControllerAngLocal.y -= 360 * std::floor((rightControllerAngLocal.y + 180) / 360);
 
     QAngle::AngleVectors(leftControllerAngLocal, &m_LeftControllerForward, &m_LeftControllerRight, &m_LeftControllerUp);			
-    QAngle::AngleVectors(rightControllerAngLocal, &m_RightControllerForward, &m_RightControllerRight, &m_RightControllerUp);			
+    QAngle::AngleVectors(rightControllerAngLocal, &m_RightControllerForward, &m_RightControllerRight, &m_RightControllerUp);	
 
-    Vector leftControllerPosLocalInWorld = leftControllerPosLocal * m_VRScale;
-    Vector rightControllerPosLocalInWorld = rightControllerPosCorrected * m_VRScale;
-
-    m_LeftControllerPosAbs = m_CameraAnchor - Vector(0, 0, 64) + leftControllerPosLocalInWorld;
-    m_RightControllerPosAbs = m_CameraAnchor - Vector(0, 0, 64) + rightControllerPosLocalInWorld;
+    // Adjust controller angle 45 degrees downward
+    m_RightControllerForward = VectorRotate(m_RightControllerForward, m_RightControllerRight, -45.0);
+    m_RightControllerUp = VectorRotate(m_RightControllerUp, m_RightControllerRight, -45.0);
 
     // controller angles
-    m_LeftControllerAngAbs = leftControllerAngLocal;
-    m_RightControllerAngAbs = rightControllerAngLocal;
+    QAngle::VectorAngles(m_RightControllerForward, m_RightControllerUp, m_RightControllerAngAbs);
 
-    // adjust controller angle 45 degrees down from its up vector
-    Vector down = -m_RightControllerUp;
-    m_RightControllerForwardCorrected = (m_RightControllerForward + down) / 2;
-    VectorNormalize(m_RightControllerForwardCorrected);
-    CrossProduct(m_RightControllerForwardCorrected, m_RightControllerRight, m_RightControllerUpCorrected);
+    PositionAngle viewmodelOffset = localPlayer->GetViewmodelOffset();
+    m_ViewmodelPosOffset = viewmodelOffset.position;
+    m_ViewmodelAngOffset = viewmodelOffset.angle;
 
+    m_ViewmodelForward = m_RightControllerForward;
+    m_ViewmodelUp = m_RightControllerUp;
+    m_ViewmodelRight = m_RightControllerRight;
+
+    // Viewmodel yaw offset
+    m_ViewmodelForward = VectorRotate(m_ViewmodelForward, m_ViewmodelUp, m_ViewmodelAngOffset.y);
+    m_ViewmodelRight = VectorRotate(m_ViewmodelRight, m_ViewmodelUp, m_ViewmodelAngOffset.y);
+
+    // Viewmodel pitch offset
+    m_ViewmodelForward = VectorRotate(m_ViewmodelForward, m_ViewmodelRight, m_ViewmodelAngOffset.x);
+    m_ViewmodelUp = VectorRotate(m_ViewmodelUp, m_ViewmodelRight, m_ViewmodelAngOffset.x);
+    
     // Process action input
     ProcessInput();
 }
