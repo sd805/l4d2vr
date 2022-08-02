@@ -549,7 +549,7 @@ void VR::UpdateTracking(Vector viewOrigin)
     ray.Init(m_SetupOrigin, extendedHmdPos);
 
     m_Game->m_EngineTrace->TraceRay(ray, STANDARD_TRACE_MASK, &tracefilter, &trace);
-    if (trace.fraction < 1)
+    if (trace.fraction < 1 && trace.fraction > 0)
     {
         Vector distanceInsideWall = trace.endpos - extendedHmdPos;
         m_CameraAnchor += distanceInsideWall;

@@ -16,19 +16,23 @@ class Game;
 class Offsets;
 class VR;
 class Hooks;
+class C_BasePlayer;
 
 inline Game *g_Game;
 
 struct Player
 {
+    C_BasePlayer *pPlayer;
     bool isUsingVR;
     QAngle controllerAngle;
     Vector controllerPos;
+    bool isMeleeing;
 
     Player()
         : isUsingVR(false),
         controllerAngle({ 0,0,0 }),
-        controllerPos({ 0,0,0 })
+        controllerPos({ 0,0,0 }),
+        isMeleeing(false)
     {}
 };
 

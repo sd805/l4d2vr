@@ -6,34 +6,6 @@
 #include "vr.h"
 #include "sdk.h"
 
-// testing random hooks
-// TestMeleeSwingCollision: game.g_client + 0x30C040
-typedef void(__thiscall *TestMeleeSwingCollision)(void *thisptr, Vector const &vec);
-TestMeleeSwingCollision pTestMeleeSwingCollision = nullptr;
-LPVOID TestMeleeSwingCollisionTarget;
-void __fastcall TestMeleeSwingCollisionHook(void *ecx, void *edx, Vector const &vec)
-{
-    return pTestMeleeSwingCollision(ecx, vec);
-}
-bool hookTestMeleeSwingCollision(LPVOID tmsAddr)
-{
-    TestMeleeSwingCollisionTarget = tmsAddr;
-    if (MH_CreateHook(TestMeleeSwingCollisionTarget, &TestMeleeSwingCollisionHook, reinterpret_cast<LPVOID *>(&pTestMeleeSwingCollision)) != MH_OK)
-    {
-        Game::errorMsg("Failed to create TestMeleeSwingCollision hook");
-        return 1;
-    }
-
-    if (MH_EnableHook(TestMeleeSwingCollisionTarget) != MH_OK)
-    {
-        Game::errorMsg("Failed to enable TestMeleeSwingCollision hook");
-        return 1;
-    }
-
-    std::cout << "Hooked TestMeleeSwingCollision" << std::endl;
-}
-
-
 DWORD WINAPI InitL4D2VR(HMODULE hModule)
 {
 #ifdef _DEBUG

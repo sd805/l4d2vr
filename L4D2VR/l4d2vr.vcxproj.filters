@@ -807,6 +807,9 @@
     <ClInclude Include="..\dxvk\src\dxvk\dxvk_pipecompiler.h">
       <Filter>dxvk</Filter>
     </ClInclude>
+    <ClInclude Include="sdk\sdk_server.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">

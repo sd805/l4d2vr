@@ -2,6 +2,7 @@
 #include "game.h"
 #include "texture.h"
 #include "sdk.h"
+#include "sdk_server.h"
 #include "vr.h"
 #include "offsets.h"
 #include <iostream>
@@ -30,6 +31,13 @@ Hooks::Hooks(Game *game)
 	hkViewport.enableHook();
 	hkGetViewport.enableHook();
 	hkCreateMove.enableHook();
+	hkTestMeleeSwingCollisionClient.enableHook();
+	hkTestMeleeSwingCollisionServer.enableHook();
+	hkDoMeleeSwingServer.enableHook();
+	hkStartMeleeSwingServer.enableHook();
+	hkPrimaryAttackServer.enableHook();
+	hkItemPostFrameServer.enableHook();
+	hkGetPrimaryAttackActivity.enableHook();
 }
 
 Hooks::~Hooks()
@@ -78,6 +86,27 @@ int Hooks::initSourceHooks()
 
 	LPVOID GetViewportAddr = (LPVOID)(m_Game->m_Offsets->GetViewport.address);
 	hkGetViewport.createHook(GetViewportAddr, &dGetViewport);
+
+	LPVOID MeleeSwingClientAddr = (LPVOID)(m_Game->m_Offsets->TestMeleeSwingClient.address);
+	hkTestMeleeSwingCollisionClient.createHook(MeleeSwingClientAddr, &dTestMeleeSwingCollisionClient);
+
+	LPVOID MeleeSwingServerAddr = (LPVOID)(m_Game->m_Offsets->TestMeleeSwingServer.address);
+	hkTestMeleeSwingCollisionServer.createHook(MeleeSwingServerAddr, &dTestMeleeSwingCollisionServer);
+
+	LPVOID DoMeleeSwingServerAddr = (LPVOID)(m_Game->m_Offsets->DoMeleeSwingServer.address);
+	hkDoMeleeSwingServer.createHook(DoMeleeSwingServerAddr, &dDoMeleeSwingServer);
+
+	LPVOID StartMeleeSwingServerAddr = (LPVOID)(m_Game->m_Offsets->StartMeleeSwingServer.address);
+	hkStartMeleeSwingServer.createHook(StartMeleeSwingServerAddr, &dStartMeleeSwingServer);
+
+	LPVOID PrimaryAttackServerAddr = (LPVOID)(m_Game->m_Offsets->PrimaryAttackServer.address);
+	hkPrimaryAttackServer.createHook(PrimaryAttackServerAddr, &dPrimaryAttackServer);
+
+	LPVOID ItemPostFrameServerAddr = (LPVOID)(m_Game->m_Offsets->ItemPostFrameServer.address);
+	hkItemPostFrameServer.createHook(ItemPostFrameServerAddr, &dItemPostFrameServer);
+
+	LPVOID GetPrimaryAttackActivityAddr = (LPVOID)(m_Game->m_Offsets->GetPrimaryAttackActivity.address);
+	hkGetPrimaryAttackActivity.createHook(GetPrimaryAttackActivityAddr, &dGetPrimaryAttackActivity);
 
 	void *clientMode = nullptr;
 	while (!clientMode)
@@ -219,19 +248,48 @@ int Hooks::dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	return hkClientFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
 }
 
+
 float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused)
 {
 	// Function pointer for CBaseEntity::entindex
 	typedef int(__thiscall *tEntindex)(void *thisptr);
-	tEntindex oEntindex = (tEntindex)(m_Game->m_Offsets->CBaseEntity_entindex.address);
+	static tEntindex oEntindex = (tEntindex)(m_Game->m_Offsets->CBaseEntity_entindex.address);
 
 	IServerUnknown * pUnknown = player->m_pUnk;
-	C_BasePlayer *pPlayer = (C_BasePlayer*)pUnknown->GetBaseEntity();
+	Server_BaseEntity *pPlayer = (Server_BaseEntity*)pUnknown->GetBaseEntity();
 
 	int index = oEntindex(pPlayer);
 	m_Game->m_CurrentUsercmdID = index;
 
-	return hkProcessUsercmds.fOriginal(ecx, player, buf, numcmds, totalcmds, dropped_packets, ignore, paused);
+	float result = hkProcessUsercmds.fOriginal(ecx, player, buf, numcmds, totalcmds, dropped_packets, ignore, paused);
+
+	// check if swinging melee wep
+	if (m_Game->m_PlayersVRInfo[index].isUsingVR && m_Game->m_PlayersVRInfo[index].isMeleeing)
+	{
+		typedef Server_WeaponCSBase *(__thiscall *tGetActiveWep)(void *thisptr);
+		static tGetActiveWep oGetActiveWep = (tGetActiveWep)(m_Game->m_Offsets->GetActiveWeapon.address);
+		Server_WeaponCSBase *curWep = oGetActiveWep(pPlayer);
+		
+		if (curWep)
+		{
+			int wepID = curWep->GetWeaponID();
+			if (wepID == 19)
+			{
+				typedef void *(__thiscall *tGetMeleeWepInfo)(void *thisptr);
+				static tGetMeleeWepInfo oGetMeleeWepInfo = (tGetMeleeWepInfo)(m_Game->m_Offsets->GetMeleeWeaponInfo.address);
+				void *meleeWepInfo = oGetMeleeWepInfo(curWep);
+
+
+				Vector direction = m_Game->m_PlayersVRInfo[index].controllerPos - pPlayer->EyePosition();
+				VectorNormalize(direction);
+
+				m_Game->m_Hooks->hkGetPrimaryAttackActivity.fOriginal(curWep, meleeWepInfo);
+				m_Game->m_Hooks->hkTestMeleeSwingCollisionServer.fOriginal(curWep, direction);
+			}
+		}
+		
+	}
+	return result;
 }
 
 int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
@@ -248,6 +306,16 @@ int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
 		m_Game->m_PlayersVRInfo[i].controllerAngle.y = (float)move->mousedy / 10;
 		m_Game->m_PlayersVRInfo[i].controllerPos.x = move->viewangles.z;
 		m_Game->m_PlayersVRInfo[i].controllerPos.y = move->upmove;
+
+		if (move->command_number < 0)
+		{
+			move->command_number *= -1;
+			m_Game->m_PlayersVRInfo[i].isMeleeing = true;
+		}
+		else
+		{
+			m_Game->m_PlayersVRInfo[i].isMeleeing = false;
+		}
 
 		// Decode viewangles.x
 		int decodedZInt = (move->viewangles.x / 10000);
@@ -284,6 +352,11 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		// Signal to the server that this CUserCmd has VR info
 		to->tick_count *= -1;
 
+		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > .8)
+		{
+			to->command_number *= -1; // Signal to server that melee swing in motion
+		}
+
 		QAngle controllerAngles = m_VR->GetRightControllerAbsAngle();
 		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
 		to->mousedy = controllerAngles.y * 10;
@@ -308,6 +381,8 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		to->tick_count *= -1;
 		to->viewangles.z = 0;
 		to->upmove = 0;
+		if (to->command_number < 0)
+			to->command_number *= -1;
 
 		// Must recalculate checksum for the edited CUserCmd or gunshots will sound
 		// terrible in multiplayer.
@@ -326,14 +401,45 @@ void Hooks::dAdjustEngineViewport(int &x, int &y, int &width, int &height)
 
 void Hooks::dViewport(void *ecx, void *edx, int x, int y, int width, int height)
 {
-	
-	//hkViewport.fOriginal(ecx, x, y, 1800, 1800);
 	hkViewport.fOriginal(ecx, x, y, width, height);
 }
 
 void Hooks::dGetViewport(void *ecx, void *edx, int &x, int &y, int &width, int &height)
 {
-	//int newWidth = 1000;
-	//int newHeight = 1000;
 	hkGetViewport.fOriginal(ecx, x, y, width, height);
+}
+
+int Hooks::dTestMeleeSwingCollisionClient(void *ecx, void *edx, Vector const &vec)
+{
+	return hkTestMeleeSwingCollisionClient.fOriginal(ecx, vec);
+}
+
+int Hooks::dTestMeleeSwingCollisionServer(void *ecx, void *edx, Vector const &vec)
+{
+	return hkTestMeleeSwingCollisionServer.fOriginal(ecx, vec);
+}
+
+void Hooks::dDoMeleeSwingServer(void *ecx, void *edx)
+{
+	return hkDoMeleeSwingServer.fOriginal(ecx);
+}
+
+void Hooks::dStartMeleeSwingServer(void *ecx, void *edx, void *player, bool a3)
+{
+	return hkStartMeleeSwingServer.fOriginal(ecx, player, a3);
+}
+
+int Hooks::dPrimaryAttackServer(void *ecx, void *edx)
+{
+	return hkPrimaryAttackServer.fOriginal(ecx);
+}
+
+void Hooks::dItemPostFrameServer(void *ecx, void *edx)
+{
+	hkItemPostFrameServer.fOriginal(ecx);
+}
+
+int Hooks::dGetPrimaryAttackActivity(void *ecx, void *edx, void *meleeInfo)
+{
+	return hkGetPrimaryAttackActivity.fOriginal(ecx, meleeInfo);
 }

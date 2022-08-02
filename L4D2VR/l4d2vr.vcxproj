@@ -440,6 +440,7 @@
     <ClInclude Include="hooks.h" />
     <ClInclude Include="offsets.h" />
     <ClInclude Include="sdk\checksum_crc.h" />
+    <ClInclude Include="sdk\sdk_server.h" />
     <ClInclude Include="sdk\usercmd.h" />
     <ClInclude Include="sdk\material.h" />
     <ClInclude Include="sdk\sdk.h" />

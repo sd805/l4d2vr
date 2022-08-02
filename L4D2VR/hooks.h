@@ -72,6 +72,12 @@ typedef int(__cdecl *tWriteUsercmd)(void *buf, CUserCmd *to, CUserCmd *from);
 typedef int(__cdecl *tAdjustEngineViewport)(int &x, int &y, int &width, int &height);
 typedef void(__thiscall *tViewport)(void *thisptr, int x, int y, int width, int height);
 typedef void(__thiscall *tGetViewport)(void *thisptr, int &x, int &y, int &width, int &height);
+typedef int(__thiscall *tTestMeleeSwingCollision)(void *thisptr, Vector const &vec);
+typedef void(__thiscall *tDoMeleeSwing)(void *thisptr);
+typedef void(__thiscall *tStartMeleeSwing)(void *thisptr, void* player, bool a3);
+typedef int(__thiscall *tPrimaryAttack)(void *thisptr);
+typedef void(__thiscall *tItemPostFrame)(void *thisptr);
+typedef int(__thiscall *tGetPrimaryAttackActivity)(void *thisptr, void *meleeInfo);
 
 
 class Hooks
@@ -94,6 +100,13 @@ public:
 	static inline Hook<tAdjustEngineViewport> hkAdjustEngineViewport;
 	static inline Hook<tViewport> hkViewport;
 	static inline Hook<tGetViewport> hkGetViewport;
+	static inline Hook<tTestMeleeSwingCollision> hkTestMeleeSwingCollisionClient;
+	static inline Hook<tTestMeleeSwingCollision> hkTestMeleeSwingCollisionServer;
+	static inline Hook<tDoMeleeSwing> hkDoMeleeSwingServer;
+	static inline Hook<tStartMeleeSwing> hkStartMeleeSwingServer;
+	static inline Hook<tPrimaryAttack> hkPrimaryAttackServer;
+	static inline Hook<tItemPostFrame> hkItemPostFrameServer;
+	static inline Hook<tGetPrimaryAttackActivity> hkGetPrimaryAttackActivity;
 
 	Hooks() {};
 	Hooks(Game *game);
@@ -117,4 +130,11 @@ public:
 	static void dAdjustEngineViewport(int &x, int &y, int &width, int &height);
 	static void __fastcall dViewport(void *ecx, void *edx, int x, int y, int width, int height);
 	static void __fastcall dGetViewport(void *ecx, void *edx, int &x, int &y, int &width, int &height);
+	static int __fastcall dTestMeleeSwingCollisionClient(void *ecx, void *edx, Vector const &vec);
+	static int __fastcall dTestMeleeSwingCollisionServer(void *ecx, void *edx, Vector const &vec);
+	static void __fastcall dDoMeleeSwingServer(void *ecx, void *edx);
+	static void __fastcall dStartMeleeSwingServer(void *ecx, void *edx, void *player, bool a3);
+	static int __fastcall dPrimaryAttackServer(void *ecx, void *edx);
+	static void __fastcall dItemPostFrameServer(void *ecx, void *edx);
+	static int __fastcall dGetPrimaryAttackActivity(void *ecx, void *edx, void* meleeInfo);
 };
