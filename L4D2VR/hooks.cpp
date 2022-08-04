@@ -38,6 +38,7 @@ Hooks::Hooks(Game *game)
 	hkPrimaryAttackServer.enableHook();
 	hkItemPostFrameServer.enableHook();
 	hkGetPrimaryAttackActivity.enableHook();
+	hkEyePosition.enableHook();
 }
 
 Hooks::~Hooks()
@@ -108,6 +109,9 @@ int Hooks::initSourceHooks()
 	LPVOID GetPrimaryAttackActivityAddr = (LPVOID)(m_Game->m_Offsets->GetPrimaryAttackActivity.address);
 	hkGetPrimaryAttackActivity.createHook(GetPrimaryAttackActivityAddr, &dGetPrimaryAttackActivity);
 
+	LPVOID EyePositionAddr = (LPVOID)(m_Game->m_Offsets->EyePosition.address);
+	hkEyePosition.createHook(EyePositionAddr, &dEyePosition);
+
 	void *clientMode = nullptr;
 	while (!clientMode)
 	{
@@ -177,7 +181,7 @@ bool __fastcall Hooks::dCreateMove(void *ecx, void *edx, float flInputSampleTime
 	if (!cmd->command_number)
 		return hkCreateMove.fOriginal(ecx, flInputSampleTime, cmd);
 
-	if (m_VR->m_RoomscaleActive)
+	if (m_VR->m_IsVREnabled && m_VR->m_RoomscaleActive)
 	{
 		Vector setupOriginToHMD = m_VR->m_SetupOriginToHMD;
 		setupOriginToHMD.z = 0;
@@ -279,15 +283,18 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 				static tGetMeleeWepInfo oGetMeleeWepInfo = (tGetMeleeWepInfo)(m_Game->m_Offsets->GetMeleeWeaponInfo.address);
 				void *meleeWepInfo = oGetMeleeWepInfo(curWep);
 
-
-				Vector direction = m_Game->m_PlayersVRInfo[index].controllerPos - pPlayer->EyePosition();
-				VectorNormalize(direction);
+				Vector forward, right, up;
+				QAngle::AngleVectors(m_Game->m_PlayersVRInfo[index].controllerAngle, &forward, &right, &up);
+				Vector meleeDirection = VectorRotate(forward, right, 75.0);
+				VectorNormalize(meleeDirection);
 
 				m_Game->m_Hooks->hkGetPrimaryAttackActivity.fOriginal(curWep, meleeWepInfo);
-				m_Game->m_Hooks->hkTestMeleeSwingCollisionServer.fOriginal(curWep, direction);
+
+				m_Game->performingMelee = true;
+				m_Game->m_Hooks->hkTestMeleeSwingCollisionServer.fOriginal(curWep, meleeDirection);
+				m_Game->performingMelee = false;
 			}
 		}
-		
 	}
 	return result;
 }
@@ -301,12 +308,6 @@ int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
 	{
 		move->tick_count *= -1;
 
-		m_Game->m_PlayersVRInfo[i].isUsingVR = true;
-		m_Game->m_PlayersVRInfo[i].controllerAngle.x = (float)move->mousedx / 10;
-		m_Game->m_PlayersVRInfo[i].controllerAngle.y = (float)move->mousedy / 10;
-		m_Game->m_PlayersVRInfo[i].controllerPos.x = move->viewangles.z;
-		m_Game->m_PlayersVRInfo[i].controllerPos.y = move->upmove;
-
 		if (move->command_number < 0)
 		{
 			move->command_number *= -1;
@@ -316,6 +317,17 @@ int Hooks::dReadUsercmd(void *buf, CUserCmd *move, CUserCmd *from)
 		{
 			m_Game->m_PlayersVRInfo[i].isMeleeing = false;
 		}
+
+		m_Game->m_PlayersVRInfo[i].isUsingVR = true;
+		m_Game->m_PlayersVRInfo[i].controllerAngle.x = (float)move->mousedx / 10;
+		m_Game->m_PlayersVRInfo[i].controllerAngle.y = (float)move->mousedy / 10;
+		m_Game->m_PlayersVRInfo[i].controllerPos.x = move->viewangles.z;
+		m_Game->m_PlayersVRInfo[i].controllerPos.y = move->upmove;
+
+		// Decode controllerAngle.z
+		int rollEncoding = move->command_number / 10000000;
+		move->command_number -= rollEncoding * 10000000;
+		m_Game->m_PlayersVRInfo[i].controllerAngle.z = (rollEncoding * 2) - 180;
 
 		// Decode viewangles.x
 		int decodedZInt = (move->viewangles.x / 10000);
@@ -352,14 +364,18 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		// Signal to the server that this CUserCmd has VR info
 		to->tick_count *= -1;
 
-		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > .8)
-		{
-			to->command_number *= -1; // Signal to server that melee swing in motion
-		}
+		int originalCommandNum = to->command_number;
 
 		QAngle controllerAngles = m_VR->GetRightControllerAbsAngle();
 		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
 		to->mousedy = controllerAngles.y * 10;
+		int rollEncoding = (((int)controllerAngles.z + 180) / 2 * 10000000);
+		to->command_number += rollEncoding;
+
+		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > .8)
+		{
+			to->command_number *= -1; // Signal to server that melee swing in motion
+		}
 
 		Vector controllerPos = m_VR->GetRightControllerAbsPos();
 		to->viewangles.z = controllerPos.x;
@@ -373,23 +389,19 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		encoding += encoding < 0 ? -encodedAngle : encodedAngle;
 		to->viewangles.x = encoding;
 
-		
-
 		hkWriteUsercmd.fOriginal(buf, to, from);
 
 		to->viewangles.x = xAngle;
 		to->tick_count *= -1;
 		to->viewangles.z = 0;
 		to->upmove = 0;
-		if (to->command_number < 0)
-			to->command_number *= -1;
+		to->command_number = originalCommandNum;
 
 		// Must recalculate checksum for the edited CUserCmd or gunshots will sound
 		// terrible in multiplayer.
 		pVerified->m_cmd = *to;
 		pVerified->m_crc = to->GetChecksum();
 		return 1;
-
 	}
 	return hkWriteUsercmd.fOriginal(buf, to, from);
 }
@@ -442,4 +454,18 @@ void Hooks::dItemPostFrameServer(void *ecx, void *edx)
 int Hooks::dGetPrimaryAttackActivity(void *ecx, void *edx, void *meleeInfo)
 {
 	return hkGetPrimaryAttackActivity.fOriginal(ecx, meleeInfo);
+}
+
+Vector *Hooks::dEyePosition(void *ecx, void *edx, Vector *eyePos)
+{
+
+	Vector *result = hkEyePosition.fOriginal(ecx, eyePos);
+
+	if (m_Game->performingMelee)
+	{
+		int i = m_Game->m_CurrentUsercmdID;
+		memcpy(result, &(m_Game->m_PlayersVRInfo[i].controllerPos), sizeof(Vector));
+	}
+
+	return result;
 }

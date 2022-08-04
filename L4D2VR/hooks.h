@@ -78,6 +78,7 @@ typedef void(__thiscall *tStartMeleeSwing)(void *thisptr, void* player, bool a3)
 typedef int(__thiscall *tPrimaryAttack)(void *thisptr);
 typedef void(__thiscall *tItemPostFrame)(void *thisptr);
 typedef int(__thiscall *tGetPrimaryAttackActivity)(void *thisptr, void *meleeInfo);
+typedef Vector *(__thiscall *tEyePosition)(void *thisptr, Vector *eyePos);
 
 
 class Hooks
@@ -107,6 +108,7 @@ public:
 	static inline Hook<tPrimaryAttack> hkPrimaryAttackServer;
 	static inline Hook<tItemPostFrame> hkItemPostFrameServer;
 	static inline Hook<tGetPrimaryAttackActivity> hkGetPrimaryAttackActivity;
+	static inline Hook<tEyePosition> hkEyePosition;
 
 	Hooks() {};
 	Hooks(Game *game);
@@ -137,4 +139,5 @@ public:
 	static int __fastcall dPrimaryAttackServer(void *ecx, void *edx);
 	static void __fastcall dItemPostFrameServer(void *ecx, void *edx);
 	static int __fastcall dGetPrimaryAttackActivity(void *ecx, void *edx, void* meleeInfo);
+	static Vector *__fastcall dEyePosition(void *ecx, void *edx, Vector *eyePos);
 };

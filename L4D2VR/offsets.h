@@ -59,6 +59,7 @@ public:
     Offset GetPrimaryAttackActivity =  { "server.dll", 0x3E7630, "55 8B EC 53 8B 5D 08 56 57 8B BB ? ? ? ?" };
     Offset GetActiveWeapon =           { "server.dll", 0x464F0, "55 8B EC 8B 45 0C 56 8B 75 08 50 56 E8 ? ? ? ? 84 C0 74 47 8B", -64 };
     Offset GetMeleeWeaponInfo =        { "server.dll", 0x3E67D0, "8B 81 ? ? ? ? 50 B9 ? ? ? ? E8 ? ? ? ? C3" };
+    Offset EyePosition =               { "server.dll", 0x6D610, "55 8B EC 56 8B F1 8B 86 ? ? ? ? C1 E8 0B A8 01 74 05 E8 ? ? ? ? 8B 45 08 F3" };
 
     Offset GetRenderTarget =           { "materialsystem.dll", 0x2CD30, "83 79 4C 00" };
     Offset Viewport =                  { "materialsystem.dll", 0x2E010, "55 8B EC 83 EC 28 8B C1" };

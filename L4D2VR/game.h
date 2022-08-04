@@ -60,6 +60,7 @@ public:
 
     std::array<Player, 24> m_PlayersVRInfo;
     int m_CurrentUsercmdID = -1;
+    bool performingMelee = false;
 
     Game();
 
