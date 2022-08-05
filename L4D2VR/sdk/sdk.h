@@ -3,11 +3,14 @@
 #pragma once
 
 #include <math.h>
+#include "game.h"
+#include "offsets.h"
 #include "usercmd.h"
 #include "material.h"
 #include <unordered_map>
 
 class C_BaseCombatWeapon;
+class C_WeaponCSBase;
 
 struct PositionAngle
 {
@@ -1223,6 +1226,15 @@ private:
 
 };
 
+class CMeleeWeaponInfoStore
+{
+public:
+	char pad_0000[3236]; //0x0000
+	char meleeWeaponName[256]; //0x0CA4
+	char pad_0DA4[920]; //0x0DA4
+}; //Size: 0x113C
+static_assert(sizeof(CMeleeWeaponInfoStore) == 0x113C);
+
 class IHandleEntity
 {
 public:
@@ -1783,6 +1795,9 @@ public:
 	virtual void *sub_10230BA0() = 0;
 	virtual void *sub_10230BB0() = 0;
 
+	int padding_0[826];
+	int m_MapBasedMeleeID;
+
 	static inline std::unordered_map<WeaponID, PositionAngle> viewmodelOffsets
 	{
 		{ NONE,				{{20,3,0}, {0,0,0}} },
@@ -1792,7 +1807,7 @@ public:
 		{ AUTOSHOTGUN,		{{14.5, 3.5, -4}, {-1.5, -2, 0}} },
 		{ M16A1,			{{18, 5.5, -5.5}, {-1.5, -2, 0}} },
 		{ HUNTING_RIFLE,	{{15, 4, -4}, {-4.5, -5, 0}} },
-		{ MAC10,			{{22.5, 5, -4.5}, {-1, 0, 0}} },
+		{ MAC10,			{{23.5, 5, -3}, {-2, 0, 0}} },
 		{ SHOTGUN_CHROME,	{{14.5, 4, -2.5}, {-1.5, -1, 0}} },
 		{ SCAR,				{{18.5, 5, -4.5}, {-0.5, 0, 0}} },
 		{ SNIPER_MILITARY,  {{18.5, 5, -5}, {0, -1.5, 0}} },
@@ -1807,14 +1822,59 @@ public:
 		{ GRENADE_LAUNCHER, {{14, 5, -2}, {-1, 0, 0}} }
 	};
 
+	static inline std::unordered_map<std::string, PositionAngle> meleeViewmodelOffsets
+	{
+		{ "fireaxe",		 {{13.5, -6, -22.5}, {0, .5, -25.5}}},
+		{ "katana",			 {{21, 5.5, -5}, {-11.5, 0, -16.5}}},
+		{ "electric_guitar", {{22, 3.5, 14}, {-2, 12, -16.5}}},
+		{ "baseball_bat",	 {{20.5, 5.5, -4.5}, {-41, .5, -26}}},
+		{ "knife",			 {{29, 7.5, -1.5}, {-41, .5, -15}}},
+		{ "golfclub",		 {{12.5, 3, -22}, {4, -2.5, -15}}},
+		{ "crowbar",		 {{21.5, 7, -14.5}, {-.5, -1.5, 6}}},
+		{ "cricket_bat",	 {{23, 3.5, -6}, {-28.5, -14, -13.5}}},
+		{ "machete",		 {{25.5, 6, -4}, {-30, -12, 18.5}}},
+		{ "tonfa",			 {{23.5, 5, -1}, {-30, -12, -7.5}}},
+		{ "frying_pan",		 {{23.5, 8.5, -8.5}, {9.5, 12, -32.5}}},
+		{ "electric_guitar", {{22, 3.5, -14}, {-2, 12, -16.5}}},
+		{ "shovel",			 {{21.5, -3, -10.5}, {8, 12, -57.5}}},
+		{ "pitchfork",		 {{19.5, 3.5, -11}, {56.5, -3.5, -7.5}}}
+	};
+
+	static inline C_WeaponCSBase *curWep;
+	static inline PositionAngle curViewmodelOffset;
+
 	PositionAngle GetViewmodelOffset()
 	{
 		WeaponID id = GetWeaponID();
 
-		if (viewmodelOffsets.find(id) == viewmodelOffsets.end())
-			return viewmodelOffsets[NONE];
+		if (this == curWep)
+			return curViewmodelOffset;
 
-		return viewmodelOffsets[id];
+		curWep = this;
+
+		if (id == MELEE)
+		{
+			typedef CMeleeWeaponInfoStore *(__thiscall *tGetMeleeWepInfo)(void *thisptr);
+			static tGetMeleeWepInfo oGetMeleeWepInfo = (tGetMeleeWepInfo)(g_Game->m_Offsets->GetMeleeWeaponInfoClient.address);
+			CMeleeWeaponInfoStore *meleeWepInfo = oGetMeleeWepInfo(this);
+
+			std::string wepName(meleeWepInfo->meleeWeaponName);
+
+			if (meleeViewmodelOffsets.find(wepName) != meleeViewmodelOffsets.end())
+			{
+				curViewmodelOffset = meleeViewmodelOffsets[wepName];
+				return curViewmodelOffset;
+			}
+		}
+
+		if (viewmodelOffsets.find(id) != viewmodelOffsets.end())
+		{
+			curViewmodelOffset = viewmodelOffsets[id];
+			return curViewmodelOffset;
+		}
+
+		curViewmodelOffset = viewmodelOffsets[NONE];
+		return curViewmodelOffset;
 	}
 };
 

@@ -46,6 +46,7 @@ public:
     Offset g_pppInput =                { "client.dll", 0xA8A22, "8B 0D ? ? ? ? 8B 01 8B 50 58 FF E2", 2 };
     Offset AdjustEngineViewport =      { "client.dll", 0x31A890, "55 8B EC 8B 0D ? ? ? ? 85 C9 74 17" };
     Offset TestMeleeSwingClient =      { "client.dll", 0x30C040, "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 53 56 8B 75 08 57 8B D9 E8 ? ? ? ? 8B" };
+    Offset GetMeleeWeaponInfoClient =  { "client.dll", 0x30B570, "8B 81 ? ? ? ? 50 B9 ? ? ? ? E8 ? ? ? ? C3" };
 
     Offset ServerFireTerrorBullets =   { "server.dll", 0x3C3FC0, "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 8B 45 08 8B 4D 10" };
     Offset ReadUserCmd =               { "server.dll", 0x205100, "55 8B EC 53 8B 5D 10 56 57 8B 7D 0C 53" };

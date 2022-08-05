@@ -602,6 +602,7 @@ void VR::UpdateTracking(Vector viewOrigin)
     QAngle::VectorAngles(m_RightControllerForward, m_RightControllerUp, m_RightControllerAngAbs);
 
     PositionAngle viewmodelOffset = localPlayer->GetViewmodelOffset();
+
     m_ViewmodelPosOffset = viewmodelOffset.position;
     m_ViewmodelAngOffset = viewmodelOffset.angle;
 
@@ -616,6 +617,10 @@ void VR::UpdateTracking(Vector viewOrigin)
     // Viewmodel pitch offset
     m_ViewmodelForward = VectorRotate(m_ViewmodelForward, m_ViewmodelRight, m_ViewmodelAngOffset.x);
     m_ViewmodelUp = VectorRotate(m_ViewmodelUp, m_ViewmodelRight, m_ViewmodelAngOffset.x);
+
+    // Viewmodel roll offset
+    m_ViewmodelRight = VectorRotate(m_ViewmodelRight, m_ViewmodelForward, m_ViewmodelAngOffset.z);
+    m_ViewmodelUp = VectorRotate(m_ViewmodelUp, m_ViewmodelForward, m_ViewmodelAngOffset.z);
     
     // Process action input
     ProcessInput();
