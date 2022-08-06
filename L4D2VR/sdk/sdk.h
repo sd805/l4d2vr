@@ -192,6 +192,46 @@ public:
 	virtual void *ClientCmd_Unrestricted(const char *szCmdString) = 0;
 };
 
+class IModelInfo
+{
+public:
+	virtual	~IModelInfo(void) { }
+	// Returns model_t* pointer for a model given a precached or dynamic model index.
+	virtual void *GetModel(int modelindex) = 0;
+
+	// Returns index of model by name for precached or known dynamic models.
+	// Does not adjust reference count for dynamic models.
+	virtual int	GetModelIndex(const char *name) const = 0;
+
+	// Returns name of model
+	virtual char *GetModelName(void *model) const = 0;
+};
+
+struct model_t;
+
+struct ModelRenderInfo_t
+{
+	Vector origin;
+	QAngle angles;
+	void *pRenderable;
+	model_t *pModel;
+	const matrix3x4_t *pModelToWorld;
+	const matrix3x4_t *pLightingOffset;
+	const Vector *pLightingOrigin;
+	int flags;
+	int entity_index;
+	int skin;
+	int body;
+	int hitboxset;
+	int instance;
+
+	ModelRenderInfo_t()
+	{
+		pModelToWorld = NULL;
+		pLightingOffset = NULL;
+		pLightingOrigin = NULL;
+	}
+};
 
 
 enum StereoEye_t
@@ -582,93 +622,36 @@ public:
 class IMaterial
 {
 public:
-	// Get the name of the material.  This is a full path to 
-	// the vmt file starting from "hl2/materials" (or equivalent) without
-	// a file extension.
 	virtual const char *GetName() const = 0;
 	virtual const char *GetTextureGroupName() const = 0;
-
-	// Get the preferred size/bitDepth of a preview image of a material.
-	// This is the sort of image that you would use for a thumbnail view
-	// of a material, or in WorldCraft until it uses materials to render.
-	// separate this for the tools maybe
-	virtual void * GetPreviewImageProperties(int *width, int *height,
-							ImageFormat *imageFormat, bool *isTranslucent) const = 0;
-
-	// Get a preview image at the specified width/height and bitDepth.
-	// Will do resampling if necessary.(not yet!!! :) )
-	// Will do color format conversion. (works now.)
-	virtual void* GetPreviewImage(unsigned char *data,
-												 int width, int height,
-												 ImageFormat imageFormat) const = 0;
-	// 
+	virtual void * GetPreviewImageProperties(int *width, int *height, ImageFormat *imageFormat, bool *isTranslucent) const = 0;
+	virtual void* GetPreviewImage(unsigned char *data, int width, int height, ImageFormat imageFormat) const = 0;
 	virtual int				GetMappingWidth() = 0;
 	virtual int				GetMappingHeight() = 0;
-
 	virtual int				GetNumAnimationFrames() = 0;
-
-	// For material subrects (material pages).  Offset(u,v) and scale(u,v) are normalized to texture.
 	virtual bool			InMaterialPage(void) = 0;
 	virtual	void			GetMaterialOffset(float *pOffset) = 0;
 	virtual void			GetMaterialScale(float *pScale) = 0;
 	virtual IMaterial *GetMaterialPage(void) = 0;
-
-	// find a vmt variable.
-	// This is how game code affects how a material is rendered.
-	// The game code must know about the params that are used by
-	// the shader for the material that it is trying to affect.
 	virtual void *FindVar(const char *varName, bool *found, bool complain = true) = 0;
-
-	// The user never allocates or deallocates materials.  Reference counting is
-	// used instead.  Garbage collection is done upon a call to 
-	// IMaterialSystem::UncacheUnusedMaterials.
 	virtual void			IncrementReferenceCount(void) = 0;
 	virtual void			DecrementReferenceCount(void) = 0;
-
-	inline void AddRef() { IncrementReferenceCount(); }
-	inline void Release() { DecrementReferenceCount(); }
-
-	// Each material is assigned a number that groups it with like materials
-	// for sorting in the application.
 	virtual int 			GetEnumerationID(void) const = 0;
-
 	virtual void			GetLowResColorSample(float s, float t, float *color) const = 0;
-
-	// This computes the state snapshots for this material
 	virtual void			RecomputeStateSnapshots() = 0;
-
-	// Are we translucent?
 	virtual bool			IsTranslucent() = 0;
-
-	// Are we alphatested?
 	virtual bool			IsAlphaTested() = 0;
-
-	// Are we vertex lit?
 	virtual bool			IsVertexLit() = 0;
-
-	// Gets the vertex format
-	virtual void *	GetVertexFormat() const = 0;
-
-	// returns true if this material uses a material proxy
+	virtual void *GetVertexFormat() const = 0;
 	virtual bool			HasProxy(void) const = 0;
-
 	virtual bool			UsesEnvCubemap(void) = 0;
-
 	virtual bool			NeedsTangentSpace(void) = 0;
-
 	virtual bool			NeedsPowerOfTwoFrameBufferTexture(bool bCheckSpecificToThisFrame = true) = 0;
 	virtual bool			NeedsFullFrameBufferTexture(bool bCheckSpecificToThisFrame = true) = 0;
-
-	// returns true if the shader doesn't do skinning itself and requires
-	// the data that is sent to it to be preskinned.
 	virtual bool			NeedsSoftwareSkinning(void) = 0;
-
-	// Apply constant color or alpha modulation
 	virtual void			AlphaModulate(float alpha) = 0;
 	virtual void			ColorModulate(float r, float g, float b) = 0;
-
-	// Material Var flags...
-	virtual void			SetMaterialVarFlag(void) = 0;
+	virtual void			SetMaterialVarFlag(MaterialVarFlags_t flag, bool on) = 0;
 	virtual bool			GetMaterialVarFlag(void) const = 0;
 
 	// Gets material reflectivity
@@ -737,6 +720,36 @@ public:
 	virtual bool			WasReloadedFromWhitelist() = 0;
 
 	virtual bool			IsPrecached() const = 0;
+};
+
+enum OverrideType_t
+{
+	OVERRIDE_NORMAL = 0,
+	OVERRIDE_BUILD_SHADOWS,
+	OVERRIDE_DEPTH_WRITE,
+	OVERRIDE_SSAO_DEPTH_WRITE,
+};
+
+class IModelRender
+{
+public:
+	virtual int		DrawModel(int flags,
+								void * pRenderable,
+								int instance,
+								int entity_index,
+								const void * model,
+								Vector const &origin,
+								QAngle const &angles,
+								int skin,
+								int body,
+								int hitboxset,
+								const matrix3x4_t * modelToWorld = NULL,
+								const matrix3x4_t * pLightingOffset = NULL) = 0;
+
+	// This causes a material to be used when rendering the model instead 
+	// of the materials the model was compiled with
+	virtual void	ForcedMaterialOverride(IMaterial *newMaterial, OverrideType_t nOverrideType = OVERRIDE_NORMAL) = 0;
+
 };
 
 class IRefCounted
@@ -1983,6 +1996,15 @@ public:
 			return PositionAngle{ {0,0,0}, {0,0,0} };
 
 		return weapon->GetViewmodelOffset();
+	}
+
+	bool IsMeleeWeaponActive()
+	{
+		C_WeaponCSBase *weapon = (C_WeaponCSBase *)GetActiveWeapon();
+		if (weapon)
+			return weapon->GetWeaponID() == 19;
+
+		return false;
 	}
 
 	char pad_0000[252]; //0x0004

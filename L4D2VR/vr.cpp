@@ -123,6 +123,7 @@ void VR::Update()
         {
             IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
             rndrContext->SetRenderTarget(NULL);
+            m_Game->m_CachedArmsModel = false;
         }
         SubmitVRTextures();
     }
@@ -495,6 +496,8 @@ void VR::UpdateTracking(Vector viewOrigin)
     C_BasePlayer *localPlayer = (C_BasePlayer *)m_Game->GetClientEntity(playerIndex);
     if (!localPlayer)
         return;
+
+    m_Game->m_IsMeleeWeaponActive = localPlayer->IsMeleeWeaponActive();
 
     // HMD tracking
     QAngle hmdAngLocal = m_HmdPose.TrackedDeviceAng;	

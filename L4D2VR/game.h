@@ -11,12 +11,16 @@ class IBaseClientDLL;
 class IViewRender;
 class IViewRender;
 class CBaseEntity;
+class IModelInfo;
+class IModelRender;
+class IMaterial;
+class C_BasePlayer;
+struct model_t;
 
 class Game;
 class Offsets;
 class VR;
 class Hooks;
-class C_BasePlayer;
 
 inline Game *g_Game;
 
@@ -48,6 +52,8 @@ public:
     IBaseClientDLL *m_BaseClientDll = nullptr;
     IViewRender *m_ClientViewRender = nullptr;
     IViewRender *m_EngineViewRender = nullptr;
+    IModelInfo *m_ModelInfo = nullptr;
+    IModelRender *m_ModelRender = nullptr;
 
     uintptr_t m_BaseEngine;
     uintptr_t m_BaseClient;
@@ -62,7 +68,13 @@ public:
 
     std::array<Player, 24> m_PlayersVRInfo;
     int m_CurrentUsercmdID = -1;
-    bool performingMelee = false;
+    bool m_PerformingMelee = false;
+
+    model_t *m_ArmsModel = nullptr;
+    IMaterial *m_ArmsMaterial = nullptr;
+    bool m_CachedArmsModel = false;
+
+    bool m_IsMeleeWeaponActive = false;
 
     Game();
 

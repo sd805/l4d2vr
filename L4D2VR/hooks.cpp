@@ -39,6 +39,7 @@ Hooks::Hooks(Game *game)
 	hkItemPostFrameServer.enableHook();
 	hkGetPrimaryAttackActivity.enableHook();
 	hkEyePosition.enableHook();
+	hkDrawModelExecute.enableHook();
 }
 
 Hooks::~Hooks()
@@ -111,6 +112,9 @@ int Hooks::initSourceHooks()
 
 	LPVOID EyePositionAddr = (LPVOID)(m_Game->m_Offsets->EyePosition.address);
 	hkEyePosition.createHook(EyePositionAddr, &dEyePosition);
+
+	LPVOID DrawModelExecuteAddr = (LPVOID)(m_Game->m_Offsets->DrawModelExecute.address);
+	hkDrawModelExecute.createHook(DrawModelExecuteAddr, &dDrawModelExecute);
 
 	void *clientMode = nullptr;
 	while (!clientMode)
@@ -301,7 +305,7 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 
 				m_Game->m_Hooks->hkGetPrimaryAttackActivity.fOriginal(curWep, meleeWepInfo); // Needed to call TestMeleeSwingCollision
 
-				m_Game->performingMelee = true;
+				m_Game->m_PerformingMelee = true;
 
 				Vector traceDirection = initialMeleeDirection;
 				int numTraces = 10;
@@ -312,7 +316,7 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 					m_Game->m_Hooks->hkTestMeleeSwingCollisionServer.fOriginal(curWep, traceDirection);
 				}
 
-				m_Game->performingMelee = false;
+				m_Game->m_PerformingMelee = false;
 			}
 		}
 	}
@@ -484,11 +488,39 @@ Vector *Hooks::dEyePosition(void *ecx, void *edx, Vector *eyePos)
 
 	Vector *result = hkEyePosition.fOriginal(ecx, eyePos);
 
-	if (m_Game->performingMelee)
+	if (m_Game->m_PerformingMelee)
 	{
 		int i = m_Game->m_CurrentUsercmdID;
-		memcpy(result, &(m_Game->m_PlayersVRInfo[i].controllerPos), sizeof(Vector));
+		*result = m_Game->m_PlayersVRInfo[i].controllerPos;
 	}
 
 	return result;
+}
+
+void Hooks::dDrawModelExecute(void *ecx, void *edx, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld)
+{
+	if (!m_Game->m_IsMeleeWeaponActive)
+		m_Game->m_CachedArmsModel = false;
+	
+	if (info.pModel && m_Game->m_IsMeleeWeaponActive && !m_Game->m_CachedArmsModel)
+	{
+		std::string modelName = m_Game->m_ModelInfo->GetModelName(info.pModel);
+		if (modelName.find("/arms/") != std::string::npos)
+		{
+			m_Game->m_ArmsMaterial = m_Game->m_MaterialSystem->FindMaterial(modelName.c_str(), "Model textures");
+			m_Game->m_ArmsModel = info.pModel;
+			m_Game->m_CachedArmsModel = true;
+		}
+	}
+
+	if (info.pModel && info.pModel == m_Game->m_ArmsModel && m_Game->m_IsMeleeWeaponActive)
+	{
+		m_Game->m_ArmsMaterial->SetMaterialVarFlag(MATERIAL_VAR_NO_DRAW, true);
+		m_Game->m_ModelRender->ForcedMaterialOverride(m_Game->m_ArmsMaterial);
+		hkDrawModelExecute.fOriginal(ecx, state, info, pCustomBoneToWorld);
+		m_Game->m_ModelRender->ForcedMaterialOverride(NULL);
+		return;
+	}
+
+	hkDrawModelExecute.fOriginal(ecx, state, info, pCustomBoneToWorld);
 }

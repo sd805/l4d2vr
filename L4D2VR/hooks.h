@@ -16,6 +16,7 @@ class CUserCmd;
 class QAngle;
 class Vector;
 class edict_t;
+class ModelRenderInfo_t;
 
 
 template <typename T>
@@ -79,6 +80,7 @@ typedef int(__thiscall *tPrimaryAttack)(void *thisptr);
 typedef void(__thiscall *tItemPostFrame)(void *thisptr);
 typedef int(__thiscall *tGetPrimaryAttackActivity)(void *thisptr, void *meleeInfo);
 typedef Vector *(__thiscall *tEyePosition)(void *thisptr, Vector *eyePos);
+typedef void(__thiscall *tDrawModelExecute)(void *thisptr, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld);
 
 
 class Hooks
@@ -109,6 +111,7 @@ public:
 	static inline Hook<tItemPostFrame> hkItemPostFrameServer;
 	static inline Hook<tGetPrimaryAttackActivity> hkGetPrimaryAttackActivity;
 	static inline Hook<tEyePosition> hkEyePosition;
+	static inline Hook<tDrawModelExecute> hkDrawModelExecute;
 
 	Hooks() {};
 	Hooks(Game *game);
@@ -140,4 +143,5 @@ public:
 	static void __fastcall dItemPostFrameServer(void *ecx, void *edx);
 	static int __fastcall dGetPrimaryAttackActivity(void *ecx, void *edx, void* meleeInfo);
 	static Vector *__fastcall dEyePosition(void *ecx, void *edx, Vector *eyePos);
+	static void __fastcall dDrawModelExecute(void *ecx, void* edx, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld);
 };

@@ -66,4 +66,5 @@ public:
     Offset Viewport =                  { "materialsystem.dll", 0x2E010, "55 8B EC 83 EC 28 8B C1" };
     Offset GetViewport =               { "materialsystem.dll", 0x2D240, "55 8B EC 8B 41 4C 8B 49 40 8D 04 C0 83 7C 81 ? ?" };
 
+    Offset DrawModelExecute =          { "engine.dll", 0xE05E0, "55 8B EC 81 EC ? ? ? ? A1 ? ? ? ? 33 C5 89 45 FC 8B 45 10 56 8B 75 08 57 8B" };
 };

@@ -24,6 +24,8 @@ Game::Game()
     m_MaterialSystem = (IMaterialSystem *)GetInterface("MaterialSystem.dll", "VMaterialSystem080");
     m_ClientViewRender = (IViewRender *)GetInterface("client.dll", "VEngineRenderView013");
     m_EngineViewRender = (IViewRender *)GetInterface("engine.dll", "VEngineRenderView013");
+    m_ModelInfo = (IModelInfo *)GetInterface("engine.dll", "VModelInfoClient004");
+    m_ModelRender = (IModelRender *)GetInterface("engine.dll", "VEngineModel016");
 
     m_Offsets = new Offsets();
     m_VR = new VR(this);
