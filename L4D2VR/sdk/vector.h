@@ -734,7 +734,7 @@ inline vec_t VectorNormalize(Vector &v)
 	return l;
 }
 
-inline Vector VectorRotate(Vector &v, Vector &k, float degrees)
+inline Vector VectorRotate(const Vector &v, const Vector &k, float degrees)
 {
 	// Rodrigues rotation
 	float radians = degrees * 3.14159265 / 180;

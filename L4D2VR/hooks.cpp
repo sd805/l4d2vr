@@ -283,19 +283,42 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 				static tGetMeleeWepInfo oGetMeleeWepInfo = (tGetMeleeWepInfo)(m_Game->m_Offsets->GetMeleeWeaponInfo.address);
 				void *meleeWepInfo = oGetMeleeWepInfo(curWep);
 
-				Vector forward, right, up;
-				QAngle::AngleVectors(m_Game->m_PlayersVRInfo[index].controllerAngle, &forward, &right, &up);
-				Vector meleeDirection = VectorRotate(forward, right, 75.0);
-				VectorNormalize(meleeDirection);
+				Vector initialForward, initialRight, initialUp;
+				QAngle::AngleVectors(m_Game->m_PlayersVRInfo[index].prevControllerAngle, &initialForward, &initialRight, &initialUp);
+				Vector initialMeleeDirection = VectorRotate(initialForward, initialRight, 75.0);
+				VectorNormalize(initialMeleeDirection);
 
-				m_Game->m_Hooks->hkGetPrimaryAttackActivity.fOriginal(curWep, meleeWepInfo);
+				Vector finalForward, finalRight, finalUp;
+				QAngle::AngleVectors(m_Game->m_PlayersVRInfo[index].controllerAngle, &finalForward, &finalRight, &finalUp);
+				Vector finalMeleeDirection = VectorRotate(finalForward, finalRight, 75.0);
+				VectorNormalize(finalMeleeDirection);
+
+				Vector pivot;
+				CrossProduct(initialMeleeDirection, finalMeleeDirection, pivot);
+				VectorNormalize(pivot);
+
+				float swingAngle = acos(DotProduct(initialMeleeDirection, finalMeleeDirection)) * 180 / 3.14159265;
+
+				m_Game->m_Hooks->hkGetPrimaryAttackActivity.fOriginal(curWep, meleeWepInfo); // Needed to call TestMeleeSwingCollision
 
 				m_Game->performingMelee = true;
-				m_Game->m_Hooks->hkTestMeleeSwingCollisionServer.fOriginal(curWep, meleeDirection);
+
+				Vector traceDirection = initialMeleeDirection;
+				int numTraces = 10;
+				float traceAngle = swingAngle / numTraces;
+				for (int i = 0; i < numTraces; ++i)
+				{
+					traceDirection = VectorRotate(traceDirection, pivot, traceAngle);
+					m_Game->m_Hooks->hkTestMeleeSwingCollisionServer.fOriginal(curWep, traceDirection);
+				}
+
 				m_Game->performingMelee = false;
 			}
 		}
 	}
+
+	m_Game->m_PlayersVRInfo[index].prevControllerAngle = m_Game->m_PlayersVRInfo[index].controllerAngle;
+
 	return result;
 }
 
@@ -372,7 +395,7 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		int rollEncoding = (((int)controllerAngles.z + 180) / 2 * 10000000);
 		to->command_number += rollEncoding;
 
-		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > .8)
+		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > .9)
 		{
 			to->command_number *= -1; // Signal to server that melee swing in motion
 		}

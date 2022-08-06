@@ -27,12 +27,14 @@ struct Player
     QAngle controllerAngle;
     Vector controllerPos;
     bool isMeleeing;
+    QAngle prevControllerAngle;
 
     Player()
         : isUsingVR(false),
         controllerAngle({ 0,0,0 }),
         controllerPos({ 0,0,0 }),
-        isMeleeing(false)
+        isMeleeing(false),
+        prevControllerAngle({ 0,0,0 })
     {}
 };
 
