@@ -24,12 +24,23 @@
 4. Load into a campaign and press A on your controller (or F6) to activate VR. 
 5. If the camera starts clipping into walls, press down on the left stick to recenter.
 
-## If the game is crashing, try:
+## Troubleshooting
+If the game is stuttering, try: 
+* Steam Settings -> Shader Pre-Caching -> Allow background processing of Vulkan shaders
+
+If the game is crashing, try:
 * Lowering video settings
 * Disabling SteamVR theater in [Steam settings](https://external-preview.redd.it/1WdLExouo_YKhTGT6C5GGrOjeWO7qNdIdDRvIRBhw-0.png?auto=webp&s=0d4447a9d954e1ec15b2c010cf50eeabd51f4197)
 * Disabling all add-ons then verifying integrity of game files
 * Re-installing the game
 
+## Build instructions
+1. ``` git clone --recurse-submodules https://github.com/sd805/l4d2vr.git ```
+2. Open l4d2vr.sln
+3. Set to x86 Debug or Release
+4. Build -> Build Solution
+
+Note: After building, it will attempt to copy the new d3d9.dll to your L4D2 directory.
 
 ## Utilizes code from
 * [VirtualFortress2](https://github.com/PinkMilkProductions/VirtualFortress2)
