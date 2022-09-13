@@ -415,7 +415,11 @@ public:
 	virtual void sub_1024C590() = 0;
 	virtual void sub_1024C5A0() = 0;
 	virtual void sub_1024C5B0() = 0;
-};
+
+	char pad_0000[6124]; //0x0000
+	int entitiesHitThisSwing; //0x17F0
+}; //Size: 0x17F4
+static_assert(sizeof(Server_WeaponCSBase) == 0x17F4);
 
 class Server_BaseEntity
 {

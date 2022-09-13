@@ -31,6 +31,7 @@ struct Player
     QAngle controllerAngle;
     Vector controllerPos;
     bool isMeleeing;
+    bool isNewSwing;
     QAngle prevControllerAngle;
 
     Player()
@@ -38,6 +39,7 @@ struct Player
         controllerAngle({ 0,0,0 }),
         controllerPos({ 0,0,0 }),
         isMeleeing(false),
+        isNewSwing(false),
         prevControllerAngle({ 0,0,0 })
     {}
 };

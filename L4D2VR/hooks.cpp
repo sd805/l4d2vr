@@ -281,20 +281,26 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 		if (curWep)
 		{
 			int wepID = curWep->GetWeaponID();
-			if (wepID == 19)
+			if (wepID == 19) // melee weapon
 			{
+				if (m_Game->m_PlayersVRInfo[index].isNewSwing)
+				{
+					m_Game->m_PlayersVRInfo[index].isNewSwing = false;
+					curWep->entitiesHitThisSwing = 0;
+				}
+
 				typedef void *(__thiscall *tGetMeleeWepInfo)(void *thisptr);
 				static tGetMeleeWepInfo oGetMeleeWepInfo = (tGetMeleeWepInfo)(m_Game->m_Offsets->GetMeleeWeaponInfo.address);
 				void *meleeWepInfo = oGetMeleeWepInfo(curWep);
 
 				Vector initialForward, initialRight, initialUp;
 				QAngle::AngleVectors(m_Game->m_PlayersVRInfo[index].prevControllerAngle, &initialForward, &initialRight, &initialUp);
-				Vector initialMeleeDirection = VectorRotate(initialForward, initialRight, 75.0);
+				Vector initialMeleeDirection = VectorRotate(initialForward, initialRight, 50.0);
 				VectorNormalize(initialMeleeDirection);
 
 				Vector finalForward, finalRight, finalUp;
 				QAngle::AngleVectors(m_Game->m_PlayersVRInfo[index].controllerAngle, &finalForward, &finalRight, &finalUp);
-				Vector finalMeleeDirection = VectorRotate(finalForward, finalRight, 75.0);
+				Vector finalMeleeDirection = VectorRotate(finalForward, finalRight, 50.0);
 				VectorNormalize(finalMeleeDirection);
 
 				Vector pivot;
@@ -319,6 +325,10 @@ float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, 
 				m_Game->m_PerformingMelee = false;
 			}
 		}
+	}
+	else
+	{
+		m_Game->m_PlayersVRInfo[index].isNewSwing = true;
 	}
 
 	m_Game->m_PlayersVRInfo[index].prevControllerAngle = m_Game->m_PlayersVRInfo[index].controllerAngle;
@@ -399,7 +409,7 @@ int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
 		int rollEncoding = (((int)controllerAngles.z + 180) / 2 * 10000000);
 		to->command_number += rollEncoding;
 
-		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > .9)
+		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > 1.1)
 		{
 			to->command_number *= -1; // Signal to server that melee swing in motion
 		}
