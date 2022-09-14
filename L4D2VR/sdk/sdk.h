@@ -1815,14 +1815,14 @@ public:
 	{
 		{ NONE,				{{20,3,0}, {0,0,0}} },
 		{ PISTOL,			{{20.5, 5, -2}, {-1, 0, 0}} },
-		{ UZI,				{{21.5, 4, -3.5}, {-1, 0.5, 0}} },
+		{ UZI,				{{22.5, 5, -4}, {-1.5, 0, 1}} },
 		{ PUMPSHOTGUN,		{{14.5, 3.5, -1.5}, {-0.5, 0, 0}} },
 		{ AUTOSHOTGUN,		{{14.5, 3.5, -4}, {-1.5, -2, 0}} },
 		{ M16A1,			{{18, 5.5, -5.5}, {-1.5, -2, 0}} },
 		{ HUNTING_RIFLE,	{{15, 4, -4}, {-4.5, -5, 0}} },
-		{ MAC10,			{{23.5, 5, -3}, {-2, 0, 0}} },
+		{ MAC10,			{{22.5, 4.5, -3.5}, {-2, 0, 1}} },
 		{ SHOTGUN_CHROME,	{{14.5, 4, -2.5}, {-1.5, -1, 0}} },
-		{ SCAR,				{{18.5, 5, -4.5}, {-0.5, 0, 0}} },
+		{ SCAR,				{{18, 5.5, -5.5}, {-1.5, 0, -1}} },
 		{ SNIPER_MILITARY,  {{18.5, 5, -5}, {0, -1.5, 0}} },
 		{ SPAS,				{{16, 5, -4.5}, {-1.5, -2, 0}} },
 		{ AK47,				{{17.5, 5.5, -4.5}, {-0.5, 0, 0}} },
@@ -1837,33 +1837,35 @@ public:
 
 	static inline std::unordered_map<std::string, PositionAngle> meleeViewmodelOffsets
 	{
-		{ "fireaxe",		 {{13.5, -6, -22.5}, {0, .5, -25.5}}},
-		{ "katana",			 {{21, 5.5, -5}, {-11.5, 0, -16.5}}},
-		{ "electric_guitar", {{22, 3.5, 14}, {-2, 12, -16.5}}},
-		{ "baseball_bat",	 {{20.5, 5.5, -4.5}, {-41, .5, -26}}},
-		{ "knife",			 {{29, 7.5, -1.5}, {-41, .5, -15}}},
-		{ "golfclub",		 {{12.5, 3, -22}, {4, -2.5, -15}}},
-		{ "crowbar",		 {{21.5, 7, -14.5}, {-.5, -1.5, 6}}},
-		{ "cricket_bat",	 {{23, 3.5, -6}, {-28.5, -14, -13.5}}},
-		{ "machete",		 {{25.5, 6, -4}, {-30, -12, 18.5}}},
-		{ "tonfa",			 {{23.5, 5, -1}, {-30, -12, -7.5}}},
-		{ "frying_pan",		 {{23.5, 8.5, -8.5}, {9.5, 12, -32.5}}},
+		{ "fireaxe",		 {{12.5, -4, -21.5}, {-12, -6.5, -44.5}}},
+		{ "katana",			 {{19, 6, -4}, {-10.5, -18, -29}}},
+		{ "electric_guitar", {{20.5, 4, -11}, {-29, -11.5, -36.5}}},
+		{ "baseball_bat",	 {{18.5, 4.5, -5.5}, {-58.5, -9, -25}}},
+		{ "knife",			 {{29, 7, -2.5}, {-26, -19.5, -33.5}}},
+		{ "golfclub",		 {{10.5, 2, -19.5}, {-8.5, -19, -34.5}}},
+		{ "crowbar",		 {{19.5, 6, -13.5}, {-24.5, -6.5, -6}}},
+		{ "cricket_bat",	 {{19.5, 4, -5.5}, {-63, -18, -33}}},
+		{ "machete",		 {{23.5, 6, -3.5}, {-51, -11.5, -.5}}},
+		{ "tonfa",			 {{20, 6.5, -.5}, {-54, -11.5, -23.5}}},
+		{ "frying_pan",		 {{22.5, 8.5, -7}, {-12, -1.5, -41.5}}},
 		{ "electric_guitar", {{22, 3.5, -14}, {-2, 12, -16.5}}},
-		{ "shovel",			 {{21.5, -3, -10.5}, {8, 12, -57.5}}},
-		{ "pitchfork",		 {{19.5, 3.5, -11}, {56.5, -3.5, -7.5}}}
+		{ "shovel",			 {{17, -6.5, -11}, {-17.5, -1.5, -70.5}}},
+		{ "pitchfork",		 {{12.5, 4, -9.5}, {40, 9, -3.5}}}
 	};
 
-	static inline C_WeaponCSBase *curWep;
-	static inline PositionAngle curViewmodelOffset;
+	static inline C_WeaponCSBase *prevWep;
+	static inline WeaponID prevWeaponID;
+	static inline PositionAngle prevViewmodelOffset;
 
 	PositionAngle GetViewmodelOffset()
 	{
 		WeaponID id = GetWeaponID();
 
-		if (this == curWep)
-			return curViewmodelOffset;
+		if (this == prevWep && id == prevWeaponID)
+			return prevViewmodelOffset;
 
-		curWep = this;
+		prevWep = this;
+		prevWeaponID = id;
 
 		if (id == MELEE)
 		{
@@ -1875,19 +1877,19 @@ public:
 
 			if (meleeViewmodelOffsets.find(wepName) != meleeViewmodelOffsets.end())
 			{
-				curViewmodelOffset = meleeViewmodelOffsets[wepName];
-				return curViewmodelOffset;
+				prevViewmodelOffset = meleeViewmodelOffsets[wepName];
+				return prevViewmodelOffset;
 			}
 		}
 
 		if (viewmodelOffsets.find(id) != viewmodelOffsets.end())
 		{
-			curViewmodelOffset = viewmodelOffsets[id];
-			return curViewmodelOffset;
+			prevViewmodelOffset = viewmodelOffsets[id];
+			return prevViewmodelOffset;
 		}
 
-		curViewmodelOffset = viewmodelOffsets[NONE];
-		return curViewmodelOffset;
+		prevViewmodelOffset = viewmodelOffsets[NONE];
+		return prevViewmodelOffset;
 	}
 };
 
