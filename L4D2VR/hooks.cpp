@@ -509,10 +509,12 @@ Vector *Hooks::dEyePosition(void *ecx, void *edx, Vector *eyePos)
 
 void Hooks::dDrawModelExecute(void *ecx, void *edx, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld)
 {
-	if (!m_Game->m_IsMeleeWeaponActive)
+	if (m_Game->m_SwitchedWeapons)
 		m_Game->m_CachedArmsModel = false;
+
+	bool hideArms = m_Game->m_IsMeleeWeaponActive || m_VR->m_HideArms;
 	
-	if (info.pModel && m_Game->m_IsMeleeWeaponActive && !m_Game->m_CachedArmsModel)
+	if (info.pModel && hideArms && !m_Game->m_CachedArmsModel)
 	{
 		std::string modelName = m_Game->m_ModelInfo->GetModelName(info.pModel);
 		if (modelName.find("/arms/") != std::string::npos)
@@ -523,7 +525,7 @@ void Hooks::dDrawModelExecute(void *ecx, void *edx, void *state, const ModelRend
 		}
 	}
 
-	if (info.pModel && info.pModel == m_Game->m_ArmsModel && m_Game->m_IsMeleeWeaponActive)
+	if (info.pModel && info.pModel == m_Game->m_ArmsModel && hideArms)
 	{
 		m_Game->m_ArmsMaterial->SetMaterialVarFlag(MATERIAL_VAR_NO_DRAW, true);
 		m_Game->m_ModelRender->ForcedMaterialOverride(m_Game->m_ArmsMaterial);

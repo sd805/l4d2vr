@@ -1862,8 +1862,12 @@ public:
 		WeaponID id = GetWeaponID();
 
 		if (this == prevWep && id == prevWeaponID)
+		{
+			g_Game->m_SwitchedWeapons = false;
 			return prevViewmodelOffset;
+		}
 
+		g_Game->m_SwitchedWeapons = true;
 		prevWep = this;
 		prevWeaponID = id;
 
@@ -1883,12 +1887,10 @@ public:
 		}
 
 		if (viewmodelOffsets.find(id) != viewmodelOffsets.end())
-		{
 			prevViewmodelOffset = viewmodelOffsets[id];
-			return prevViewmodelOffset;
-		}
-
-		prevViewmodelOffset = viewmodelOffsets[NONE];
+		else
+			prevViewmodelOffset = viewmodelOffsets[NONE];
+		
 		return prevViewmodelOffset;
 	}
 };

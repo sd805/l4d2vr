@@ -689,6 +689,7 @@ void VR::ParseConfigFile()
     m_LeftHanded = userConfig["LeftHanded"] == "true";
     m_VRScale = std::stof(userConfig["VRScale"]);
     m_IpdScale = std::stof(userConfig["IPDScale"]);
+    m_HideArms = userConfig["HideArms"] == "true";
 }
 
 void VR::WaitForConfigUpdate()

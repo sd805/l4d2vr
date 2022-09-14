@@ -77,6 +77,7 @@ public:
     bool m_CachedArmsModel = false;
 
     bool m_IsMeleeWeaponActive = false;
+    bool m_SwitchedWeapons = false;
 
     Game();
 

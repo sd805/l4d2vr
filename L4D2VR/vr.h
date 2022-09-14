@@ -149,6 +149,7 @@ public:
 	bool m_LeftHanded = false;
 	float m_VRScale = 43.2;
 	float m_IpdScale = 1.0;
+	bool m_HideArms = false;
 
 	VR() {};
 	VR(Game *game);
