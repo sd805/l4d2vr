@@ -1859,39 +1859,7 @@ public:
 
 	PositionAngle GetViewmodelOffset()
 	{
-		WeaponID id = GetWeaponID();
-
-		if (this == prevWep && id == prevWeaponID)
-		{
-			g_Game->m_SwitchedWeapons = false;
-			return prevViewmodelOffset;
-		}
-
-		g_Game->m_SwitchedWeapons = true;
-		prevWep = this;
-		prevWeaponID = id;
-
-		if (id == MELEE)
-		{
-			typedef CMeleeWeaponInfoStore *(__thiscall *tGetMeleeWepInfo)(void *thisptr);
-			static tGetMeleeWepInfo oGetMeleeWepInfo = (tGetMeleeWepInfo)(g_Game->m_Offsets->GetMeleeWeaponInfoClient.address);
-			CMeleeWeaponInfoStore *meleeWepInfo = oGetMeleeWepInfo(this);
-
-			std::string wepName(meleeWepInfo->meleeWeaponName);
-
-			if (meleeViewmodelOffsets.find(wepName) != meleeViewmodelOffsets.end())
-			{
-				prevViewmodelOffset = meleeViewmodelOffsets[wepName];
-				return prevViewmodelOffset;
-			}
-		}
-
-		if (viewmodelOffsets.find(id) != viewmodelOffsets.end())
-			prevViewmodelOffset = viewmodelOffsets[id];
-		else
-			prevViewmodelOffset = viewmodelOffsets[NONE];
-		
-		return prevViewmodelOffset;
+		return viewmodelOffsets[NONE];
 	}
 };
 

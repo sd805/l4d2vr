@@ -2,33 +2,16 @@
 #include <Windows.h>
 #include <iostream>
 #include "sdk.h"
-#include "vr.h"
 #include "hooks.h"
 #include "offsets.h"
 #include "sigscanner.h"
 
 Game::Game()
 {
-    while (!(m_BaseClient = (uintptr_t)GetModuleHandle("client.dll")))
-        Sleep(50);
-    while (!(m_BaseEngine = (uintptr_t)GetModuleHandle("engine.dll")))
-        Sleep(50);
-    while (!(m_BaseMaterialSystem = (uintptr_t)GetModuleHandle("MaterialSystem.dll")))
-        Sleep(50);
     while (!(m_BaseServer = (uintptr_t)GetModuleHandle("server.dll")))
         Sleep(50);
 
-    m_ClientEntityList = (IClientEntityList *)GetInterface("client.dll", "VClientEntityList003");
-    m_EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient003");
-    m_EngineClient = (IEngineClient *)GetInterface("engine.dll", "VEngineClient013");
-    m_MaterialSystem = (IMaterialSystem *)GetInterface("MaterialSystem.dll", "VMaterialSystem080");
-    m_ClientViewRender = (IViewRender *)GetInterface("client.dll", "VEngineRenderView013");
-    m_EngineViewRender = (IViewRender *)GetInterface("engine.dll", "VEngineRenderView013");
-    m_ModelInfo = (IModelInfo *)GetInterface("engine.dll", "VModelInfoClient004");
-    m_ModelRender = (IModelRender *)GetInterface("engine.dll", "VEngineModel016");
-
     m_Offsets = new Offsets();
-    m_VR = new VR(this);
     m_Hooks = new Hooks(this);
 
     m_Initialized = true;

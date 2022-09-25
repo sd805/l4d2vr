@@ -3,7 +3,6 @@
 #include "texture.h"
 #include "sdk.h"
 #include "sdk_server.h"
-#include "vr.h"
 #include "offsets.h"
 #include <iostream>
 
@@ -15,23 +14,12 @@ Hooks::Hooks(Game *game)
 	}
 
 	m_Game = game;
-	m_VR = m_Game->m_VR;
 
 	initSourceHooks();
 
-	hkGetRenderTarget.enableHook();
-	hkCalcViewModelView.enableHook();
 	hkServerFireTerrorBullets.enableHook();
-	hkClientFireTerrorBullets.enableHook();
 	hkProcessUsercmds.enableHook();
 	hkReadUsercmd.enableHook();
-	hkWriteUsercmdDeltaToBuffer.enableHook();
-	hkWriteUsercmd.enableHook();
-	hkAdjustEngineViewport.enableHook();
-	hkViewport.enableHook();
-	hkGetViewport.enableHook();
-	hkCreateMove.enableHook();
-	hkTestMeleeSwingCollisionClient.enableHook();
 	hkTestMeleeSwingCollisionServer.enableHook();
 	hkDoMeleeSwingServer.enableHook();
 	hkStartMeleeSwingServer.enableHook();
@@ -39,7 +27,6 @@ Hooks::Hooks(Game *game)
 	hkItemPostFrameServer.enableHook();
 	hkGetPrimaryAttackActivity.enableHook();
 	hkEyePosition.enableHook();
-	hkDrawModelExecute.enableHook();
 }
 
 Hooks::~Hooks()
@@ -53,44 +40,14 @@ Hooks::~Hooks()
 
 int Hooks::initSourceHooks()
 {
-	LPVOID pGetRenderTargetVFunc = (LPVOID)(m_Game->m_Offsets->GetRenderTarget.address);
-	hkGetRenderTarget.createHook(pGetRenderTargetVFunc, &dGetRenderTarget);
-
-	LPVOID pRenderViewVFunc = (LPVOID)(m_Game->m_Offsets->RenderView.address);
-	hkRenderView.createHook(pRenderViewVFunc, &dRenderView);
-
-	LPVOID calcViewModelViewAddr = (LPVOID)(m_Game->m_Offsets->CalcViewModelView.address);
-	hkCalcViewModelView.createHook(calcViewModelViewAddr, &dCalcViewModelView);
-
 	LPVOID serverFireTerrorBulletsAddr = (LPVOID)(m_Game->m_Offsets->ServerFireTerrorBullets.address);
 	hkServerFireTerrorBullets.createHook(serverFireTerrorBulletsAddr, &dServerFireTerrorBullets);
-
-	LPVOID clientFireTerrorBulletsAddr = (LPVOID)(m_Game->m_Offsets->ClientFireTerrorBullets.address);
-	hkClientFireTerrorBullets.createHook(clientFireTerrorBulletsAddr, &dClientFireTerrorBullets);
 
 	LPVOID ProcessUsercmdsAddr = (LPVOID)(m_Game->m_Offsets->ProcessUsercmds.address);
 	hkProcessUsercmds.createHook(ProcessUsercmdsAddr, &dProcessUsercmds);
 
 	LPVOID ReadUserCmdAddr = (LPVOID)(m_Game->m_Offsets->ReadUserCmd.address);
 	hkReadUsercmd.createHook(ReadUserCmdAddr, &dReadUsercmd);
-
-	LPVOID WriteUsercmdDeltaToBufferAddr = (LPVOID)(m_Game->m_Offsets->WriteUsercmdDeltaToBuffer.address);
-	hkWriteUsercmdDeltaToBuffer.createHook(WriteUsercmdDeltaToBufferAddr, &dWriteUsercmdDeltaToBuffer);
-
-	LPVOID WriteUsercmdAddr = (LPVOID)(m_Game->m_Offsets->WriteUsercmd.address);
-	hkWriteUsercmd.createHook(WriteUsercmdAddr, &dWriteUsercmd);
-
-	LPVOID AdjustEngineViewportAddr = (LPVOID)(m_Game->m_Offsets->AdjustEngineViewport.address);
-	hkAdjustEngineViewport.createHook(AdjustEngineViewportAddr, &dAdjustEngineViewport);
-
-	LPVOID ViewportAddr = (LPVOID)(m_Game->m_Offsets->Viewport.address);
-	hkViewport.createHook(ViewportAddr, &dViewport);
-
-	LPVOID GetViewportAddr = (LPVOID)(m_Game->m_Offsets->GetViewport.address);
-	hkGetViewport.createHook(GetViewportAddr, &dGetViewport);
-
-	LPVOID MeleeSwingClientAddr = (LPVOID)(m_Game->m_Offsets->TestMeleeSwingClient.address);
-	hkTestMeleeSwingCollisionClient.createHook(MeleeSwingClientAddr, &dTestMeleeSwingCollisionClient);
 
 	LPVOID MeleeSwingServerAddr = (LPVOID)(m_Game->m_Offsets->TestMeleeSwingServer.address);
 	hkTestMeleeSwingCollisionServer.createHook(MeleeSwingServerAddr, &dTestMeleeSwingCollisionServer);
@@ -113,20 +70,8 @@ int Hooks::initSourceHooks()
 	LPVOID EyePositionAddr = (LPVOID)(m_Game->m_Offsets->EyePosition.address);
 	hkEyePosition.createHook(EyePositionAddr, &dEyePosition);
 
-	LPVOID DrawModelExecuteAddr = (LPVOID)(m_Game->m_Offsets->DrawModelExecute.address);
-	hkDrawModelExecute.createHook(DrawModelExecuteAddr, &dDrawModelExecute);
-
-	void *clientMode = nullptr;
-	while (!clientMode)
-	{
-		Sleep(10);
-		clientMode = **(void ***)(m_Game->m_Offsets->g_pClientMode.address);
-	}
-	hkCreateMove.createHook( (*(void ***)clientMode)[27], dCreateMove );
-
 	return 1;
 }
-
 
 ITexture *__fastcall Hooks::dGetRenderTarget(void *ecx, void *edx)
 {
@@ -134,91 +79,9 @@ ITexture *__fastcall Hooks::dGetRenderTarget(void *ecx, void *edx)
 	return result;
 }
 
-void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CViewSetup &hudViewSetup, int nClearFlags, int whatToDraw)
-{
-	IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
-
-	CViewSetup leftEyeView = setup;
-	CViewSetup rightEyeView = setup;
-
-	// Left eye CViewSetup
-	leftEyeView.x = 0;
-	leftEyeView.width = m_VR->m_RenderWidth;
-	leftEyeView.height = m_VR->m_RenderHeight;
-	leftEyeView.fov = m_VR->m_Fov;
-	leftEyeView.fovViewmodel = m_VR->m_Fov;
-	leftEyeView.m_flAspectRatio = m_VR->m_Aspect;
-	leftEyeView.zNear = 6;
-	leftEyeView.zNearViewmodel = 6;
-	leftEyeView.origin = m_VR->GetViewOriginLeft();
-	leftEyeView.angles = m_VR->GetViewAngle();
-
-	m_VR->m_SetupOrigin = setup.origin;
-
-	Vector hmdAngle = m_VR->GetViewAngle();
-	QAngle inGameAngle(hmdAngle.x, hmdAngle.y, hmdAngle.z);
-	m_Game->m_EngineClient->SetViewAngles(inGameAngle);
-
-	rndrContext->SetRenderTarget(m_VR->m_LeftEyeTexture);
-	hkRenderView.fOriginal(ecx, leftEyeView, hudViewSetup, nClearFlags, whatToDraw);
-
-	// Right eye CViewSetup
-	rightEyeView.x = 0;
-	rightEyeView.width = m_VR->m_RenderWidth;
-	rightEyeView.height = m_VR->m_RenderHeight;
-	rightEyeView.fov = m_VR->m_Fov;
-	rightEyeView.fovViewmodel = m_VR->m_Fov;
-	rightEyeView.m_flAspectRatio = m_VR->m_Aspect;
-	rightEyeView.zNear = 6;
-	rightEyeView.zNearViewmodel = 6;
-	rightEyeView.origin = m_VR->GetViewOriginRight();
-	rightEyeView.angles = m_VR->GetViewAngle();
-
-	rndrContext->SetRenderTarget(m_VR->m_RightEyeTexture);
-	hkRenderView.fOriginal(ecx, rightEyeView, hudViewSetup, nClearFlags, whatToDraw);
-
-	m_VR->m_RenderedNewFrame = true;
-}
-
-bool __fastcall Hooks::dCreateMove(void *ecx, void *edx, float flInputSampleTime, CUserCmd *cmd)
-{
-	if (!cmd->command_number)
-		return hkCreateMove.fOriginal(ecx, flInputSampleTime, cmd);
-
-	if (m_VR->m_IsVREnabled && m_VR->m_RoomscaleActive)
-	{
-		Vector setupOriginToHMD = m_VR->m_SetupOriginToHMD;
-		setupOriginToHMD.z = 0;
-		float distance = VectorLength(setupOriginToHMD);
-		if (distance > 1)
-		{
-			float forwardSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdForward);
-			float sideSpeed = DotProduct2D(setupOriginToHMD, m_VR->m_HmdRight);
-			cmd->forwardmove += distance * forwardSpeed;
-			cmd->sidemove += distance * sideSpeed;
-		}
-	}
-
-	return false;
-}
-
 void __fastcall Hooks::dEndFrame(void *ecx, void *edx)
 {
 	return hkEndFrame.fOriginal(ecx);
-}
-
-void __fastcall Hooks::dCalcViewModelView(void *ecx, void *edx, void *owner, const Vector &eyePosition, const QAngle &eyeAngles)
-{
-	Vector vecNewOrigin = eyePosition;
-	QAngle vecNewAngles = eyeAngles;
-
-	if (m_VR->m_IsVREnabled)
-	{
-		vecNewOrigin = m_VR->GetRecommendedViewmodelAbsPos();
-		vecNewAngles = m_VR->GetRecommendedViewmodelAbsAngle();
-	}
-
-	return hkCalcViewModelView.fOriginal(ecx, owner, vecNewOrigin, vecNewAngles);
 }
 
 int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7)
@@ -226,14 +89,8 @@ int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 	Vector vecNewOrigin = vecOrigin;
 	QAngle vecNewAngles = vecAngles;
 
-	// Server host
-	if (m_VR->m_IsVREnabled && playerId == m_Game->m_EngineClient->GetLocalPlayer())
-	{
-		vecNewOrigin = m_VR->GetRightControllerAbsPos();
-		vecNewAngles = m_VR->GetRightControllerAbsAngle();
-	}
 	// Clients
-	else if (m_Game->m_PlayersVRInfo[playerId].isUsingVR)
+	if (m_Game->m_PlayersVRInfo[playerId].isUsingVR)
 	{
 		vecNewOrigin = m_Game->m_PlayersVRInfo[playerId].controllerPos;
 		vecNewAngles = m_Game->m_PlayersVRInfo[playerId].controllerAngle;
@@ -241,21 +98,6 @@ int Hooks::dServerFireTerrorBullets(int playerId, const Vector &vecOrigin, const
 
 	return hkServerFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
 }
-
-int Hooks::dClientFireTerrorBullets(int playerId, const Vector &vecOrigin, const QAngle &vecAngles, int a4, int a5, int a6, float a7)
-{
-	Vector vecNewOrigin = vecOrigin;
-	QAngle vecNewAngles = vecAngles;
-	
-	if (m_VR->m_IsVREnabled && playerId == m_Game->m_EngineClient->GetLocalPlayer())
-	{
-		vecNewOrigin = m_VR->GetRightControllerAbsPos();
-		vecNewAngles = m_VR->GetRightControllerAbsAngle();
-	}
-
-	return hkClientFireTerrorBullets.fOriginal(playerId, vecNewOrigin, vecNewAngles, a4, a5, a6, a7);
-}
-
 
 float __fastcall Hooks::dProcessUsercmds(void *ecx, void *edx, edict_t *player, void *buf, int numcmds, int totalcmds, int dropped_packets, bool ignore, bool paused)
 {
@@ -390,59 +232,6 @@ void __fastcall Hooks::dWriteUsercmdDeltaToBuffer(void *ecx, void *edx, int a1, 
 	return hkWriteUsercmdDeltaToBuffer.fOriginal(ecx, a1, buf, from, to, isnewcommand);
 }
 
-int Hooks::dWriteUsercmd(void *buf, CUserCmd *to, CUserCmd *from)
-{
-	if (m_VR->m_IsVREnabled)
-	{
-		CInput *m_Input = **(CInput ***)(m_Game->m_Offsets->g_pppInput.address);
-		CVerifiedUserCmd *pVerifiedCommands = *(CVerifiedUserCmd **)((uintptr_t)m_Input + 0xF0);
-		CVerifiedUserCmd *pVerified = &pVerifiedCommands[(to->command_number) % 150];
-
-		// Signal to the server that this CUserCmd has VR info
-		to->tick_count *= -1;
-
-		int originalCommandNum = to->command_number;
-
-		QAngle controllerAngles = m_VR->GetRightControllerAbsAngle();
-		to->mousedx = controllerAngles.x * 10; // Strip off 2nd decimal to save bits.
-		to->mousedy = controllerAngles.y * 10;
-		int rollEncoding = (((int)controllerAngles.z + 180) / 2 * 10000000);
-		to->command_number += rollEncoding;
-
-		if (VectorLength(m_VR->m_RightControllerPose.TrackedDeviceVel) > 1.1)
-		{
-			to->command_number *= -1; // Signal to server that melee swing in motion
-		}
-
-		Vector controllerPos = m_VR->GetRightControllerAbsPos();
-		to->viewangles.z = controllerPos.x;
-		to->upmove = controllerPos.y;
-
-		// Space in CUserCmd is tight, so encode viewangle.x and controllerPos.z together.
-		// Encoding will overflow if controllerPos.z goes beyond +-21474.8
-		float xAngle = to->viewangles.x;
-		int encodedAngle = (xAngle + 360) * 10;
-		int encoding = (int)(controllerPos.z * 10) * 10000;
-		encoding += encoding < 0 ? -encodedAngle : encodedAngle;
-		to->viewangles.x = encoding;
-
-		hkWriteUsercmd.fOriginal(buf, to, from);
-
-		to->viewangles.x = xAngle;
-		to->tick_count *= -1;
-		to->viewangles.z = 0;
-		to->upmove = 0;
-		to->command_number = originalCommandNum;
-
-		// Must recalculate checksum for the edited CUserCmd or gunshots will sound
-		// terrible in multiplayer.
-		pVerified->m_cmd = *to;
-		pVerified->m_crc = to->GetChecksum();
-		return 1;
-	}
-	return hkWriteUsercmd.fOriginal(buf, to, from);
-}
-
 void Hooks::dAdjustEngineViewport(int &x, int &y, int &width, int &height)
 {
 	hkAdjustEngineViewport.fOriginal(x, y, width, height);
@@ -505,34 +294,4 @@ Vector *Hooks::dEyePosition(void *ecx, void *edx, Vector *eyePos)
 	}
 
 	return result;
-}
-
-void Hooks::dDrawModelExecute(void *ecx, void *edx, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld)
-{
-	if (m_Game->m_SwitchedWeapons)
-		m_Game->m_CachedArmsModel = false;
-
-	bool hideArms = m_Game->m_IsMeleeWeaponActive || m_VR->m_HideArms;
-	
-	if (info.pModel && hideArms && !m_Game->m_CachedArmsModel)
-	{
-		std::string modelName = m_Game->m_ModelInfo->GetModelName(info.pModel);
-		if (modelName.find("/arms/") != std::string::npos)
-		{
-			m_Game->m_ArmsMaterial = m_Game->m_MaterialSystem->FindMaterial(modelName.c_str(), "Model textures");
-			m_Game->m_ArmsModel = info.pModel;
-			m_Game->m_CachedArmsModel = true;
-		}
-	}
-
-	if (info.pModel && info.pModel == m_Game->m_ArmsModel && hideArms)
-	{
-		m_Game->m_ArmsMaterial->SetMaterialVarFlag(MATERIAL_VAR_NO_DRAW, true);
-		m_Game->m_ModelRender->ForcedMaterialOverride(m_Game->m_ArmsMaterial);
-		hkDrawModelExecute.fOriginal(ecx, state, info, pCustomBoneToWorld);
-		m_Game->m_ModelRender->ForcedMaterialOverride(NULL);
-		return;
-	}
-
-	hkDrawModelExecute.fOriginal(ecx, state, info, pCustomBoneToWorld);
 }
