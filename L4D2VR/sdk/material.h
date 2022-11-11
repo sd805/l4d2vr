@@ -150,7 +150,7 @@ public:
 	virtual void SupportsMSAAModeEi() = 0; //CMaterialSystem::SupportsMSAAMode(int)
 	virtual void GetVideoCardIdentifierEv() = 0; //CMaterialSystem::GetVideoCardIdentifier(void)
 	virtual void SpewDriverInfoEv() = 0; //CMaterialSystem::SpewDriverInfo(void)
-	virtual void GetBackBufferDimensionsERiS0_() = 0; //CMaterialSystem::GetBackBufferDimensions(int &,int &)
+	virtual void GetBackBufferDimensions(int &, int &) = 0; //CMaterialSystem::GetBackBufferDimensions(int &,int &)
 	virtual ImageFormat GetBackBufferFormat() = 0; //CMaterialSystem::GetBackBufferFormat(void)
 	virtual void SupportsHDRModeE9HDRType_t() = 0; //CMaterialSystem::SupportsHDRMode(HDRType_t)
 	virtual void AddViewEPv() = 0; //CMaterialSystem::AddView(void *)

@@ -14,6 +14,7 @@ class CBaseEntity;
 class IModelInfo;
 class IModelRender;
 class IMaterial;
+class IInput;
 class C_BasePlayer;
 struct model_t;
 
@@ -56,11 +57,13 @@ public:
     IViewRender *m_EngineViewRender = nullptr;
     IModelInfo *m_ModelInfo = nullptr;
     IModelRender *m_ModelRender = nullptr;
+    IInput *m_VguiInput = nullptr;
 
     uintptr_t m_BaseEngine;
     uintptr_t m_BaseClient;
     uintptr_t m_BaseServer;
     uintptr_t m_BaseMaterialSystem;
+    uintptr_t m_BaseVgui2;
 
     Offsets *m_Offsets = nullptr;
     VR *m_VR = nullptr;

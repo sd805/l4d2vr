@@ -127,12 +127,25 @@ class CInput
 public:
 	virtual        void        Init_All(void);
 	virtual        void        Shutdown_All(void);
-	virtual        int            GetButtonBits(int);
+	virtual        int         GetButtonBits(int);
 	virtual        void        CreateMove(int sequence_number, float input_sample_frametime, bool active);
 	virtual        void        ExtraMouseSample(float frametime, bool active);
 	virtual        bool        WriteUsercmdDeltaToBuffer(int *buf, int from, int to, bool isnewcommand);
 	virtual        void        EncodeUserCmdToBuffer(int buf, int slot);
 	virtual        void        DecodeUserCmdFromBuffer(int buf, int slot);
-	virtual        CUserCmd *GetUserCmd(int uk, int sequence_number);
-
+	virtual        CUserCmd    *GetUserCmd(int uk, int sequence_number);
+	virtual        void        func0(void);
+	virtual        void        func1(void);
+	virtual        void        KeyEvent(int x, int y, char const * z);
+	virtual        void        func3(void);
+	virtual        void        func4(void);
+	virtual        void        Joystick_Advanced(void);
+	virtual        void        func5(void);
+	virtual        void        func6(void);
+	virtual        void        func7(void);
+	virtual        void        func8(void);
+	virtual        void        func9(void);
+	virtual        void        func10(void);
+	virtual        void        ActivateMouse(void);
+	virtual        void        DeactivateMouse(void);
 };

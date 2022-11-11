@@ -11,8 +11,10 @@
 #include <string>
 #include <filesystem>
 #include <thread>
+#include <d3d9_vr.h>
 
-VR::VR(Game *game) {
+VR::VR(Game *game) 
+{
     m_Game = game;
 
     char errorString[MAX_STR_LEN];
@@ -20,7 +22,8 @@ VR::VR(Game *game) {
     vr::HmdError error = vr::VRInitError_None;
     m_System = vr::VR_Init(&error, vr::VRApplication_Scene);
 
-    if (error != vr::VRInitError_None) {
+    if (error != vr::VRInitError_None) 
+    {
         snprintf(errorString, MAX_STR_LEN, "VR_Init failed: %s", vr::VR_GetVRInitErrorAsEnglishDescription(error));
         Game::errorMsg(errorString);
         return;
@@ -68,19 +71,29 @@ VR::VR(Game *game) {
     std::thread configParser(&VR::WaitForConfigUpdate, this);
     configParser.detach();
 
+    while (!g_D3DVR9) 
+        Sleep(10);
+
+    g_D3DVR9->GetBackBufferData(&m_VKBackBuffer);
+    m_Overlay = vr::VROverlay();
+    m_Overlay->CreateOverlay("MenuOverlayKey", "MenuOverlay", &m_OverlayHandle);
+    m_Overlay->SetOverlayInputMethod(m_OverlayHandle, vr::VROverlayInputMethod_Mouse);
+
+    UpdatePosesAndActions();
+
     m_IsInitialized = true;
+    m_IsVREnabled = true;
 }
 
-
-
-int VR::SetActionManifest(const char *fileName) {
-
+int VR::SetActionManifest(const char *fileName) 
+{
     char currentDir[MAX_STR_LEN];
     GetCurrentDirectory(MAX_STR_LEN, currentDir);
     char path[MAX_STR_LEN];
     sprintf_s(path, MAX_STR_LEN, "%s\\VR\\SteamVRActionManifest\\%s", currentDir, fileName);
 
-    if (m_Input->SetActionManifestPath(path) != vr::VRInputError_None) {
+    if (m_Input->SetActionManifestPath(path) != vr::VRInputError_None) 
+    {
         Game::errorMsg("SetActionManifestPath failed");
     }
 
@@ -97,6 +110,13 @@ int VR::SetActionManifest(const char *fileName) {
     m_Input->GetActionHandle("/actions/main/in/ResetPosition", &m_ActionResetPosition);
     m_Input->GetActionHandle("/actions/main/in/Crouch", &m_ActionCrouch);
     m_Input->GetActionHandle("/actions/main/in/Flashlight", &m_ActionFlashlight);
+    m_Input->GetActionHandle("/actions/main/in/MenuSelect", &m_MenuSelect);
+    m_Input->GetActionHandle("/actions/main/in/MenuBack", &m_MenuBack);
+    m_Input->GetActionHandle("/actions/main/in/MenuUp", &m_MenuUp);
+    m_Input->GetActionHandle("/actions/main/in/MenuDown", &m_MenuDown);
+    m_Input->GetActionHandle("/actions/main/in/MenuLeft", &m_MenuLeft);
+    m_Input->GetActionHandle("/actions/main/in/MenuRight", &m_MenuRight);
+    m_Input->GetActionHandle("/actions/main/in/Spray", &m_Spray);
 
     m_Input->GetActionSetHandle("/actions/main", &m_ActionSet);
     m_ActiveActionSet = {};
@@ -110,12 +130,12 @@ void VR::Update()
     if (!m_IsInitialized || !m_Game->m_Initialized)
         return;
 
-    if (m_IsVREnabled)
+    if (m_IsVREnabled && g_D3DVR9)
     {
-        if (!m_CreatedVRTextures)
+        if (!m_CreatedVRTextures && m_Game->m_EngineClient->IsInGame())
         {
             CreateVRTextures();
-            m_Game->m_Hooks->hkRenderView.enableHook();
+            m_CreatedVRTextures = true;
         }
 
         // Prevents crashing at menu
@@ -124,12 +144,18 @@ void VR::Update()
             IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
             rndrContext->SetRenderTarget(NULL);
             m_Game->m_CachedArmsModel = false;
+            m_CreatedVRTextures = false; // Have to recreate textures otherwise some workshop maps won't render
         }
-        SubmitVRTextures();
     }
-    
+
+    SubmitVRTextures();
     UpdatePosesAndActions();
-    UpdateTracking(m_SetupOrigin);
+    UpdateTracking();
+
+    if (m_Game->m_EngineClient->IsInGame())
+        ProcessInput();
+    else
+        ProcessMenuInput();
 }
 
 void VR::CreateVRTextures()
@@ -144,28 +170,34 @@ void VR::CreateVRTextures()
     m_RightEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("rightEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
     m_CreatingTextureID = -1;
 
-    m_Game->m_MaterialSystem->isGameRunning = false;
-    //MaterialSystem->EndRenderTargetAllocation(); // Freezes game and leaks memory
-    m_Game->m_MaterialSystem->isGameRunning = true;
-
-    m_CreatedVRTextures = true;
+    m_Game->m_MaterialSystem->EndRenderTargetAllocation();
 }
 
 void VR::SubmitVRTextures()
 {
     if (!m_RenderedNewFrame)
+    {
+        if (!m_Overlay->IsOverlayVisible(m_OverlayHandle))
+            RepositionMenuOverlay();
+
+        m_Overlay->SetOverlayTexture(m_OverlayHandle, &m_VKBackBuffer.m_VRTexture);
+        vr::VROverlay()->ShowOverlay(m_OverlayHandle);
+
         return;
+    }
 
-    vr::EVRCompositorError leftEyeError = vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
+    vr::VROverlay()->HideOverlay(m_OverlayHandle);
 
-    vr::EVRCompositorError rightEyeError = vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
+    vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
+    vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
 
     m_RenderedNewFrame = false;
 }
 
 void VR::GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &poseOut)
 {
-    if (poseRaw.bPoseIsValid) {
+    if (poseRaw.bPoseIsValid) 
+    {
         vr::HmdMatrix34_t mat = poseRaw.mDeviceToAbsoluteTracking;
         Vector pos;
         Vector vel;
@@ -191,11 +223,57 @@ void VR::GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &po
     }
 }
 
+void VR::RepositionMenuOverlay()
+{
+    vr::TrackedDevicePose_t hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
+    vr::HmdMatrix34_t hmdMat = hmdPose.mDeviceToAbsoluteTracking;
+    Vector hmdPosition = { hmdMat.m[0][3], hmdMat.m[1][3], hmdMat.m[2][3] };
+    Vector hmdForward = { -hmdMat.m[0][2], 0, -hmdMat.m[2][2] };
+
+    int windowWidth, windowHeight;
+    m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
+
+    vr::HmdMatrix34_t overlayTransform = 
+    {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 1.0f,
+        0.0f, 0.0f, 1.0f, 1.0f
+    };
+
+    vr::ETrackingUniverseOrigin trackingOrigin = vr::ETrackingUniverseOrigin::TrackingUniverseSeated;
+
+    float renderWidth = m_VKBackBuffer.m_VulkanData.m_nWidth;
+    float renderHeight = m_VKBackBuffer.m_VulkanData.m_nHeight;
+
+    float widthRatio = windowWidth / renderWidth;
+    float heightRatio = windowHeight / renderHeight;
+    overlayTransform.m[0][0] *= widthRatio;
+    overlayTransform.m[1][1] *= heightRatio;
+
+    hmdForward[1] = 0;
+    VectorNormalize(hmdForward);
+    hmdForward *= 3;
+
+    Vector overlayNewPos = hmdForward + hmdPosition;
+
+    overlayTransform.m[0][3] = overlayNewPos.x;
+    overlayTransform.m[1][3] = overlayNewPos.y - 0.25;
+    overlayTransform.m[2][3] = overlayNewPos.z;
+
+    float xScale = overlayTransform.m[0][0];
+    float hmdRotationDegrees = atan2f(hmdMat.m[0][2], hmdMat.m[2][2]);
+
+    overlayTransform.m[0][0] *= cos(hmdRotationDegrees);
+    overlayTransform.m[0][2] = sin(hmdRotationDegrees);
+    overlayTransform.m[2][0] = -sin(hmdRotationDegrees) * xScale;
+    overlayTransform.m[2][2] *= cos(hmdRotationDegrees);
+
+    vr::VROverlay()->SetOverlayTransformAbsolute(m_OverlayHandle, trackingOrigin, &overlayTransform);
+    vr::VROverlay()->SetOverlayWidthInMeters(m_OverlayHandle, 1.5 * (1.0 / heightRatio));
+}
+
 void VR::GetPoses() 
 {
-    vr::InputPoseActionData_t poseActionData;
-    vr::TrackedDevicePose_t pose;
-
     vr::TrackedDevicePose_t hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
 
     vr::TrackedDeviceIndex_t leftControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_LeftHand);
@@ -231,14 +309,18 @@ void VR::GetViewParameters()
     m_EyeToHeadTransformPosRight.z = eyeToHeadRight.m[2][3];
 }
 
-
-bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle)
+bool VR::PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfActionChanged)
 {
     vr::InputDigitalActionData_t digitalActionData;
     vr::EVRInputError result = m_Input->GetDigitalActionData(actionHandle, &digitalActionData, sizeof(digitalActionData), vr::k_ulInvalidInputValueHandle);
     
     if (result == vr::VRInputError_None)
-        return digitalActionData.bState;
+    {
+        if (checkIfActionChanged)
+            return digitalActionData.bState && digitalActionData.bChanged;
+        else
+            return digitalActionData.bState;
+    }
 
     return false;
 }
@@ -253,14 +335,105 @@ bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalog
     return false;
 }
 
+void VR::ProcessMenuInput()
+{
+    vr::TrackedDeviceIndex_t rightControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
+    vr::TrackedDevicePose_t rightControllerPose = m_Poses[rightControllerIndex];
+
+    vr::HmdMatrix34_t mat = rightControllerPose.mDeviceToAbsoluteTracking;
+    Vector controllerPosition = { mat.m[0][3], mat.m[1][3], mat.m[2][3] };
+    Vector controllerForward = { -mat.m[0][2], -mat.m[1][2], -mat.m[2][2] };
+    Vector controllerRight = { mat.m[0][0], mat.m[1][0], mat.m[2][0] };
+    Vector controllerUp = { mat.m[0][1], mat.m[1][1], mat.m[2][1] };
+
+    float laserPitchOffset = -38;
+    float laserYawOffset = 0.3;
+
+    Vector forwardCorrected = VectorRotate(controllerForward, controllerRight, laserPitchOffset);
+    forwardCorrected = VectorRotate(forwardCorrected, controllerUp, laserYawOffset);
+
+    vr::VROverlayIntersectionParams_t intersectParams =
+    {
+        { controllerPosition.x, controllerPosition.y, controllerPosition.z },
+        { forwardCorrected.x, forwardCorrected.y, forwardCorrected.z },
+        vr::ETrackingUniverseOrigin::TrackingUniverseSeated
+    };
+
+    vr::VROverlayIntersectionResults_t intersectResults;
+    
+    bool hitOverlay = vr::VROverlay()->ComputeOverlayIntersection(m_OverlayHandle, &intersectParams, &intersectResults);
+    
+    if (hitOverlay)
+    {
+        vr::VROverlay()->SetOverlayFlag(m_OverlayHandle, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
+
+        float laserX = intersectResults.vUVs.v[0];
+        float laserY = intersectResults.vUVs.v[1];
+
+        int windowWidth, windowHeight;
+        m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
+        m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserY));
+
+        vr::VREvent_t vrEvent;
+        while (vr::VROverlay()->PollNextOverlayEvent(m_OverlayHandle, &vrEvent, sizeof(vrEvent)))
+        {
+            switch (vrEvent.eventType)
+            {
+            case vr::VREvent_MouseButtonDown:
+                m_Game->m_VguiInput->InternalMousePressed(ButtonCode_t::MOUSE_LEFT);
+                break;
+            case vr::VREvent_MouseButtonUp:
+                m_Game->m_VguiInput->InternalMouseReleased(ButtonCode_t::MOUSE_LEFT);
+                break;
+            }
+        }
+    }
+    else
+    {
+        vr::VROverlay()->SetOverlayFlag(m_OverlayHandle, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, false);
+        
+        if (PressedDigitalAction(m_MenuSelect, true))
+        {
+            m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_SPACE);
+            m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_SPACE);
+            m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_SPACE);
+        }
+        if (PressedDigitalAction(m_MenuBack, true))
+        {
+            m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_ESCAPE);
+            m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_ESCAPE);
+            m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_ESCAPE);
+        }
+        if (PressedDigitalAction(m_MenuUp, true))
+        {
+            m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_UP);
+            m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_UP);
+            m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_UP);
+        }
+        if (PressedDigitalAction(m_MenuDown, true))
+        {
+            m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_DOWN);
+            m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_DOWN);
+            m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_DOWN);
+        }
+        if (PressedDigitalAction(m_MenuLeft, true))
+        {
+            m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_LEFT);
+            m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_LEFT);
+            m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_LEFT);
+        }
+        if (PressedDigitalAction(m_MenuRight, true))
+        {
+            m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_RIGHT);
+            m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_RIGHT);
+            m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_RIGHT);
+        }
+    }
+}
+
 void VR::ProcessInput()
 {
     vr::InputAnalogActionData_t analogActionData;
-
-    if (GetAsyncKeyState(VK_F6) || PressedDigitalAction(m_ActionActivateVR))
-    {
-        m_IsVREnabled = true;
-    }
 
     if (!m_IsVREnabled)
         return;
@@ -308,6 +481,7 @@ void VR::ProcessInput()
         m_RotationOffset -= 360 * std::floor(m_RotationOffset / 360);
     }
 
+    // TODO: Instead of ClientCmding, override Usercmd in CreateMove
     if (GetAnalogActionData(m_ActionWalk, analogActionData))		
     {
         bool pushingStickX = true;
@@ -401,38 +575,18 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("-attack2");
     }
 
-    if (PressedDigitalAction(m_ActionPrevItem))
+    if (PressedDigitalAction(m_ActionPrevItem, true))
     {
-        if (!m_ChangedItem)
-        {
-            m_Game->ClientCmd_Unrestricted("invprev");
-            m_ChangedItem = true;
-        }
+        m_Game->ClientCmd_Unrestricted("invprev");
     }
-    else if (PressedDigitalAction(m_ActionNextItem))
+    else if (PressedDigitalAction(m_ActionNextItem, true))
     {
-        if (!m_ChangedItem)
-        {
-            m_Game->ClientCmd_Unrestricted("invnext");
-            m_ChangedItem = true;
-        }
-    }
-    else
-    {
-        m_ChangedItem = false;
+        m_Game->ClientCmd_Unrestricted("invnext");
     }
 
-    if (PressedDigitalAction(m_ActionResetPosition))
+    if (PressedDigitalAction(m_ActionResetPosition, true))
     {
-        if (!m_PressedLeftStick)
-        {
-            ResetPosition();
-            m_PressedLeftStick = true;
-        }
-    }
-    else
-    {
-        m_PressedLeftStick = false;
+        ResetPosition();
     }
 
     if (PressedDigitalAction(m_ActionCrouch))
@@ -444,19 +598,15 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("-duck");
     }
 
-    if (PressedDigitalAction(m_ActionFlashlight))
+    if (PressedDigitalAction(m_ActionFlashlight, true))
     {
-        if (!m_ToggledFlashlight)
-        {
-            m_Game->ClientCmd_Unrestricted("impulse 100");
-            m_ToggledFlashlight = true;
-        }
-    }
-    else
-    {
-        m_ToggledFlashlight = false;
+        m_Game->ClientCmd_Unrestricted("impulse 100");
     }
 
+    if (PressedDigitalAction(m_Spray, true))
+    {
+        m_Game->ClientCmd_Unrestricted("impulse 201");
+    }
 }
 
 QAngle VR::GetRightControllerAbsAngle()
@@ -488,7 +638,7 @@ QAngle VR::GetRecommendedViewmodelAbsAngle()
     return result;
 }
 
-void VR::UpdateTracking(Vector viewOrigin)
+void VR::UpdateTracking()
 {
     GetPoses();
 
@@ -624,9 +774,6 @@ void VR::UpdateTracking(Vector viewOrigin)
     // Viewmodel roll offset
     m_ViewmodelRight = VectorRotate(m_ViewmodelRight, m_ViewmodelForward, m_ViewmodelAngOffset.z);
     m_ViewmodelUp = VectorRotate(m_ViewmodelUp, m_ViewmodelForward, m_ViewmodelAngOffset.z);
-    
-    // Process action input
-    ProcessInput();
 }
 
 Vector VR::GetViewAngle()
@@ -646,7 +793,6 @@ Vector VR::GetViewOriginLeft()
 
 Vector VR::GetViewOriginRight()
 {
-
     Vector viewOriginRight;
 
     viewOriginRight = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));

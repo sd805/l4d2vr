@@ -606,6 +606,13 @@ inline Vector Vector::operator*(float fl) const
 	return res;
 }
 
+inline Vector operator*(const float lhs, const Vector &rhs)
+{
+	Vector res;
+	VectorMultiply(rhs, lhs, res);
+	return res;
+}
+
 inline Vector Vector::operator*(const Vector &v) const
 {
 	Vector res;
@@ -713,6 +720,15 @@ inline void CrossProduct(const Vector &a, const Vector &b, Vector &result)
 	result.x = a.y * b.z - a.z * b.y;
 	result.y = a.z * b.x - a.x * b.z;
 	result.z = a.x * b.y - a.y * b.x;
+}
+
+inline Vector CrossProduct(const Vector &a, const Vector &b)
+{
+	Vector result{};
+	result.x = a.y * b.z - a.z * b.y;
+	result.y = a.z * b.x - a.x * b.z;
+	result.z = a.x * b.y - a.y * b.x;
+	return result;
 }
 
 inline vec_t VectorLength(const Vector &v)

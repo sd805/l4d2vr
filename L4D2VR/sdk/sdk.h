@@ -762,458 +762,108 @@ public:
 class IMatRenderContext : public IRefCounted
 {
 public:
-	virtual void				BeginRender() = 0;
-	virtual void				EndRender() = 0;
-
-	virtual void				Flush(bool flushHardware = false) = 0;
-
-	virtual void				BindLocalCubemap(ITexture *pTexture) = 0;
-
-	// pass in an ITexture (that is build with "rendertarget" "1") or
-	// pass in NULL for the regular backbuffer.
-	virtual void				SetRenderTarget(ITexture *pTexture) = 0;
-	virtual ITexture *GetRenderTarget(void) = 0;
-
-	virtual void				GetRenderTargetDimensions(int &width, int &height) const = 0;
-
-	// Bind a material is current for rendering.
-	virtual void				Bind(IMaterial *material, void *proxyData = 0) = 0;
-	// Bind a lightmap page current for rendering.  You only have to 
-	// do this for materials that require lightmaps.
-	virtual void				BindLightmapPage(int lightmapPageID) = 0;
-
-	// inputs are between 0 and 1
-	virtual void				DepthRange(float zNear, float zFar) = 0;
-
-	virtual void				ClearBuffers(bool bClearColor, bool bClearDepth, bool bClearStencil = false) = 0;
-
-	// read to a unsigned char rgb image.
-	virtual void				ReadPixels(int x, int y, int width, int height, unsigned char *data, ImageFormat dstFormat) = 0;
-
-	// Sets lighting
-	virtual void				SetAmbientLight(float r, float g, float b) = 0;
-	virtual void				SetLight(void) = 0;
-
-	// The faces of the cube are specified in the same order as cubemap textures
-	virtual void				SetAmbientLightCube(Vector4D cube[6]) = 0;
-
-	// Blit the backbuffer to the framebuffer texture
-	virtual void				CopyRenderTargetToTexture(ITexture *pTexture) = 0;
-
-	// Set the current texture that is a copy of the framebuffer.
-	virtual void				SetFrameBufferCopyTexture(ITexture *pTexture, int textureIndex = 0) = 0;
-	virtual ITexture *GetFrameBufferCopyTexture(int textureIndex) = 0;
-
-	//
-	// end vertex array api
-	//
-
-	// matrix api
-	virtual void				MatrixMode(void) = 0;
-	virtual void				PushMatrix(void) = 0;
-	virtual void				PopMatrix(void) = 0;
-	virtual void				LoadMatrix(VMatrix const &matrix) = 0;
-	virtual void				LoadMatrix(matrix3x4_t const &matrix) = 0;
-	virtual void				MultMatrix(VMatrix const &matrix) = 0;
-	virtual void				MultMatrix(matrix3x4_t const &matrix) = 0;
-	virtual void				MultMatrixLocal(VMatrix const &matrix) = 0;
-	virtual void				MultMatrixLocal(matrix3x4_t const &matrix) = 0;
-	virtual void				GetMatrix(void) = 0;
-	virtual void				GetMatrix(void*, void*) = 0;
-	virtual void				LoadIdentity(void) = 0;
-	virtual void				Ortho(double left, double top, double right, double bottom, double zNear, double zFar) = 0;
-	virtual void				PerspectiveX(double fovx, double aspect, double zNear, double zFar) = 0;
-	virtual void				PickMatrix(int x, int y, int width, int height) = 0;
-	virtual void				Rotate(float angle, float x, float y, float z) = 0;
-	virtual void				Translate(float x, float y, float z) = 0;
-	virtual void				Scale(float x, float y, float z) = 0;
-	// end matrix api
-
-	// Sets/gets the viewport
-	virtual void				Viewport(int x, int y, int width, int height) = 0;
-	virtual void				GetViewport(int &x, int &y, int &width, int &height) const = 0;
-
-	// The cull mode
-	virtual void				CullMode(void) = 0;
-
-	// end matrix api
-
-	// This could easily be extended to a general user clip plane
-	virtual void				SetHeightClipMode(void) = 0;
-	// garymcthack : fog z is always used for heightclipz for now.
-	virtual void				SetHeightClipZ(float z) = 0;
-
-	// Fog methods...
-	virtual void				FogMode(void) = 0;
-	virtual void				FogStart(float fStart) = 0;
-	virtual void				FogEnd(float fEnd) = 0;
-	virtual void				SetFogZ(float fogZ) = 0;
-	virtual void	GetFogMode(void) = 0;
-
-	virtual void				FogColor3f(float r, float g, float b) = 0;
-	virtual void				FogColor3fv(float const *rgb) = 0;
-	virtual void				FogColor3ub(unsigned char r, unsigned char g, unsigned char b) = 0;
-	virtual void				FogColor3ubv(unsigned char const *rgb) = 0;
-
-	virtual void				GetFogColor(unsigned char *rgb) = 0;
-
-	// Sets the number of bones for skinning
-	virtual void				SetNumBoneWeights(int numBones) = 0;
-
-	// Creates/destroys Mesh
-	virtual void *CreateStaticMesh(void) = 0;
-	virtual void DestroyStaticMesh(void) = 0;
-
-	// Gets the dynamic mesh associated with the currently bound material
-	// note that you've got to render the mesh before calling this function 
-	// a second time. Clients should *not* call DestroyStaticMesh on the mesh 
-	// returned by this call.
-	// Use buffered = false if you want to not have the mesh be buffered,
-	// but use it instead in the following pattern:
-	//		meshBuilder.Begin
-	//		meshBuilder.End
-	//		Draw partial
-	//		Draw partial
-	//		Draw partial
-	//		meshBuilder.Begin
-	//		meshBuilder.End
-	//		etc
-	// Use Vertex or Index Override to supply a static vertex or index buffer
-	// to use in place of the dynamic buffers.
-	//
-	// If you pass in a material in pAutoBind, it will automatically bind the
-	// material. This can be helpful since you must bind the material you're
-	// going to use BEFORE calling GetDynamicMesh.
-	virtual void *GetDynamicMesh(void) = 0;
-
-	// ------------ New Vertex/Index Buffer interface ----------------------------
-	// Do we need support for bForceTempMesh and bSoftwareVertexShader?
-	// I don't think we use bSoftwareVertexShader anymore. .need to look into bForceTempMesh.
-	virtual void *CreateStaticVertexBuffer(void) = 0;
-	virtual void *CreateStaticIndexBuffer(void) = 0;
-	virtual void DestroyVertexBuffer(void *) = 0;
-	virtual void DestroyIndexBuffer(void *) = 0;
-	// Do we need to specify the stream here in the case of locking multiple dynamic VBs on different streams?
-	virtual void *GetDynamicVertexBuffer(void) = 0;
-	virtual void *GetDynamicIndexBuffer(void) = 0;
-	virtual void BindVertexBuffer(void) = 0;
-	virtual void BindIndexBuffer(void) = 0;
-	virtual void Draw(void) = 0;
-	// ------------ End ----------------------------
-
-	// Selection mode methods
-	virtual int  SelectionMode(bool selectionMode) = 0;
-	virtual void SelectionBuffer(unsigned int *pBuffer, int size) = 0;
-	virtual void ClearSelectionNames() = 0;
-	virtual void LoadSelectionName(int name) = 0;
-	virtual void PushSelectionName(int name) = 0;
-	virtual void PopSelectionName() = 0;
-
-	// Sets the Clear Color for ClearBuffer....
-	virtual void		ClearColor3ub(unsigned char r, unsigned char g, unsigned char b) = 0;
-	virtual void		ClearColor4ub(unsigned char r, unsigned char g, unsigned char b, unsigned char a) = 0;
-
-	// Allows us to override the depth buffer setting of a material
-	virtual void	OverrideDepthEnable(bool bEnable, bool bDepthEnable) = 0;
-
-	// FIXME: This is a hack required for NVidia/XBox, can they fix in drivers?
-	virtual void	DrawScreenSpaceQuad(IMaterial *pMaterial) = 0;
-
-	// For debugging and building recording files. This will stuff a token into the recording file,
-	// then someone doing a playback can watch for the token.
-	virtual void	SyncToken(const char *pToken) = 0;
-
-	// FIXME: REMOVE THIS FUNCTION!
-	// The only reason why it's not gone is because we're a week from ship when I found the bug in it
-	// and everything's tuned to use it.
-	// It's returning values which are 2x too big (it's returning sphere diameter x2)
-	// Use ComputePixelDiameterOfSphere below in all new code instead.
-	virtual float	ComputePixelWidthOfSphere(const Vector &origin, float flRadius) = 0;
-
-	//
-	// Occlusion query support
-	//
-
-	// Allocate and delete query objects.
-	virtual void CreateOcclusionQueryObject(void) = 0;
-	virtual void DestroyOcclusionQueryObject(void) = 0;
-
-	// Bracket drawing with begin and end so that we can get counts next frame.
-	virtual void BeginOcclusionQueryDrawing(void) = 0;
-	virtual void EndOcclusionQueryDrawing(void) = 0;
-
-	// Get the number of pixels rendered between begin and end on an earlier frame.
-	// Calling this in the same frame is a huge perf hit!
-	virtual int OcclusionQuery_GetNumPixelsRendered(void) = 0;
-
-	virtual void SetFlashlightMode(bool bEnable) = 0;
-
-	virtual void SetFlashlightState(void) = 0;
-
-	// Gets the current height clip mode
-	virtual void GetHeightClipMode() = 0;
-
-	// This returns the diameter of the sphere in pixels based on 
-	// the current model, view, + projection matrices and viewport.
-	virtual float	ComputePixelDiameterOfSphere(const Vector &vecAbsOrigin, float flRadius) = 0;
-
-	// By default, the material system applies the VIEW and PROJECTION matrices	to the user clip
-	// planes (which are specified in world space) to generate projection-space user clip planes
-	// Occasionally (for the particle system in hl2, for example), we want to override that
-	// behavior and explictly specify a ViewProj transform for user clip planes
-	virtual void	EnableUserClipTransformOverride(bool bEnable) = 0;
-	virtual void	UserClipTransform(const VMatrix &worldToView) = 0;
-
-	virtual bool GetFlashlightMode() const = 0;
-
-	// Used to make the handle think it's never had a successful query before
-	virtual void ResetOcclusionQueryObject(void) = 0;
-
-	// FIXME: Remove
-	virtual void Unused3() {}
-
-	// Creates/destroys morph data associated w/ a particular material
-	virtual void *CreateMorph(void) = 0;
-	virtual void DestroyMorph(void) = 0;
-
-	// Binds the morph data for use in rendering
-	virtual void BindMorph(void) = 0;
-
-	// Sets flexweights for rendering
-	virtual void SetFlexWeights(void) = 0;
-
-	// FIXME: Remove
-	virtual void Unused4() {};
-	virtual void Unused5() {};
-	virtual void Unused6() {};
-	virtual void Unused7() {};
-	virtual void Unused8() {};
-
-	// Read w/ stretch to a host-memory buffer
-	virtual void ReadPixelsAndStretch(Rect_t *pSrcRect, Rect_t *pDstRect, unsigned char *pBuffer, ImageFormat dstFormat, int nDstStride) = 0;
-
-	// Gets the window size
-	virtual void GetWindowSize(int &width, int &height) const = 0;
-
-	// This function performs a texture map from one texture map to the render destination, doing
-	// all the necessary pixel/texel coordinate fix ups. fractional values can be used for the
-	// src_texture coordinates to get linear sampling - integer values should produce 1:1 mappings
-	// for non-scaled operations.
-	virtual void DrawScreenSpaceRectangle(
-		IMaterial *pMaterial,
-		int destx, int desty,
-		int width, int height,
-		float src_texture_x0, float src_texture_y0,			// which texel you want to appear at
-		// destx/y
-		float src_texture_x1, float src_texture_y1,			// which texel you want to appear at
-		// destx+width-1, desty+height-1
-		int src_texture_width, int src_texture_height,		// needed for fixup
-		void *pClientRenderable = NULL,
-		int nXDice = 1,
-		int nYDice = 1) = 0;
-
-	virtual void LoadBoneMatrix(int boneIndex, const matrix3x4_t &matrix) = 0;
-
-	// This version will push the current rendertarget + current viewport onto the stack
-	virtual void PushRenderTargetAndViewport() = 0;
-
-	// This version will push a new rendertarget + a maximal viewport for that rendertarget onto the stack
-	virtual void PushRenderTargetAndViewport(ITexture *pTexture) = 0;
-
-	// This version will push a new rendertarget + a specified viewport onto the stack
-	virtual void PushRenderTargetAndViewport(ITexture *pTexture, int nViewX, int nViewY, int nViewW, int nViewH) = 0;
-
-	// This version will push a new rendertarget + a specified viewport onto the stack
-	virtual void PushRenderTargetAndViewport(ITexture *pTexture, ITexture *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH) = 0;
-
-	// This will pop a rendertarget + viewport
-	virtual void PopRenderTargetAndViewport(void) = 0;
-
-	// Binds a particular texture as the current lightmap
-	virtual void BindLightmapTexture(ITexture *pLightmapTexture) = 0;
-
-	// Blit a subrect of the current render target to another texture
-	virtual void CopyRenderTargetToTextureEx(ITexture *pTexture, int nRenderTargetID, Rect_t *pSrcRect, Rect_t *pDstRect = NULL) = 0;
-	virtual void CopyTextureToRenderTargetEx(int nRenderTargetID, ITexture *pTexture, Rect_t *pSrcRect, Rect_t *pDstRect = NULL) = 0;
-
-	// Special off-center perspective matrix for DoF, MSAA jitter and poster rendering
-	virtual void PerspectiveOffCenterX(double fovx, double aspect, double zNear, double zFar, double bottom, double top, double left, double right) = 0;
-
-	// Rendering parameters control special drawing modes withing the material system, shader
-	// system, shaders, and engine. renderparm.h has their definitions.
-	virtual void SetFloatRenderingParameter(int parm_number, float value) = 0;
-	virtual void SetIntRenderingParameter(int parm_number, int value) = 0;
-	virtual void SetVectorRenderingParameter(int parm_number, Vector const &value) = 0;
-
-	// stencil buffer operations.
-	virtual void SetStencilEnable(bool onoff) = 0;
-	virtual void SetStencilFailOperation(void) = 0;
-	virtual void SetStencilZFailOperation(void) = 0;
-	virtual void SetStencilPassOperation(void) = 0;
-	virtual void SetStencilCompareFunction(void) = 0;
-	virtual void SetStencilReferenceValue(int ref) = 0;
-	virtual void SetStencilTestMask(uint32 msk) = 0;
-	virtual void SetStencilWriteMask(uint32 msk) = 0;
-	virtual void ClearStencilBufferRectangle(int xmin, int ymin, int xmax, int ymax,int value) = 0;
-
-	virtual void SetRenderTargetEx(int nRenderTargetID, ITexture *pTexture) = 0;
-
-	// rendering clip planes, beware that only the most recently pushed plane will actually be used in a sizeable chunk of hardware configurations
-	// and that changes to the clip planes mid-frame while UsingFastClipping() is true will result unresolvable depth inconsistencies
-	virtual void PushCustomClipPlane(const float *pPlane) = 0;
-	virtual void PopCustomClipPlane(void) = 0;
-
-	// Returns the number of vertices + indices we can render using the dynamic mesh
-	// Passing true in the second parameter will return the max # of vertices + indices
-	// we can use before a flush is provoked and may return different values 
-	// if called multiple times in succession. 
-	// Passing false into the second parameter will return
-	// the maximum possible vertices + indices that can be rendered in a single batch
-	virtual void GetMaxToRender(void) = 0;
-
-	// Returns the max possible vertices + indices to render in a single draw call
-	virtual int GetMaxVerticesToRender(IMaterial *pMaterial) = 0;
-	virtual int GetMaxIndicesToRender() = 0;
-	virtual void DisableAllLocalLights() = 0;
-	virtual int CompareMaterialCombos(IMaterial *pMaterial1, IMaterial *pMaterial2, int lightMapID1, int lightMapID2) = 0;
-
-	virtual void *GetFlexMesh() = 0;
-
-	virtual void SetFlashlightStateEx(void) = 0;
-
-	// Returns the currently bound local cubemap
-	virtual ITexture *GetLocalCubemap() = 0;
-
-	// This is a version of clear buffers which will only clear the buffer at pixels which pass the stencil test
-	virtual void ClearBuffersObeyStencil(bool bClearColor, bool bClearDepth) = 0;
-
-	//enables/disables all entered clipping planes, returns the input from the last time it was called.
-	virtual bool EnableClipping(bool bEnable) = 0;
-
-	//get fog distances entered with FogStart(), FogEnd(), and SetFogZ()
-	virtual void GetFogDistances(float *fStart, float *fEnd, float *fFogZ) = 0;
-
-	// Hooks for firing PIX events from outside the Material System...
-	virtual void BeginPIXEvent(unsigned long color, const char *szName) = 0;
-	virtual void EndPIXEvent() = 0;
-	virtual void SetPIXMarker(unsigned long color, const char *szName) = 0;
-
-	// Batch API
-	// from changelist 166623:
-	// - replaced obtuse material system batch usage with an explicit and easier to thread API
-	virtual void BeginBatch(void) = 0;
-	virtual void BindBatch(void) = 0;
-	virtual void DrawBatch(int firstIndex, int numIndices) = 0;
-	virtual void EndBatch() = 0;
-
-	// Raw access to the call queue, which can be NULL if not in a queued mode
-	virtual void *GetCallQueue() = 0;
-
-	// Returns the world-space camera position
-	virtual void GetWorldSpaceCameraPosition(Vector *pCameraPos) = 0;
-	virtual void GetWorldSpaceCameraVectors(Vector *pVecForward, Vector *pVecRight, Vector *pVecUp) = 0;
-
-	// Tone mapping
-	virtual void				ResetToneMappingScale(float monoscale) = 0; 			// set scale to monoscale instantly with no chasing
-	virtual void				SetGoalToneMappingScale(float monoscale) = 0; 			// set scale to monoscale instantly with no chasing
-
-	// call TurnOnToneMapping before drawing the 3d scene to get the proper interpolated brightness
-	// value set.
-	virtual void				TurnOnToneMapping() = 0;
-
-	// Set a linear vector color scale for all 3D rendering.
-	// A value of [1.0f, 1.0f, 1.0f] should match non-tone-mapped rendering.
-	virtual void				SetToneMappingScaleLinear(const Vector &scale) = 0;
-
-	virtual Vector				GetToneMappingScaleLinear(void) = 0;
-	virtual void				SetShadowDepthBiasFactors(float fSlopeScaleDepthBias, float fDepthBias) = 0;
-
-	// Apply stencil operations to every pixel on the screen without disturbing depth or color buffers
-	virtual void				PerformFullScreenStencilOperation(void) = 0;
-
-	// Sets lighting origin for the current model (needed to convert directional lights to points)
-	virtual void				SetLightingOrigin(Vector vLightingOrigin) = 0;
-
-	// Set scissor rect for rendering
-	virtual void				SetScissorRect(const int nLeft, const int nTop, const int nRight, const int nBottom, const bool bEnableScissor) = 0;
-
-	// Methods used to build the morph accumulator that is read from when HW morph<ing is enabled.
-	virtual void				BeginMorphAccumulation() = 0;
-	virtual void				EndMorphAccumulation() = 0;
-	virtual void				AccumulateMorph(void) = 0;
-
-	virtual void				PushDeformation(void) = 0;
-	virtual void				PopDeformation() = 0;
-	virtual int					GetNumActiveDeformations() const = 0;
-
-	virtual bool				GetMorphAccumulatorTexCoord(void) = 0;
-
-	// Version of get dynamic mesh that specifies a specific vertex format
-	virtual void *GetDynamicMeshEx(void) = 0;
-
-	virtual void				FogMaxDensity(float flMaxDensity) = 0;
-
-#if defined( _X360 )
-	//Seems best to expose GPR allocation to scene rendering code. 128 total to split between vertex/pixel shaders (pixel will be set to 128 - vertex). Minimum value of 16. More GPR's = more threads.
-	virtual void				PushVertexShaderGPRAllocation(int iVertexShaderCount = 64) = 0;
-	virtual void				PopVertexShaderGPRAllocation(void) = 0;
-#endif
-
-	virtual IMaterial *GetCurrentMaterial() = 0;
-	virtual int  GetCurrentNumBones() const = 0;
-	virtual void *GetCurrentProxy() = 0;
-
-	// Color correction related methods..
-	// Client cannot call IColorCorrectionSystem directly because it is not thread-safe
-	// FIXME: Make IColorCorrectionSystem threadsafe?
-	virtual void EnableColorCorrection(bool bEnable) = 0;
-	virtual void AddLookup(const char *pName) = 0;
-	virtual bool RemoveLookup(void) = 0;
-	virtual void LockLookup(void) = 0;
-	virtual void LoadLookup(void) = 0;
-	virtual void UnlockLookup(void) = 0;
-	virtual void SetLookupWeight(void) = 0;
-	virtual void ResetLookupWeights() = 0;
-	virtual void SetResetable(void) = 0;
-
-	//There are some cases where it's simply not reasonable to update the full screen depth texture (mostly on PC).
-	//Use this to mark it as invalid and use a dummy texture for depth reads.
-	virtual void SetFullScreenDepthTextureValidityFlag(bool bIsValid) = 0;
-
-	// A special path used to tick the front buffer while loading on the 360
-	virtual void SetNonInteractivePacifierTexture(ITexture *pTexture, float flNormalizedX, float flNormalizedY, float flNormalizedSize) = 0;
-	virtual void SetNonInteractiveTempFullscreenBuffer(void) = 0;
-	virtual void EnableNonInteractiveMode(void) = 0;
-	virtual void RefreshFrontBufferNonInteractive() = 0;
-	// Allocates temp render data. Renderdata goes out of scope at frame end in multicore
-	// Renderdata goes out of scope after refcount goes to zero in singlecore.
-	// Locking/unlocking increases + decreases refcount
-	virtual void *LockRenderData(int nSizeInBytes) = 0;
-	virtual void			UnlockRenderData(void *pData) = 0;
-
-	// Typed version. If specified, pSrcData is copied into the locked memory.
-	template< class E > E *LockRenderDataTyped(int nCount, const E *pSrcData = NULL);
-
-	// Temp render data gets immediately freed after it's all unlocked in single core.
-	// This prevents it from being freed
-	virtual void			AddRefRenderData() = 0;
-	virtual void			ReleaseRenderData() = 0;
-
-	// Returns whether a pointer is render data. NOTE: passing NULL returns true
-	virtual bool			IsRenderData(const void *pData) const = 0;
-	virtual void			PrintfVA(char *fmt, va_list vargs) = 0;
-	virtual void			Printf(void) = 0;
-	virtual float			Knob(char *knobname, float *setvalue = NULL) = 0;
-	// Allows us to override the alpha write setting of a material
-	virtual void OverrideAlphaWriteEnable(bool bEnable, bool bAlphaWriteEnable) = 0;
-	virtual void OverrideColorWriteEnable(bool bOverrideEnable, bool bColorWriteEnable) = 0;
-
-	virtual void ClearBuffersObeyStencilEx(bool bClearColor, bool bClearAlpha, bool bClearDepth) = 0;
-
-	// Create a texture from the specified src render target, then call pRecipient->OnAsyncCreateComplete from the main thread.
-	// The texture will be created using the destination format, and will optionally have mipmaps generated.
-	// In case of error, the provided callback function will be called with the error texture.
-	virtual void AsyncCreateTextureFromRenderTarget(void) = 0;
+	virtual void BeginRender();
+	virtual void EndRender();
+	virtual void sub_10016C20();
+	virtual void sub_10016C70();
+	virtual void SetRenderTarget(ITexture *pTexture);
+	virtual ITexture *GetRenderTarget();
+	virtual void sub_10025440();
+	virtual void sub_100274A0();
+	virtual void sub_10016CA0();
+	virtual void sub_10016CD0();
+	virtual void ClearBuffers(bool bClearColor, bool bClearDepth, bool bClearStencil = false);
+	virtual void sub_100240F0();
+	virtual void sub_100278F0();
+	virtual void sub_100277A0();
+	virtual void sub_10027970();
+	virtual void sub_10016E20();
+	virtual void sub_10016E50();
+	virtual void sub_10029080();
+	virtual void sub_10028380();
+	virtual void sub_100283B0();
+	virtual void sub_100283E0();
+	virtual void sub_10028460();
+	virtual void sub_10028410();
+	virtual void sub_10028500();
+	virtual void sub_100284B0();
+	virtual void sub_100285E0();
+	virtual void sub_10028590();
+	virtual void sub_1002CE30();
+	virtual void sub_1002CDF0();
+	virtual void sub_10028670();
+	virtual void sub_100286A0();
+	virtual void sub_10028710();
+	virtual void sub_100287F0();
+	virtual void sub_10028850();
+	virtual void sub_100288B0();
+	virtual void sub_10028910();
+	virtual void sub_100276D0();
+	virtual void sub_100254A0();
+	virtual void sub_10016F00();
+	virtual void sub_100173B0();
+	virtual void sub_100173E0();
+	virtual void sub_10027A10();
+	virtual void sub_10027A40();
+	virtual void sub_10027A70();
+	virtual void sub_10023C90();
+	virtual void sub_10023CA0();
+	virtual void sub_10023D40();
+	virtual void sub_10027B60();
+	virtual void sub_10023DE0();
+	virtual void sub_10023E10();
+	virtual void sub_10027AD0();
+	virtual void sub_10027B00();
+	virtual void sub_10027B30();
+	virtual void sub_100279E0();
+	virtual void sub_10014420();
+	virtual void sub_10016F30();
+	virtual void sub_10023EC0();
+	virtual void sub_10014450();
+	virtual void sub_10014480();
+	virtual void sub_100144A0();
+	virtual void sub_100144C0();
+	virtual void sub_100144E0();
+	virtual void sub_10023EB0();
+	virtual void sub_10014510();
+	virtual void sub_10014550();
+	virtual void sub_10014570();
+	virtual void sub_10014590();
+	virtual void sub_100145E0();
+	virtual void sub_10016F60();
+	virtual void sub_10016F80();
+	virtual void sub_10016FB0();
+	virtual void sub_10016FE0();
+	virtual void sub_10017000();
+	virtual void sub_100170A0();
+	virtual void sub_100170E0();
+	virtual void sub_100172C0();
+	virtual void sub_10028DF0();
+	virtual void sub_100143C0();
+	virtual void sub_10027C20();
+	virtual void sub_100172F0();
+	virtual void sub_10017320();
+	virtual void sub_10017350();
+	virtual void sub_10027C60();
+	virtual void sub_10017C70();
+	virtual void sub_10027CA0();
+	virtual void sub_10014400();
+	virtual void sub_1002AC30();
+	virtual void sub_10017420();
+	virtual void sub_10027D40();
+	virtual void sub_100148D0();
+	virtual void sub_10017380();
+	virtual void sub_10014630();
+	virtual void sub_10017450();
+	virtual void sub_10017480();
+	virtual void nullsub_22();
+	virtual void sub_1002B990();
+	virtual void UnlockRenderData();
+	virtual void sub_100290F0();
+	virtual void sub_10029100();
+	virtual void sub_1002A400();
+	virtual void sub_10024150();
+	virtual void GetWindowSize(int &, int &);
 };
 
 class CMatRenderContextPtr : public CRefPtr<IMatRenderContext>
@@ -2112,4 +1762,111 @@ public:
 
 	// The server timestampe at which the edict was freed (so we can try to use other edicts before reallocating this one)
 	float		freetime;
+};
+
+enum ButtonCode_t
+{
+	KEY_SPACE = 65,
+	KEY_ESCAPE = 70,
+	KEY_UP = 88, 
+	KEY_LEFT,
+	KEY_DOWN,
+	KEY_RIGHT,
+	MOUSE_LEFT = 107
+};
+
+typedef ButtonCode_t MouseCode;
+typedef ButtonCode_t KeyCode;
+
+class IInput
+{
+public:
+	virtual ~IInput();
+	virtual void SetMouseFocus(void);;
+	virtual void SetMouseCapture(void);
+	virtual void GetKeyCodeText(ButtonCode_t, char *, int);
+	virtual void GetFocus(void);
+	virtual void GetCalculatedFocus(void);
+	virtual void GetMouseOver(void);
+	virtual void SetCursorPos(int, int);
+	virtual void GetCursorPos(int &, int &);
+	virtual void WasMousePressed(ButtonCode_t);
+	virtual void WasMouseDoublePressed(ButtonCode_t);
+	virtual void IsMouseDown(ButtonCode_t);
+	virtual void SetCursorOveride(void);
+	virtual void GetCursorOveride(void);
+	virtual void WasMouseReleased(ButtonCode_t);
+	virtual void WasKeyPressed(ButtonCode_t);
+	virtual void IsKeyDown(ButtonCode_t);
+	virtual void WasKeyTyped(ButtonCode_t);
+	virtual void WasKeyReleased(ButtonCode_t);
+	virtual void GetAppModalSurface(void);
+	virtual void SetAppModalSurface(void);
+	virtual void ReleaseAppModalSurface(void);
+	virtual void GetCursorPosition(int &, int &);
+	virtual void SetIMEWindow(void *);
+	virtual void GetIMEWindow(void);
+	virtual void OnChangeIME(bool);
+	virtual void GetCurrentIMEHandle(void);
+	virtual void GetEnglishIMEHandle(void);
+	virtual void GetIMELanguageName(wchar_t *, int);
+	virtual void GetIMELanguageShortCode(wchar_t *, int);
+	virtual void GetIMELanguageList(void);
+	virtual void GetIMEConversionModes(void);
+	virtual void GetIMESentenceModes(void);
+	virtual void OnChangeIMEByHandle(int);
+	virtual void OnChangeIMEConversionModeByHandle(int);
+	virtual void OnChangeIMESentenceModeByHandle(int);
+	virtual void OnInputLanguageChanged(void);
+	virtual void OnIMEStartComposition(void);
+	virtual void OnIMEComposition(int);
+	virtual void OnIMEEndCompositionEv(void);;
+	virtual void OnIMEShowCandidates(void);
+	virtual void OnIMEChangeCandidates(void);
+	virtual void OnIMECloseCandidates(void);
+	virtual void OnIMERecomputeModes(void);
+	virtual void GetCandidateListCount(void);
+	virtual void GetCandidate(int, wchar_t *, int);
+	virtual void GetCandidateListSelectedItem(void);
+	virtual void GetCandidateListPageSize(void);
+	virtual void GetCandidateListPageStart(void);
+	virtual void SetCandidateWindowPos(int, int);
+	virtual void GetShouldInvertCompositionString(void);
+	virtual void CandidateListStartsAtOne(void);
+	virtual void SetCandidateListPageStart(int);
+	virtual void SetMouseCaptureEx(void);
+	virtual void RegisterKeyCodeUnhandledListener(void);
+	virtual void UnregisterKeyCodeUnhandledListener(void);
+	virtual void OnKeyCodeUnhandled(void);
+	virtual void SetModalSubTree(void);
+	virtual void ReleaseModalSubTree(void);
+	virtual void GetModalSubTree(void);
+	virtual void SetModalSubTreeReceiveMessages(bool);
+	virtual void ShouldModalSubTreeReceiveMessages(void);
+	virtual void GetMouseCapture(void);
+	virtual void GetMouseFocus(void);
+	virtual void RunFrame(void);
+	virtual void UpdateMouseFocus(int, int);
+	virtual void PanelDeleted(void);
+	virtual void InternalCursorMoved(void);
+	virtual void InternalMousePressed(ButtonCode_t);
+	virtual void InternalMouseDoublePressed(ButtonCode_t);
+	virtual void InternalMouseReleased(ButtonCode_t);
+	virtual void InternalMouseWheeled(void);
+	virtual void InternalKeyCodePressed(KeyCode);
+	virtual void InternalKeyCodeTyped(KeyCode code);
+	virtual void InternalKeyTyped(void);
+	virtual void InternalKeyCodeReleased(KeyCode code);
+	virtual void CreateInputContext(void);
+	virtual void DestroyInputContext(int);
+	virtual void AssociatePanelWithInputContext(void);
+	virtual void ActivateInputContext(int);
+	virtual void PostCursorMessageEv(void);
+	virtual void UpdateCursorPosInternal(int, int);
+	virtual void HandleExplicitSetCursor(void);
+	virtual void SetKeyCodeState(ButtonCode_t, bool);
+	virtual void SetMouseCodeState(void);
+	virtual void UpdateButtonState(void);
+	virtual void ResetInputContext(int);
+	virtual void IsChildOfModalPanel(void);
 };

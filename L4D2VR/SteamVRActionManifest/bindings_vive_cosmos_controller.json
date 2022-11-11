@@ -136,6 +136,47 @@
                "mode" : "button",
                "path" : "/user/hand/right/input/a"
             },
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/MenuSelect"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/a"
+            },
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/MenuBack"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/right/input/b"
+            },
+			{
+               "inputs" : {
+                  "east" : {
+                     "output" : "/actions/main/in/MenuRight"
+                  },
+                  "north" : {
+                     "output" : "/actions/main/in/MenuUp"
+                  },
+                  "south" : {
+                     "output" : "/actions/main/in/MenuDown"
+                  },
+                  "west" : {
+                     "output" : "/actions/main/in/MenuLeft"
+                  }
+               },
+               "mode" : "dpad",
+               "parameters" : {
+                  "deadzone_pct" : "70",
+                  "overlap_pct" : "0",
+                  "sub_mode" : "touch"
+               },
+               "path" : "/user/hand/left/input/joystick"
+            },
             {
                "inputs" : {
                   "click" : {

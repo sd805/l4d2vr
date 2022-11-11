@@ -83,6 +83,34 @@
 		{
 			"name": "/actions/main/in/ActivateVR",
 			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/MenuSelect",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/MenuBack",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/MenuUp",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/MenuDown",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/MenuLeft",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/MenuRight",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Spray",
+			"type": "boolean"
 		}
 	],
 

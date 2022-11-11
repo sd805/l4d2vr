@@ -11,7 +11,8 @@ class IDirect3DSurface9;
 class ITexture;
 
 
-struct TrackedDevicePoseData {
+struct TrackedDevicePoseData 
+{
 	std::string TrackedDeviceName;
 	Vector TrackedDevicePos;
 	Vector TrackedDeviceVel;
@@ -19,7 +20,8 @@ struct TrackedDevicePoseData {
 	QAngle TrackedDeviceAngVel;
 };
 
-struct SharedTextureHolder {
+struct SharedTextureHolder 
+{
 	vr::VRVulkanTextureData_t m_VulkanData;
 	vr::Texture_t m_VRTexture;
 };
@@ -32,6 +34,9 @@ public:
 
 	vr::IVRSystem *m_System = nullptr;
 	vr::IVRInput *m_Input = nullptr;
+	vr::IVROverlay *m_Overlay = nullptr;
+
+	vr::VROverlayHandle_t m_OverlayHandle;
 
 	float m_HorizontalOffsetLeft;
 	float m_VerticalOffsetLeft;
@@ -103,6 +108,7 @@ public:
 
 	SharedTextureHolder m_VKLeftEye;
 	SharedTextureHolder m_VKRightEye;
+	SharedTextureHolder m_VKBackBuffer;
 
 	bool m_IsVREnabled = false;
 	bool m_IsInitialized = false;
@@ -110,9 +116,6 @@ public:
 	bool m_CreatedVRTextures = false;
 	int m_CreatingTextureID = -1;
 
-	bool m_PressedLeftStick = false;
-	bool m_ChangedItem = false;
-	bool m_ToggledFlashlight = false;
 	bool m_PressedTurn = false;
 	bool m_PushingThumbstick = false;
 
@@ -134,6 +137,13 @@ public:
 	vr::VRActionHandle_t m_ActionCrouch;
 	vr::VRActionHandle_t m_ActionFlashlight;
 	vr::VRActionHandle_t m_ActionActivateVR;
+	vr::VRActionHandle_t m_MenuSelect;
+	vr::VRActionHandle_t m_MenuBack;
+	vr::VRActionHandle_t m_MenuUp;
+	vr::VRActionHandle_t m_MenuDown;
+	vr::VRActionHandle_t m_MenuLeft;
+	vr::VRActionHandle_t m_MenuRight;
+	vr::VRActionHandle_t m_Spray;
 
 	TrackedDevicePoseData m_HmdPose;
 	TrackedDevicePoseData m_LeftControllerPose;
@@ -157,19 +167,21 @@ public:
 	void Update();
 	void CreateVRTextures();
 	void SubmitVRTextures();
+	void RepositionMenuOverlay();
 	void GetPoses();
 	void UpdatePosesAndActions();
 	void GetViewParameters();
+	void ProcessMenuInput();
 	void ProcessInput();
 	QAngle GetRightControllerAbsAngle();
 	Vector GetRightControllerAbsPos();
 	Vector GetRecommendedViewmodelAbsPos();
 	QAngle GetRecommendedViewmodelAbsAngle();
-	void UpdateTracking(Vector viewOrigin);
+	void UpdateTracking();
 	Vector GetViewAngle();
 	Vector GetViewOriginLeft();
 	Vector GetViewOriginRight();
-	bool PressedDigitalAction(vr::VRActionHandle_t &actionHandle);
+	bool PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfActionChanged = false);
 	bool GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut);
 	void ResetPosition();
 	void GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &poseOut);

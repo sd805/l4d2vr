@@ -17,6 +17,8 @@ Game::Game()
         Sleep(50);
     while (!(m_BaseServer = (uintptr_t)GetModuleHandle("server.dll")))
         Sleep(50);
+    while (!(m_BaseVgui2 = (uintptr_t)GetModuleHandle("vgui2.dll")))
+        Sleep(50);
 
     m_ClientEntityList = (IClientEntityList *)GetInterface("client.dll", "VClientEntityList003");
     m_EngineTrace = (IEngineTrace *)GetInterface("engine.dll", "EngineTraceClient003");
@@ -26,6 +28,7 @@ Game::Game()
     m_EngineViewRender = (IViewRender *)GetInterface("engine.dll", "VEngineRenderView013");
     m_ModelInfo = (IModelInfo *)GetInterface("engine.dll", "VModelInfoClient004");
     m_ModelRender = (IModelRender *)GetInterface("engine.dll", "VEngineModel016");
+    m_VguiInput = (IInput *)GetInterface("vgui2.dll", "VGUI_InputInternal001");
 
     m_Offsets = new Offsets();
     m_VR = new VR(this);

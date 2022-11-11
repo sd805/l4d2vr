@@ -40,6 +40,7 @@ Hooks::Hooks(Game *game)
 	hkGetPrimaryAttackActivity.enableHook();
 	hkEyePosition.enableHook();
 	hkDrawModelExecute.enableHook();
+	hkRenderView.enableHook();
 }
 
 Hooks::~Hooks()
