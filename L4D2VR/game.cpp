@@ -29,6 +29,7 @@ Game::Game()
     m_ModelInfo = (IModelInfo *)GetInterface("engine.dll", "VModelInfoClient004");
     m_ModelRender = (IModelRender *)GetInterface("engine.dll", "VEngineModel016");
     m_VguiInput = (IInput *)GetInterface("vgui2.dll", "VGUI_InputInternal001");
+    m_VguiSurface = (ISurface *)GetInterface("vguimatsurface.dll", "VGUI_Surface031");
 
     m_Offsets = new Offsets();
     m_VR = new VR(this);

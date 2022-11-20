@@ -37,6 +37,7 @@ public:
 	vr::IVROverlay *m_Overlay = nullptr;
 
 	vr::VROverlayHandle_t m_OverlayHandle;
+	vr::VROverlayHandle_t m_HUDHandle;
 
 	float m_HorizontalOffsetLeft;
 	float m_VerticalOffsetLeft;
@@ -102,17 +103,21 @@ public:
 
 	ITexture *m_LeftEyeTexture;
 	ITexture *m_RightEyeTexture;
+	ITexture *m_HUDTexture;
 
 	IDirect3DSurface9 *m_D9LeftEyeSurface;
 	IDirect3DSurface9 *m_D9RightEyeSurface;
+	IDirect3DSurface9 *m_D9HUDSurface;
 
 	SharedTextureHolder m_VKLeftEye;
 	SharedTextureHolder m_VKRightEye;
 	SharedTextureHolder m_VKBackBuffer;
+	SharedTextureHolder m_VKHUD;
 
 	bool m_IsVREnabled = false;
 	bool m_IsInitialized = false;
 	bool m_RenderedNewFrame = false;
+	bool m_RenderedHud = false;
 	bool m_CreatedVRTextures = false;
 	int m_CreatingTextureID = -1;
 
@@ -143,7 +148,10 @@ public:
 	vr::VRActionHandle_t m_MenuDown;
 	vr::VRActionHandle_t m_MenuLeft;
 	vr::VRActionHandle_t m_MenuRight;
-	vr::VRActionHandle_t m_Spray;
+	vr::VRActionHandle_t m_Spray; 
+	vr::VRActionHandle_t m_Scoreboard;
+	vr::VRActionHandle_t m_ShowHUD;
+	vr::VRActionHandle_t m_Pause;
 
 	TrackedDevicePoseData m_HmdPose;
 	TrackedDevicePoseData m_LeftControllerPose;
@@ -151,7 +159,6 @@ public:
 
 	float m_RotationOffset = 0;
 	std::chrono::steady_clock::time_point m_PrevFrameTime;
-
 
 	float m_TurnSpeed = 0.3;
 	bool m_SnapTurning = false;
@@ -167,7 +174,7 @@ public:
 	void Update();
 	void CreateVRTextures();
 	void SubmitVRTextures();
-	void RepositionMenuOverlay();
+	void RepositionOverlays();
 	void GetPoses();
 	void UpdatePosesAndActions();
 	void GetViewParameters();

@@ -15,6 +15,7 @@ class IModelInfo;
 class IModelRender;
 class IMaterial;
 class IInput;
+class ISurface;
 class C_BasePlayer;
 struct model_t;
 
@@ -58,6 +59,7 @@ public:
     IModelInfo *m_ModelInfo = nullptr;
     IModelRender *m_ModelRender = nullptr;
     IInput *m_VguiInput = nullptr;
+    ISurface *m_VguiSurface = nullptr;
 
     uintptr_t m_BaseEngine;
     uintptr_t m_BaseClient;

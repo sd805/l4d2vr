@@ -111,6 +111,18 @@
 		{
 			"name": "/actions/main/in/Spray",
 			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Scoreboard",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/ShowHUD",
+			"type": "boolean"
+		},
+		{
+			"name": "/actions/main/in/Pause",
+			"type": "boolean"
 		}
 	],
 

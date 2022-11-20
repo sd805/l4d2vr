@@ -177,6 +177,40 @@
                },
                "path" : "/user/hand/left/input/joystick"
             },
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/Spray"
+                  }
+               },
+               "mode" : "button"
+            },
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/Scoreboard"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/x"
+            },
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/ShowHUD"
+                  }
+               },
+               "mode" : "button"
+            },
+			{
+               "inputs" : {
+                  "click" : {
+                     "output" : "/actions/main/in/Pause"
+                  }
+               },
+               "mode" : "button",
+               "path" : "/user/hand/left/input/y"
+            },
             {
                "inputs" : {
                   "click" : {

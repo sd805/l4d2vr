@@ -1,12 +1,6 @@
 #pragma once
-#define D3D_DEBUG_INFO
-#include <d3d9.h>
-#include <d3dx9.h>
 #include <iostream>
 #include "MinHook.h"
-
-#pragma comment (lib, "d3d9.lib")
-#pragma comment (lib, "d3dx9.lib")
 
 class Game;
 class VR;
@@ -81,6 +75,11 @@ typedef void(__thiscall *tItemPostFrame)(void *thisptr);
 typedef int(__thiscall *tGetPrimaryAttackActivity)(void *thisptr, void *meleeInfo);
 typedef Vector *(__thiscall *tEyePosition)(void *thisptr, Vector *eyePos);
 typedef void(__thiscall *tDrawModelExecute)(void *thisptr, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld);
+typedef void(__thiscall *tPushRenderTargetAndViewport)(void *thisptr, ITexture *pTexture, ITexture *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH);
+typedef void(__thiscall *tPopRenderTargetAndViewport)(void *thisptr);
+typedef void(__thiscall *tVgui_Paint)(void *thisptr, int mode);
+typedef int(__cdecl *tIsSplitScreen)();
+typedef DWORD *(__thiscall *tPrePushRenderTarget)(void *thisptr, int a2);
 
 
 class Hooks
@@ -112,6 +111,11 @@ public:
 	static inline Hook<tGetPrimaryAttackActivity> hkGetPrimaryAttackActivity;
 	static inline Hook<tEyePosition> hkEyePosition;
 	static inline Hook<tDrawModelExecute> hkDrawModelExecute;
+	static inline Hook<tPushRenderTargetAndViewport> hkPushRenderTargetAndViewport;
+	static inline Hook<tPopRenderTargetAndViewport> hkPopRenderTargetAndViewport;
+	static inline Hook<tVgui_Paint> hkVgui_Paint;
+	static inline Hook<tIsSplitScreen> hkIsSplitScreen;
+	static inline Hook<tPrePushRenderTarget> hkPrePushRenderTarget;
 
 	Hooks() {};
 	Hooks(Game *game);
@@ -144,4 +148,12 @@ public:
 	static int __fastcall dGetPrimaryAttackActivity(void *ecx, void *edx, void* meleeInfo);
 	static Vector *__fastcall dEyePosition(void *ecx, void *edx, Vector *eyePos);
 	static void __fastcall dDrawModelExecute(void *ecx, void* edx, void *state, const ModelRenderInfo_t &info, void *pCustomBoneToWorld);
+	static void __fastcall dPushRenderTargetAndViewport(void *ecx, void *edx, ITexture *pTexture, ITexture *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH);
+	static void __fastcall dPopRenderTargetAndViewport(void *ecx, void *edx);
+	static void __fastcall dVGui_Paint(void *ecx, void *edx, int mode);
+	static int __fastcall dIsSplitScreen();
+	static DWORD *__fastcall dPrePushRenderTarget(void *ecx, void *edx, int a2);
+
+	static inline int m_PushHUDStep;
+	static inline bool m_PushedHud;
 };

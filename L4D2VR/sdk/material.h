@@ -114,6 +114,13 @@ enum RenderTargetSizeMode_t
 
 };
 
+enum PaintMode_t
+{
+	PAINT_UIPANELS = (1 << 0),
+	PAINT_INGAMEPANELS = (1 << 1),
+	PAINT_CURSOR = (1 << 2), // software cursor, if appropriate
+};
+
 class IMatRenderContext;
 class IMaterial;
 

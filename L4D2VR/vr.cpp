@@ -11,6 +11,7 @@
 #include <string>
 #include <filesystem>
 #include <thread>
+#include <algorithm>
 #include <d3d9_vr.h>
 
 VR::VR(Game *game) 
@@ -77,7 +78,9 @@ VR::VR(Game *game)
     g_D3DVR9->GetBackBufferData(&m_VKBackBuffer);
     m_Overlay = vr::VROverlay();
     m_Overlay->CreateOverlay("MenuOverlayKey", "MenuOverlay", &m_OverlayHandle);
+    m_Overlay->CreateOverlay("HUDOverlayKey", "HUDOverlay", &m_HUDHandle);
     m_Overlay->SetOverlayInputMethod(m_OverlayHandle, vr::VROverlayInputMethod_Mouse);
+    m_Overlay->SetOverlayInputMethod(m_HUDHandle, vr::VROverlayInputMethod_Mouse);
 
     UpdatePosesAndActions();
 
@@ -117,6 +120,9 @@ int VR::SetActionManifest(const char *fileName)
     m_Input->GetActionHandle("/actions/main/in/MenuLeft", &m_MenuLeft);
     m_Input->GetActionHandle("/actions/main/in/MenuRight", &m_MenuRight);
     m_Input->GetActionHandle("/actions/main/in/Spray", &m_Spray);
+    m_Input->GetActionHandle("/actions/main/in/Scoreboard", &m_Scoreboard);
+    m_Input->GetActionHandle("/actions/main/in/ShowHUD", &m_ShowHUD);
+    m_Input->GetActionHandle("/actions/main/in/Pause", &m_Pause);
 
     m_Input->GetActionSetHandle("/actions/main", &m_ActionSet);
     m_ActiveActionSet = {};
@@ -152,14 +158,19 @@ void VR::Update()
     UpdatePosesAndActions();
     UpdateTracking();
 
-    if (m_Game->m_EngineClient->IsInGame())
-        ProcessInput();
-    else
+    if (m_Game->m_VguiSurface->IsCursorVisible())
+    {
         ProcessMenuInput();
+    }
+    else
+        ProcessInput();
 }
 
 void VR::CreateVRTextures()
 {
+    int windowWidth, windowHeight;
+    m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
+
     m_Game->m_MaterialSystem->isGameRunning = false;
     m_Game->m_MaterialSystem->BeginRenderTargetAllocation();
     m_Game->m_MaterialSystem->isGameRunning = true;
@@ -168,6 +179,8 @@ void VR::CreateVRTextures()
     m_LeftEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("leftEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
     m_CreatingTextureID = 1;
     m_RightEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("rightEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
+    m_CreatingTextureID = 2;
+    m_HUDTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("vrHUD", windowWidth, windowHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
     m_CreatingTextureID = -1;
 
     m_Game->m_MaterialSystem->EndRenderTargetAllocation();
@@ -178,15 +191,23 @@ void VR::SubmitVRTextures()
     if (!m_RenderedNewFrame)
     {
         if (!m_Overlay->IsOverlayVisible(m_OverlayHandle))
-            RepositionMenuOverlay();
+            RepositionOverlays();
 
         m_Overlay->SetOverlayTexture(m_OverlayHandle, &m_VKBackBuffer.m_VRTexture);
         vr::VROverlay()->ShowOverlay(m_OverlayHandle);
+        vr::VROverlay()->HideOverlay(m_HUDHandle);
 
         return;
     }
-
     vr::VROverlay()->HideOverlay(m_OverlayHandle);
+
+    m_Overlay->SetOverlayTexture(m_HUDHandle, &m_VKHUD.m_VRTexture);
+
+    if (m_Game->m_VguiSurface->IsCursorVisible())
+    {
+        // We're in the pause menu
+        vr::VROverlay()->ShowOverlay(m_HUDHandle);
+    }
 
     vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
     vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
@@ -223,7 +244,7 @@ void VR::GetPoseData(vr::TrackedDevicePose_t &poseRaw, TrackedDevicePoseData &po
     }
 }
 
-void VR::RepositionMenuOverlay()
+void VR::RepositionOverlays()
 {
     vr::TrackedDevicePose_t hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
     vr::HmdMatrix34_t hmdMat = hmdPose.mDeviceToAbsoluteTracking;
@@ -233,7 +254,7 @@ void VR::RepositionMenuOverlay()
     int windowWidth, windowHeight;
     m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
 
-    vr::HmdMatrix34_t overlayTransform = 
+    vr::HmdMatrix34_t menuTransform = 
     {
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 1.0f,
@@ -242,34 +263,58 @@ void VR::RepositionMenuOverlay()
 
     vr::ETrackingUniverseOrigin trackingOrigin = vr::ETrackingUniverseOrigin::TrackingUniverseSeated;
 
+    // Reposition main menu overlay
     float renderWidth = m_VKBackBuffer.m_VulkanData.m_nWidth;
     float renderHeight = m_VKBackBuffer.m_VulkanData.m_nHeight;
 
     float widthRatio = windowWidth / renderWidth;
     float heightRatio = windowHeight / renderHeight;
-    overlayTransform.m[0][0] *= widthRatio;
-    overlayTransform.m[1][1] *= heightRatio;
+    menuTransform.m[0][0] *= widthRatio;
+    menuTransform.m[1][1] *= heightRatio;
 
     hmdForward[1] = 0;
     VectorNormalize(hmdForward);
-    hmdForward *= 3;
 
-    Vector overlayNewPos = hmdForward + hmdPosition;
+    Vector menuDistance = hmdForward * 3;
+    Vector menuNewPos = menuDistance + hmdPosition;
 
-    overlayTransform.m[0][3] = overlayNewPos.x;
-    overlayTransform.m[1][3] = overlayNewPos.y - 0.25;
-    overlayTransform.m[2][3] = overlayNewPos.z;
+    menuTransform.m[0][3] = menuNewPos.x;
+    menuTransform.m[1][3] = menuNewPos.y - 0.25;
+    menuTransform.m[2][3] = menuNewPos.z;
 
-    float xScale = overlayTransform.m[0][0];
+    float xScale = menuTransform.m[0][0];
     float hmdRotationDegrees = atan2f(hmdMat.m[0][2], hmdMat.m[2][2]);
 
-    overlayTransform.m[0][0] *= cos(hmdRotationDegrees);
-    overlayTransform.m[0][2] = sin(hmdRotationDegrees);
-    overlayTransform.m[2][0] = -sin(hmdRotationDegrees) * xScale;
-    overlayTransform.m[2][2] *= cos(hmdRotationDegrees);
+    menuTransform.m[0][0] *= cos(hmdRotationDegrees);
+    menuTransform.m[0][2] = sin(hmdRotationDegrees);
+    menuTransform.m[2][0] = -sin(hmdRotationDegrees) * xScale;
+    menuTransform.m[2][2] *= cos(hmdRotationDegrees);
 
-    vr::VROverlay()->SetOverlayTransformAbsolute(m_OverlayHandle, trackingOrigin, &overlayTransform);
+    vr::VROverlay()->SetOverlayTransformAbsolute(m_OverlayHandle, trackingOrigin, &menuTransform);
     vr::VROverlay()->SetOverlayWidthInMeters(m_OverlayHandle, 1.5 * (1.0 / heightRatio));
+
+    // Reposition HUD overlay
+    vr::HmdMatrix34_t hudTransform =
+    {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f
+    };
+
+    Vector hudDistance = hmdForward * 2;
+    Vector hudNewPos = hudDistance + hmdPosition;
+
+    hudTransform.m[0][3] = hudNewPos.x;
+    hudTransform.m[1][3] = hudNewPos.y - 0.25;
+    hudTransform.m[2][3] = hudNewPos.z;
+
+    hudTransform.m[0][0] *= cos(hmdRotationDegrees);
+    hudTransform.m[0][2] = sin(hmdRotationDegrees);
+    hudTransform.m[2][0] = -sin(hmdRotationDegrees);
+    hudTransform.m[2][2] *= cos(hmdRotationDegrees);
+
+    vr::VROverlay()->SetOverlayTransformAbsolute(m_HUDHandle, trackingOrigin, &hudTransform);
+    vr::VROverlay()->SetOverlayWidthInMeters(m_HUDHandle, 1.5);
 }
 
 void VR::GetPoses() 
@@ -337,6 +382,8 @@ bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalog
 
 void VR::ProcessMenuInput()
 {
+    vr::VROverlayHandle_t currentOverlay = m_Game->m_EngineClient->IsInGame() ? m_HUDHandle : m_OverlayHandle;
+
     vr::TrackedDeviceIndex_t rightControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
     vr::TrackedDevicePose_t rightControllerPose = m_Poses[rightControllerIndex];
 
@@ -361,21 +408,34 @@ void VR::ProcessMenuInput()
 
     vr::VROverlayIntersectionResults_t intersectResults;
     
-    bool hitOverlay = vr::VROverlay()->ComputeOverlayIntersection(m_OverlayHandle, &intersectParams, &intersectResults);
+    bool hitOverlay = vr::VROverlay()->ComputeOverlayIntersection(currentOverlay, &intersectParams, &intersectResults);
     
     if (hitOverlay)
     {
-        vr::VROverlay()->SetOverlayFlag(m_OverlayHandle, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
+        vr::VROverlay()->SetOverlayFlag(currentOverlay, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
 
         float laserX = intersectResults.vUVs.v[0];
         float laserY = intersectResults.vUVs.v[1];
 
         int windowWidth, windowHeight;
         m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
-        m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserY));
+
+        if (currentOverlay == m_HUDHandle)
+        {
+            // The pause menu aspect ratio can vary, but the overlay aspect ratio is always 1:1, so correct the pointer
+            float lowerOverlayBound = (1 - ((float)windowHeight / (float)windowWidth)) / 2.0;
+            float upperOverlayBound = 1 - lowerOverlayBound;
+            float laserYcorrected = (laserY - lowerOverlayBound) / (upperOverlayBound - lowerOverlayBound);
+            laserYcorrected = std::clamp(laserYcorrected, 0.0f, 1.0f);
+            m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserYcorrected));
+        }
+        else // main menu
+        {
+            m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserY));
+        }
 
         vr::VREvent_t vrEvent;
-        while (vr::VROverlay()->PollNextOverlayEvent(m_OverlayHandle, &vrEvent, sizeof(vrEvent)))
+        while (vr::VROverlay()->PollNextOverlayEvent(currentOverlay, &vrEvent, sizeof(vrEvent)))
         {
             switch (vrEvent.eventType)
             {
@@ -390,7 +450,7 @@ void VR::ProcessMenuInput()
     }
     else
     {
-        vr::VROverlay()->SetOverlayFlag(m_OverlayHandle, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, false);
+        vr::VROverlay()->SetOverlayFlag(currentOverlay, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, false);
         
         if (PressedDigitalAction(m_MenuSelect, true))
         {
@@ -398,7 +458,7 @@ void VR::ProcessMenuInput()
             m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_SPACE);
             m_Game->m_VguiInput->InternalKeyCodeReleased(ButtonCode_t::KEY_SPACE);
         }
-        if (PressedDigitalAction(m_MenuBack, true))
+        if (PressedDigitalAction(m_MenuBack, true) || PressedDigitalAction(m_Pause, true))
         {
             m_Game->m_VguiInput->InternalKeyCodeTyped(ButtonCode_t::KEY_ESCAPE);
             m_Game->m_VguiInput->InternalKeyCodePressed(ButtonCode_t::KEY_ESCAPE);
@@ -433,16 +493,18 @@ void VR::ProcessMenuInput()
 
 void VR::ProcessInput()
 {
-    vr::InputAnalogActionData_t analogActionData;
-
     if (!m_IsVREnabled)
         return;
+
+    vr::VROverlay()->SetOverlayFlag(m_HUDHandle, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, false);
 
     typedef std::chrono::duration<float, std::milli> duration;
     auto currentTime = std::chrono::steady_clock::now();
     duration elapsed = currentTime - m_PrevFrameTime;
     float deltaTime = elapsed.count();
     m_PrevFrameTime = currentTime;
+
+    vr::InputAnalogActionData_t analogActionData;
 
     if (GetAnalogActionData(m_ActionTurn, analogActionData))
     {
@@ -607,6 +669,32 @@ void VR::ProcessInput()
     {
         m_Game->ClientCmd_Unrestricted("impulse 201");
     }
+    
+    bool isControllerVertical = m_RightControllerAngAbs.x > 45;
+    if ((PressedDigitalAction(m_ShowHUD) || PressedDigitalAction(m_Scoreboard) || isControllerVertical) && m_RenderedHud)
+    {
+        if (!vr::VROverlay()->IsOverlayVisible(m_HUDHandle))
+            RepositionOverlays();
+
+        if (PressedDigitalAction(m_Scoreboard))
+            m_Game->ClientCmd_Unrestricted("+showscores");
+
+        vr::VROverlay()->ShowOverlay(m_HUDHandle);
+        m_RenderedHud = false;
+    }
+    else
+    {
+        vr::VROverlay()->HideOverlay(m_HUDHandle);
+        m_Game->ClientCmd_Unrestricted("-showscores");
+        m_RenderedHud = false;
+    }
+
+    if (PressedDigitalAction(m_Pause, true))
+    {
+        m_Game->ClientCmd_Unrestricted("gameui_activate");
+        RepositionOverlays();
+    }
+
 }
 
 QAngle VR::GetRightControllerAbsAngle()
@@ -753,7 +841,7 @@ void VR::UpdateTracking()
 
     // controller angles
     QAngle::VectorAngles(m_RightControllerForward, m_RightControllerUp, m_RightControllerAngAbs);
-
+    
     PositionAngle viewmodelOffset = localPlayer->GetViewmodelOffset();
 
     m_ViewmodelPosOffset = viewmodelOffset.position;

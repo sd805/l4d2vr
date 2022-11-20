@@ -17,6 +17,9 @@ Hooks::Hooks(Game *game)
 	m_Game = game;
 	m_VR = m_Game->m_VR;
 
+	m_PushHUDStep = -999;
+	m_PushedHud = false;
+
 	initSourceHooks();
 
 	hkGetRenderTarget.enableHook();
@@ -41,6 +44,11 @@ Hooks::Hooks(Game *game)
 	hkEyePosition.enableHook();
 	hkDrawModelExecute.enableHook();
 	hkRenderView.enableHook();
+	hkPushRenderTargetAndViewport.enableHook();
+	hkPopRenderTargetAndViewport.enableHook();
+	hkVgui_Paint.enableHook();
+	hkIsSplitScreen.enableHook();
+	hkPrePushRenderTarget.enableHook();
 }
 
 Hooks::~Hooks()
@@ -117,6 +125,21 @@ int Hooks::initSourceHooks()
 	LPVOID DrawModelExecuteAddr = (LPVOID)(m_Game->m_Offsets->DrawModelExecute.address);
 	hkDrawModelExecute.createHook(DrawModelExecuteAddr, &dDrawModelExecute);
 
+	LPVOID PushRenderTargetAddr = (LPVOID)(m_Game->m_Offsets->PushRenderTargetAndViewport.address);
+	hkPushRenderTargetAndViewport.createHook(PushRenderTargetAddr, &dPushRenderTargetAndViewport);
+
+	LPVOID PopRenderTargetAddr = (LPVOID)(m_Game->m_Offsets->PopRenderTargetAndViewport.address);
+	hkPopRenderTargetAndViewport.createHook(PopRenderTargetAddr, &dPopRenderTargetAndViewport);
+
+	LPVOID VGui_PaintAddr = (LPVOID)(m_Game->m_Offsets->VGui_Paint.address);
+	hkVgui_Paint.createHook(VGui_PaintAddr, &dVGui_Paint);
+
+	LPVOID IsSplitScreenAddr = (LPVOID)(m_Game->m_Offsets->IsSplitScreen.address);
+	hkIsSplitScreen.createHook(IsSplitScreenAddr, &dIsSplitScreen);
+
+	LPVOID PrePushRenderTargetAddr = (LPVOID)(m_Game->m_Offsets->PrePushRenderTarget.address);
+	hkPrePushRenderTarget.createHook(PrePushRenderTargetAddr, &dPrePushRenderTarget);
+
 	void *clientMode = nullptr;
 	while (!clientMode)
 	{
@@ -137,6 +160,12 @@ ITexture *__fastcall Hooks::dGetRenderTarget(void *ecx, void *edx)
 
 void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CViewSetup &hudViewSetup, int nClearFlags, int whatToDraw)
 {
+	if (!m_VR->m_CreatedVRTextures)
+	{
+		hkRenderView.fOriginal(ecx, setup, hudViewSetup, nClearFlags, whatToDraw);
+		return;
+	}
+
 	IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
 
 	CViewSetup leftEyeView = setup;
@@ -162,6 +191,7 @@ void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CVie
 
 	rndrContext->SetRenderTarget(m_VR->m_LeftEyeTexture);
 	hkRenderView.fOriginal(ecx, leftEyeView, hudViewSetup, nClearFlags, whatToDraw);
+	m_PushedHud = false;
 
 	// Right eye CViewSetup
 	rightEyeView.x = 0;
@@ -496,7 +526,6 @@ int Hooks::dGetPrimaryAttackActivity(void *ecx, void *edx, void *meleeInfo)
 
 Vector *Hooks::dEyePosition(void *ecx, void *edx, Vector *eyePos)
 {
-
 	Vector *result = hkEyePosition.fOriginal(ecx, eyePos);
 
 	if (m_Game->m_PerformingMelee)
@@ -536,4 +565,86 @@ void Hooks::dDrawModelExecute(void *ecx, void *edx, void *state, const ModelRend
 	}
 
 	hkDrawModelExecute.fOriginal(ecx, state, info, pCustomBoneToWorld);
+}
+
+void Hooks::dPushRenderTargetAndViewport(void *ecx, void *edx, ITexture *pTexture, ITexture *pDepthTexture, int nViewX, int nViewY, int nViewW, int nViewH)
+{
+	if (!m_VR->m_CreatedVRTextures)
+		return hkPushRenderTargetAndViewport.fOriginal(ecx, pTexture, pDepthTexture, nViewX, nViewY, nViewW, nViewH);
+
+	if (m_PushHUDStep == 2)
+		++m_PushHUDStep;
+	else
+		m_PushHUDStep = -999;
+
+	// RenderView calls PushRenderTargetAndViewport multiple times with different textures. 
+	// When the call order goes PopRenderTargetAndViewport -> IsSplitScreen -> PrePushRenderTarget -> PushRenderTargetAndViewport,
+	// then it pushed the HUD/GUI render target to the RT stack.
+	if (m_PushHUDStep == 3)
+	{
+		pTexture = m_VR->m_HUDTexture;
+
+		IMatRenderContext *renderContext = m_Game->m_MaterialSystem->GetRenderContext();
+		renderContext->ClearBuffers(false, true, true);
+
+		hkPushRenderTargetAndViewport.fOriginal(ecx, pTexture, pDepthTexture, nViewX, nViewY, nViewW, nViewH);
+
+		renderContext->OverrideAlphaWriteEnable(true, true);
+		renderContext->ClearColor4ub(0, 0, 0, 0);
+		renderContext->ClearBuffers(true, false);
+
+		m_VR->m_RenderedHud = true;
+		m_PushedHud = true;
+	}
+	else
+	{
+		hkPushRenderTargetAndViewport.fOriginal(ecx, pTexture, pDepthTexture, nViewX, nViewY, nViewW, nViewH);
+	}
+}
+
+void Hooks::dPopRenderTargetAndViewport(void *ecx, void *edx)
+{
+	if (!m_VR->m_CreatedVRTextures)
+		return hkPopRenderTargetAndViewport.fOriginal(ecx);
+
+	m_PushHUDStep = 0;
+
+	if (m_PushedHud)
+	{
+		m_Game->m_MaterialSystem->GetRenderContext()->OverrideAlphaWriteEnable(false, true);
+		m_Game->m_MaterialSystem->GetRenderContext()->ClearColor4ub(0, 0, 0, 255);
+	}
+
+	hkPopRenderTargetAndViewport.fOriginal(ecx);
+}
+
+void Hooks::dVGui_Paint(void *ecx, void *edx, int mode)
+{
+	if (!m_VR->m_CreatedVRTextures)
+		return hkVgui_Paint.fOriginal(ecx, mode);
+
+	if (m_PushedHud)
+		mode = PAINT_UIPANELS | PAINT_INGAMEPANELS;
+
+	hkVgui_Paint.fOriginal(ecx, mode);
+}
+
+int Hooks::dIsSplitScreen()
+{
+	if (m_PushHUDStep == 0)
+		++m_PushHUDStep;
+	else
+		m_PushHUDStep = -999;
+
+	return hkIsSplitScreen.fOriginal();
+}
+
+DWORD *Hooks::dPrePushRenderTarget(void *ecx, void *edx, int a2)
+{
+	if (m_PushHUDStep == 1)
+		++m_PushHUDStep;
+	else
+		m_PushHUDStep = -999;
+
+	return hkPrePushRenderTarget.fOriginal(ecx, a2);
 }
