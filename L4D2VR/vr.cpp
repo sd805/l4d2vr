@@ -77,9 +77,9 @@ VR::VR(Game *game)
 
     g_D3DVR9->GetBackBufferData(&m_VKBackBuffer);
     m_Overlay = vr::VROverlay();
-    m_Overlay->CreateOverlay("MenuOverlayKey", "MenuOverlay", &m_OverlayHandle);
+    m_Overlay->CreateOverlay("MenuOverlayKey", "MenuOverlay", &m_MainMenuHandle);
     m_Overlay->CreateOverlay("HUDOverlayKey", "HUDOverlay", &m_HUDHandle);
-    m_Overlay->SetOverlayInputMethod(m_OverlayHandle, vr::VROverlayInputMethod_Mouse);
+    m_Overlay->SetOverlayInputMethod(m_MainMenuHandle, vr::VROverlayInputMethod_Mouse);
     m_Overlay->SetOverlayInputMethod(m_HUDHandle, vr::VROverlayInputMethod_Mouse);
 
     UpdatePosesAndActions();
@@ -141,7 +141,6 @@ void VR::Update()
         if (!m_CreatedVRTextures && m_Game->m_EngineClient->IsInGame())
         {
             CreateVRTextures();
-            m_CreatedVRTextures = true;
         }
 
         // Prevents crashing at menu
@@ -175,33 +174,47 @@ void VR::CreateVRTextures()
     m_Game->m_MaterialSystem->BeginRenderTargetAllocation();
     m_Game->m_MaterialSystem->isGameRunning = true;
 
-    m_CreatingTextureID = 0;
+    m_CreatingTextureID = Texture_LeftEye;
     m_LeftEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("leftEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
-    m_CreatingTextureID = 1;
+    
+    m_CreatingTextureID = Texture_RightEye;
     m_RightEyeTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("rightEye0", m_RenderWidth, m_RenderHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
-    m_CreatingTextureID = 2;
+    
+    m_CreatingTextureID = Texture_HUD;
     m_HUDTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("vrHUD", windowWidth, windowHeight, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
-    m_CreatingTextureID = -1;
+    
+    m_CreatingTextureID = Texture_Blank;
+    m_BlankTexture = m_Game->m_MaterialSystem->CreateNamedRenderTargetTextureEx("blankTexture", 512, 512, RT_SIZE_NO_CHANGE, m_Game->m_MaterialSystem->GetBackBufferFormat(), MATERIAL_RT_DEPTH_SHARED, TEXTUREFLAGS_NOMIP);
+    
+    m_CreatingTextureID = Texture_None;
 
     m_Game->m_MaterialSystem->EndRenderTargetAllocation();
+
+    m_CreatedVRTextures = true;
 }
 
 void VR::SubmitVRTextures()
 {
     if (!m_RenderedNewFrame)
     {
-        if (!m_Overlay->IsOverlayVisible(m_OverlayHandle))
+        if (!m_BlankTexture)
+            CreateVRTextures();
+
+        if (!vr::VROverlay()->IsOverlayVisible(m_MainMenuHandle))
             RepositionOverlays();
 
-        m_Overlay->SetOverlayTexture(m_OverlayHandle, &m_VKBackBuffer.m_VRTexture);
-        vr::VROverlay()->ShowOverlay(m_OverlayHandle);
+        vr::VROverlay()->SetOverlayTexture(m_MainMenuHandle, &m_VKBackBuffer.m_VRTexture);
+        vr::VROverlay()->ShowOverlay(m_MainMenuHandle);
         vr::VROverlay()->HideOverlay(m_HUDHandle);
+
+        vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
+        vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
 
         return;
     }
-    vr::VROverlay()->HideOverlay(m_OverlayHandle);
+    vr::VROverlay()->HideOverlay(m_MainMenuHandle);
 
-    m_Overlay->SetOverlayTexture(m_HUDHandle, &m_VKHUD.m_VRTexture);
+    vr::VROverlay()->SetOverlayTexture(m_HUDHandle, &m_VKHUD.m_VRTexture);
 
     if (m_Game->m_VguiSurface->IsCursorVisible())
     {
@@ -290,8 +303,8 @@ void VR::RepositionOverlays()
     menuTransform.m[2][0] = -sin(hmdRotationDegrees) * xScale;
     menuTransform.m[2][2] *= cos(hmdRotationDegrees);
 
-    vr::VROverlay()->SetOverlayTransformAbsolute(m_OverlayHandle, trackingOrigin, &menuTransform);
-    vr::VROverlay()->SetOverlayWidthInMeters(m_OverlayHandle, 1.5 * (1.0 / heightRatio));
+    vr::VROverlay()->SetOverlayTransformAbsolute(m_MainMenuHandle, trackingOrigin, &menuTransform);
+    vr::VROverlay()->SetOverlayWidthInMeters(m_MainMenuHandle, 1.5 * (1.0 / heightRatio));
 
     // Reposition HUD overlay
     vr::HmdMatrix34_t hudTransform =
@@ -382,7 +395,7 @@ bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalog
 
 void VR::ProcessMenuInput()
 {
-    vr::VROverlayHandle_t currentOverlay = m_Game->m_EngineClient->IsInGame() ? m_HUDHandle : m_OverlayHandle;
+    vr::VROverlayHandle_t currentOverlay = m_Game->m_EngineClient->IsInGame() ? m_HUDHandle : m_MainMenuHandle;
 
     vr::TrackedDeviceIndex_t rightControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
     vr::TrackedDevicePose_t rightControllerPose = m_Poses[rightControllerIndex];
