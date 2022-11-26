@@ -396,66 +396,52 @@ bool VR::GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalog
 void VR::ProcessMenuInput()
 {
     vr::VROverlayHandle_t currentOverlay = m_Game->m_EngineClient->IsInGame() ? m_HUDHandle : m_MainMenuHandle;
-
-    vr::TrackedDeviceIndex_t rightControllerIndex = m_System->GetTrackedDeviceIndexForControllerRole(vr::TrackedControllerRole_RightHand);
-    vr::TrackedDevicePose_t rightControllerPose = m_Poses[rightControllerIndex];
-
-    vr::HmdMatrix34_t mat = rightControllerPose.mDeviceToAbsoluteTracking;
-    Vector controllerPosition = { mat.m[0][3], mat.m[1][3], mat.m[2][3] };
-    Vector controllerForward = { -mat.m[0][2], -mat.m[1][2], -mat.m[2][2] };
-    Vector controllerRight = { mat.m[0][0], mat.m[1][0], mat.m[2][0] };
-    Vector controllerUp = { mat.m[0][1], mat.m[1][1], mat.m[2][1] };
-
-    float laserPitchOffset = -38;
-    float laserYawOffset = 0.3;
-
-    Vector forwardCorrected = VectorRotate(controllerForward, controllerRight, laserPitchOffset);
-    forwardCorrected = VectorRotate(forwardCorrected, controllerUp, laserYawOffset);
-
-    vr::VROverlayIntersectionParams_t intersectParams =
-    {
-        { controllerPosition.x, controllerPosition.y, controllerPosition.z },
-        { forwardCorrected.x, forwardCorrected.y, forwardCorrected.z },
-        vr::ETrackingUniverseOrigin::TrackingUniverseSeated
-    };
-
-    vr::VROverlayIntersectionResults_t intersectResults;
     
-    bool hitOverlay = vr::VROverlay()->ComputeOverlayIntersection(currentOverlay, &intersectParams, &intersectResults);
-    
-    if (hitOverlay)
+    // Overlays can't process action inputs if the laser is active, so
+    // only activate laser if the controller is aiming forward.
+    if (abs(m_RightControllerAngAbs.x) < 45 || abs(m_LeftControllerAngAbs.x) < 45)
     {
         vr::VROverlay()->SetOverlayFlag(currentOverlay, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
 
-        float laserX = intersectResults.vUVs.v[0];
-        float laserY = intersectResults.vUVs.v[1];
-
         int windowWidth, windowHeight;
         m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
-
-        if (currentOverlay == m_HUDHandle)
-        {
-            // The pause menu aspect ratio can vary, but the overlay aspect ratio is always 1:1, so correct the pointer
-            float lowerOverlayBound = (1 - ((float)windowHeight / (float)windowWidth)) / 2.0;
-            float upperOverlayBound = 1 - lowerOverlayBound;
-            float laserYcorrected = (laserY - lowerOverlayBound) / (upperOverlayBound - lowerOverlayBound);
-            laserYcorrected = std::clamp(laserYcorrected, 0.0f, 1.0f);
-            m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserYcorrected));
-        }
-        else // main menu
-        {
-            m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserY));
-        }
 
         vr::VREvent_t vrEvent;
         while (vr::VROverlay()->PollNextOverlayEvent(currentOverlay, &vrEvent, sizeof(vrEvent)))
         {
             switch (vrEvent.eventType)
             {
-            case vr::VREvent_MouseButtonDown:
-                m_Game->m_VguiInput->InternalMousePressed(ButtonCode_t::MOUSE_LEFT);
+            case vr::VREvent_MouseMove:
+            {
+                float laserX = vrEvent.data.mouse.x;
+                float laserY = vrEvent.data.mouse.y;
+
+                if (currentOverlay == m_HUDHandle)
+                {
+                    // The pause menu aspect ratio can vary, but the overlay aspect ratio is always 1:1, so correct the pointer
+                    float lowerOverlayBound = (1 - ((float)windowHeight / (float)windowWidth)) / 2.0;
+                    float upperOverlayBound = 1 - lowerOverlayBound;
+                    float laserYcorrected = (laserY - lowerOverlayBound) / (upperOverlayBound - lowerOverlayBound);
+                    laserYcorrected = std::clamp(laserYcorrected, 0.0f, 1.0f);
+                    m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserYcorrected));
+                }
+                else // main menu
+                {
+                    m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserY));
+                }
                 break;
+            }
+
+            case vr::VREvent_MouseButtonDown:
+                // Don't allow holding down the mouse down in the pause menu. The resume button can be clicked before
+                // the MouseButtonUp event is polled, which causes issues with the overlay.
+                if (currentOverlay == m_MainMenuHandle)
+                    m_Game->m_VguiInput->InternalMousePressed(ButtonCode_t::MOUSE_LEFT);
+                break;
+
             case vr::VREvent_MouseButtonUp:
+                if (currentOverlay == m_HUDHandle)
+                    m_Game->m_VguiInput->InternalMousePressed(ButtonCode_t::MOUSE_LEFT);
                 m_Game->m_VguiInput->InternalMouseReleased(ButtonCode_t::MOUSE_LEFT);
                 break;
             }
@@ -849,6 +835,9 @@ void VR::UpdateTracking()
     QAngle::AngleVectors(rightControllerAngLocal, &m_RightControllerForward, &m_RightControllerRight, &m_RightControllerUp);	
 
     // Adjust controller angle 45 degrees downward
+    m_LeftControllerForward = VectorRotate(m_LeftControllerForward, m_LeftControllerRight, -45.0);
+    m_LeftControllerUp = VectorRotate(m_LeftControllerUp, m_LeftControllerRight, -45.0);
+
     m_RightControllerForward = VectorRotate(m_RightControllerForward, m_RightControllerRight, -45.0);
     m_RightControllerUp = VectorRotate(m_RightControllerUp, m_RightControllerRight, -45.0);
 
