@@ -161,10 +161,7 @@ ITexture *__fastcall Hooks::dGetRenderTarget(void *ecx, void *edx)
 void __fastcall Hooks::dRenderView(void *ecx, void *edx, CViewSetup &setup, CViewSetup &hudViewSetup, int nClearFlags, int whatToDraw)
 {
 	if (!m_VR->m_CreatedVRTextures)
-	{
-		hkRenderView.fOriginal(ecx, setup, hudViewSetup, nClearFlags, whatToDraw);
-		return;
-	}
+		m_VR->CreateVRTextures();
 
 	IMatRenderContext *rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
 

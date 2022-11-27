@@ -138,11 +138,6 @@ void VR::Update()
 
     if (m_IsVREnabled && g_D3DVR9)
     {
-        if (!m_CreatedVRTextures && m_Game->m_EngineClient->IsInGame())
-        {
-            CreateVRTextures();
-        }
-
         // Prevents crashing at menu
         if (!m_Game->m_EngineClient->IsInGame())
         {
@@ -158,9 +153,7 @@ void VR::Update()
     UpdateTracking();
 
     if (m_Game->m_VguiSurface->IsCursorVisible())
-    {
         ProcessMenuInput();
-    }
     else
         ProcessInput();
 }
@@ -669,7 +662,7 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("impulse 201");
     }
     
-    bool isControllerVertical = m_RightControllerAngAbs.x > 45;
+    bool isControllerVertical = m_RightControllerAngAbs.x > 60 || m_RightControllerAngAbs.x < -45;
     if ((PressedDigitalAction(m_ShowHUD) || PressedDigitalAction(m_Scoreboard) || isControllerVertical || m_HudAlwaysVisible)
         && m_RenderedHud)
     {
@@ -694,7 +687,6 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("gameui_activate");
         RepositionOverlays();
     }
-
 }
 
 QAngle VR::GetRightControllerAbsAngle()
