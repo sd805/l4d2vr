@@ -314,7 +314,7 @@ void VR::RepositionOverlays()
         0.0f, 0.0f, 1.0f, 0.0f
     };
 
-    Vector hudDistance = hmdForward * 2;
+    Vector hudDistance = hmdForward * m_HudDistance;
     Vector hudNewPos = hudDistance + hmdPosition;
 
     hudTransform.m[0][3] = hudNewPos.x;
@@ -327,7 +327,7 @@ void VR::RepositionOverlays()
     hudTransform.m[2][2] *= cos(hmdRotationDegrees);
 
     vr::VROverlay()->SetOverlayTransformAbsolute(m_HUDHandle, trackingOrigin, &hudTransform);
-    vr::VROverlay()->SetOverlayWidthInMeters(m_HUDHandle, 1.5);
+    vr::VROverlay()->SetOverlayWidthInMeters(m_HUDHandle, m_HudSize);
 }
 
 void VR::GetPoses() 
@@ -670,23 +670,24 @@ void VR::ProcessInput()
     }
     
     bool isControllerVertical = m_RightControllerAngAbs.x > 45;
-    if ((PressedDigitalAction(m_ShowHUD) || PressedDigitalAction(m_Scoreboard) || isControllerVertical) && m_RenderedHud)
+    if ((PressedDigitalAction(m_ShowHUD) || PressedDigitalAction(m_Scoreboard) || isControllerVertical || m_HudAlwaysVisible)
+        && m_RenderedHud)
     {
-        if (!vr::VROverlay()->IsOverlayVisible(m_HUDHandle))
+        if (!vr::VROverlay()->IsOverlayVisible(m_HUDHandle) || m_HudAlwaysVisible)
             RepositionOverlays();
 
         if (PressedDigitalAction(m_Scoreboard))
             m_Game->ClientCmd_Unrestricted("+showscores");
+        else
+            m_Game->ClientCmd_Unrestricted("-showscores");
 
         vr::VROverlay()->ShowOverlay(m_HUDHandle);
-        m_RenderedHud = false;
     }
     else
     {
         vr::VROverlay()->HideOverlay(m_HUDHandle);
-        m_Game->ClientCmd_Unrestricted("-showscores");
-        m_RenderedHud = false;
     }
+    m_RenderedHud = false;
 
     if (PressedDigitalAction(m_Pause, true))
     {
@@ -926,6 +927,9 @@ void VR::ParseConfigFile()
     m_VRScale = std::stof(userConfig["VRScale"]);
     m_IpdScale = std::stof(userConfig["IPDScale"]);
     m_HideArms = userConfig["HideArms"] == "true";
+    m_HudDistance = std::stof(userConfig["HudDistance"]);
+    m_HudSize = std::stof(userConfig["HudSize"]);
+    m_HudAlwaysVisible = userConfig["HudAlwaysVisible"] == "true";
 }
 
 void VR::WaitForConfigUpdate()

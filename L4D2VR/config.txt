@@ -5,3 +5,6 @@ LeftHanded=false
 VRScale=43.2
 IPDScale=1.0
 HideArms=false
+HudDistance=2.0
+HudSize=1.5
+HudAlwaysVisible=false

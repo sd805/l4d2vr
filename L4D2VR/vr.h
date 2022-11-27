@@ -179,6 +179,9 @@ public:
 	float m_VRScale = 43.2;
 	float m_IpdScale = 1.0;
 	bool m_HideArms = false;
+	float m_HudDistance = 2.0;
+	float m_HudSize = 1.5;
+	bool m_HudAlwaysVisible = false;
 
 	VR() {};
 	VR(Game *game);
