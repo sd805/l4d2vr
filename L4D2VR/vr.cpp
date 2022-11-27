@@ -200,8 +200,11 @@ void VR::SubmitVRTextures()
         vr::VROverlay()->ShowOverlay(m_MainMenuHandle);
         vr::VROverlay()->HideOverlay(m_HUDHandle);
 
-        vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
-        vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
+        if (!m_Game->m_EngineClient->IsInGame())
+        {
+            vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
+            vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
+        }
 
         return;
     }
@@ -835,6 +838,7 @@ void VR::UpdateTracking()
     m_RightControllerUp = VectorRotate(m_RightControllerUp, m_RightControllerRight, -45.0);
 
     // controller angles
+    QAngle::VectorAngles(m_LeftControllerForward, m_LeftControllerUp, m_LeftControllerAngAbs);
     QAngle::VectorAngles(m_RightControllerForward, m_RightControllerUp, m_RightControllerAngAbs);
     
     PositionAngle viewmodelOffset = localPlayer->GetViewmodelOffset();
