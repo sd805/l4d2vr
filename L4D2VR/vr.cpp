@@ -270,7 +270,7 @@ void VR::RepositionOverlays()
         0.0f, 0.0f, 1.0f, 1.0f
     };
 
-    vr::ETrackingUniverseOrigin trackingOrigin = vr::ETrackingUniverseOrigin::TrackingUniverseSeated;
+    vr::ETrackingUniverseOrigin trackingOrigin = vr::VRCompositor()->GetTrackingSpace();
 
     // Reposition main menu overlay
     float renderWidth = m_VKBackBuffer.m_VulkanData.m_nWidth;
