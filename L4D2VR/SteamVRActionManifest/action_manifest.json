@@ -15,7 +15,6 @@
 	], 
 	
 	"actions": [
-
 		{
 			"name": "/actions/base/in/pose_lefthand",
 			"type": "pose"
@@ -31,6 +30,16 @@
 		{
 			"name": "/actions/base/out/vibration_right",
 			"type": "vibration"
+		},
+		{
+			"name" : "/actions/base/in/skeleton_lefthand",
+			"skeleton" : "/skeleton/hand/left",
+			"type" : "skeleton"
+		},
+		{
+			"name" : "/actions/base/in/skeleton_righthand",
+			"skeleton" : "/skeleton/hand/right",
+			"type" : "skeleton"
 		},
 		{
 			"name": "/actions/main/in/PrimaryAttack",
@@ -110,7 +119,8 @@
 		},
 		{
 			"name": "/actions/main/in/Spray",
-			"type": "boolean"
+			"type": "boolean",
+			"requirement": "optional"
 		},
 		{
 			"name": "/actions/main/in/Scoreboard",
@@ -118,7 +128,8 @@
 		},
 		{
 			"name": "/actions/main/in/ShowHUD",
-			"type": "boolean"
+			"type": "boolean",
+			"requirement": "optional"
 		},
 		{
 			"name": "/actions/main/in/Pause",
@@ -130,13 +141,40 @@
 		{
 			"name": "/actions/main",
 			"usage": "leftright"
+		},
+		{
+		  "name": "/actions/base",
+		  "usage": "hidden"
 		}
 	],
 
 	"localization" : [
 		{
 			"language_tag": "en_us",
-			"/actions/main" : "Main"
+			"/actions/main" : "Main",
+			"/actions/main/in/PrimaryAttack" : "Primary Attack",
+			"/actions/main/in/SecondaryAttack" : "Secondary Attack",
+			"/actions/main/in/Jump" : "Jump",
+			"/actions/main/in/Walk" : "Walk",
+			"/actions/main/in/Turn" : "Turn",
+			"/actions/main/in/Reload" : "Reload",
+			"/actions/main/in/Use" : "Use",
+			"/actions/main/in/NextItem" : "Next Item",
+			"/actions/main/in/PrevItem" : "Previous Item",
+			"/actions/main/in/ResetPosition" : "Reset Position",
+			"/actions/main/in/Crouch" : "Crouch",
+			"/actions/main/in/Flashlight" : "Flashlight",
+			"/actions/main/in/ActivateVR" : "Activate VR",
+			"/actions/main/in/MenuSelect" : "Menu Select",
+			"/actions/main/in/MenuBack" : "Menu Back",
+			"/actions/main/in/MenuUp" : "Menu Up",
+			"/actions/main/in/MenuDown" : "Menu Down",
+			"/actions/main/in/MenuLeft" : "Menu Left",
+			"/actions/main/in/MenuRight" : "Menu Right",
+			"/actions/main/in/Spray" : "Spray",
+			"/actions/main/in/Scoreboard" : "Show Scoreboard",
+			"/actions/main/in/ShowHUD" : "Show HUD",
+			"/actions/main/in/Pause" : "Pause"
 		}
 	]
 }
