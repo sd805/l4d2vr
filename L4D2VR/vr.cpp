@@ -82,6 +82,15 @@ VR::VR(Game *game)
     m_Overlay->SetOverlayInputMethod(m_MainMenuHandle, vr::VROverlayInputMethod_Mouse);
     m_Overlay->SetOverlayInputMethod(m_HUDHandle, vr::VROverlayInputMethod_Mouse);
 
+    int windowWidth, windowHeight;
+    m_Game->m_MaterialSystem->GetRenderContext()->GetWindowSize(windowWidth, windowHeight);
+
+    const vr::HmdVector2_t mouseScaleHUD = {windowWidth, windowHeight};
+    m_Overlay->SetOverlayMouseScale(m_HUDHandle, &mouseScaleHUD);
+
+    const vr::HmdVector2_t mouseScaleMenu = {m_RenderWidth, m_RenderHeight};
+    m_Overlay->SetOverlayMouseScale(m_MainMenuHandle, &mouseScaleMenu);
+
     UpdatePosesAndActions();
 
     m_IsInitialized = true;
@@ -414,17 +423,15 @@ void VR::ProcessMenuInput()
 
                 if (currentOverlay == m_HUDHandle)
                 {
-                    // The pause menu aspect ratio can vary, but the overlay aspect ratio is always 1:1, so correct the pointer
-                    float lowerOverlayBound = (1 - ((float)windowHeight / (float)windowWidth)) / 2.0;
-                    float upperOverlayBound = 1 - lowerOverlayBound;
-                    float laserYcorrected = (laserY - lowerOverlayBound) / (upperOverlayBound - lowerOverlayBound);
-                    laserYcorrected = std::clamp(laserYcorrected, 0.0f, 1.0f);
-                    m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserYcorrected));
+                    laserY = -laserY + windowHeight;
                 }
-                else // main menu
+                else // main menu (uses render sized texture)
                 {
-                    m_Game->m_VguiInput->SetCursorPos(windowWidth * laserX, windowHeight * (1 - laserY));
+                    laserX = (laserX / m_RenderWidth) * windowWidth;
+                    laserY = ((-laserY + m_RenderHeight) / m_RenderHeight) * windowHeight;
                 }
+
+                m_Game->m_VguiInput->SetCursorPos(laserX, laserY);
                 break;
             }
 
