@@ -81,6 +81,8 @@ VR::VR(Game *game)
     m_Overlay->CreateOverlay("HUDOverlayKey", "HUDOverlay", &m_HUDHandle);
     m_Overlay->SetOverlayInputMethod(m_MainMenuHandle, vr::VROverlayInputMethod_Mouse);
     m_Overlay->SetOverlayInputMethod(m_HUDHandle, vr::VROverlayInputMethod_Mouse);
+    m_Overlay->SetOverlayFlag(m_MainMenuHandle, vr::VROverlayFlags_SendVRDiscreteScrollEvents, true);
+    m_Overlay->SetOverlayFlag(m_HUDHandle, vr::VROverlayFlags_SendVRDiscreteScrollEvents, true);
 
     UpdatePosesAndActions();
 
@@ -439,6 +441,10 @@ void VR::ProcessMenuInput()
                 if (currentOverlay == m_HUDHandle)
                     m_Game->m_VguiInput->InternalMousePressed(ButtonCode_t::MOUSE_LEFT);
                 m_Game->m_VguiInput->InternalMouseReleased(ButtonCode_t::MOUSE_LEFT);
+                break;
+
+            case vr::VREvent_ScrollDiscrete:
+                m_Game->m_VguiInput->InternalMouseWheeled((int)vrEvent.data.scroll.ydelta);
                 break;
             }
         }
