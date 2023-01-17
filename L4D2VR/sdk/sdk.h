@@ -1929,7 +1929,7 @@ public:
 	virtual void InternalMousePressed(ButtonCode_t);
 	virtual void InternalMouseDoublePressed(ButtonCode_t);
 	virtual void InternalMouseReleased(ButtonCode_t);
-	virtual void InternalMouseWheeled(void);
+	virtual void InternalMouseWheeled(int);
 	virtual void InternalKeyCodePressed(KeyCode);
 	virtual void InternalKeyCodeTyped(KeyCode code);
 	virtual void InternalKeyTyped(void);
