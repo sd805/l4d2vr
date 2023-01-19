@@ -140,7 +140,6 @@ void VR::InstallApplicationManifest(const char *fileName)
     sprintf_s(path, MAX_STR_LEN, "%s\\VR\\%s", currentDir, fileName);
 
     vr::VRApplications()->AddApplicationManifest(path);
-    vr::VRApplications()->IdentifyApplication(GetCurrentProcessId(), "l4d2vr");
 }
 
 void VR::Update()

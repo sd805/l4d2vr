@@ -1,10 +1,10 @@
 {
 	"source" : "builtin",
 	"applications": [{
-		"app_key": "l4d2vr",
+		"app_key": "steam.app.550",
 		
 		"launch_type": "url",
-		"url": "steam://rungameid/550",
+		"url": "steam://launch/550/VR",
 		"action_manifest_path" : "SteamVRActionManifest/action_manifest.json",
 		"image_path" : "l4d2vr_capsule_main.png",
 
