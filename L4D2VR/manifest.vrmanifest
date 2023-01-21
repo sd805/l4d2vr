@@ -1,0 +1,18 @@
+{
+	"source" : "builtin",
+	"applications": [{
+		"app_key": "steam.app.550",
+		
+		"launch_type": "url",
+		"url": "steam://launch/550/VR",
+		"action_manifest_path" : "SteamVRActionManifest/action_manifest.json",
+		"image_path" : "l4d2vr_capsule_main.png",
+
+		"strings": {
+			"en_us": {
+				"name": "Left 4 Dead 2 VR",
+				"description": "Left 4 Dead 2 VR Mod"
+			}
+		}
+	}]
+}

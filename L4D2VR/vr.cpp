@@ -67,6 +67,7 @@ VR::VR(Game *game)
     m_Aspect = tanHalfFov[0] / tanHalfFov[1];
     m_Fov = 2.0f * atan(tanHalfFov[0]) * 360 / (3.14159265358979323846 * 2);
 
+    InstallApplicationManifest("manifest.vrmanifest");
     SetActionManifest("action_manifest.json");
 
     std::thread configParser(&VR::WaitForConfigUpdate, this);
@@ -140,6 +141,16 @@ int VR::SetActionManifest(const char *fileName)
     m_ActiveActionSet.ulActionSet = m_ActionSet;
 
     return 0;
+}
+
+void VR::InstallApplicationManifest(const char *fileName)
+{
+    char currentDir[MAX_STR_LEN];
+    GetCurrentDirectory(MAX_STR_LEN, currentDir);
+    char path[MAX_STR_LEN];
+    sprintf_s(path, MAX_STR_LEN, "%s\\VR\\%s", currentDir, fileName);
+
+    vr::VRApplications()->AddApplicationManifest(path);
 }
 
 void VR::Update()

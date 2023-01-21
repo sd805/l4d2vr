@@ -186,6 +186,7 @@ public:
 	VR() {};
 	VR(Game *game);
 	int SetActionManifest(const char *fileName);
+	void InstallApplicationManifest(const char *fileName);
 	void Update();
 	void CreateVRTextures();
 	void SubmitVRTextures();

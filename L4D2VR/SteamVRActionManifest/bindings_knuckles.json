@@ -228,8 +228,8 @@
    },
    "category" : "steamvr_input",
    "controller_type" : "knuckles",
-   "description" : "default l4d2vr bindings",
-   "name" : "default l4d2vr bindings",
+   "description" : "",
+   "name" : "Default Left 4 Dead 2 VR bindings for Index Controllers",
    "options" : {},
    "simulated_actions" : []
 }
