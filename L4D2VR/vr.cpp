@@ -415,9 +415,13 @@ void VR::ProcessMenuInput()
 {
     vr::VROverlayHandle_t currentOverlay = m_Game->m_EngineClient->IsInGame() ? m_HUDHandle : m_MainMenuHandle;
     
+    // Check if left or right hand controller is pointing at the overlay
+    const bool isHoveringOverlay = CheckOverlayIntersectionForController(currentOverlay, vr::TrackedControllerRole_LeftHand) ||
+                                   CheckOverlayIntersectionForController(currentOverlay, vr::TrackedControllerRole_RightHand);
+
     // Overlays can't process action inputs if the laser is active, so
-    // only activate laser if the controller is aiming forward.
-    if (abs(m_RightControllerAngAbs.x) < 45 || abs(m_LeftControllerAngAbs.x) < 45)
+    // only activate laser if a controller is pointing at the overlay
+    if (isHoveringOverlay)
     {
         vr::VROverlay()->SetOverlayFlag(currentOverlay, vr::VROverlayFlags_MakeOverlaysInteractiveIfVisible, true);
 
@@ -714,6 +718,108 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("gameui_activate");
         RepositionOverlays();
     }
+}
+
+VMatrix VR::VMatrixToHmdMatrix(const vr::HmdMatrix34_t &hmdMat)
+{
+    // VMatrix has a different implicit coordinate system than HmdMatrix34_t, but this function does not convert between them
+    VMatrix vMat(
+        hmdMat.m[0][0], hmdMat.m[1][0], hmdMat.m[2][0], 0.0f,
+        hmdMat.m[0][1], hmdMat.m[1][1], hmdMat.m[2][1], 0.0f,
+        hmdMat.m[0][2], hmdMat.m[1][2], hmdMat.m[2][2], 0.0f,
+        hmdMat.m[0][3], hmdMat.m[1][3], hmdMat.m[2][3], 1.0f
+    );
+
+    return vMat;
+}
+
+vr::HmdMatrix34_t VR::VMatrixFromHmdMatrix(const VMatrix &vMat)
+{
+    vr::HmdMatrix34_t hmdMat = {0};
+
+    hmdMat.m[0][0] = vMat.m[0][0];
+    hmdMat.m[1][0] = vMat.m[0][1];
+    hmdMat.m[2][0] = vMat.m[0][2];
+
+    hmdMat.m[0][1] = vMat.m[1][0];
+    hmdMat.m[1][1] = vMat.m[1][1];
+    hmdMat.m[2][1] = vMat.m[1][2];
+
+    hmdMat.m[0][2] = vMat.m[2][0];
+    hmdMat.m[1][2] = vMat.m[2][1];
+    hmdMat.m[2][2] = vMat.m[2][2];
+
+    hmdMat.m[0][3] = vMat.m[3][0];
+    hmdMat.m[1][3] = vMat.m[3][1];
+    hmdMat.m[2][3] = vMat.m[3][2];
+
+    return hmdMat;
+}
+
+vr::HmdMatrix34_t VR::GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole)
+{
+    vr::VRInputValueHandle_t inputValue = vr::k_ulInvalidInputValueHandle;
+
+    if (controllerRole == vr::TrackedControllerRole_RightHand)
+    {
+        m_Input->GetInputSourceHandle("/user/hand/right", &inputValue);
+    }
+    else if (controllerRole == vr::TrackedControllerRole_LeftHand)
+    {
+        m_Input->GetInputSourceHandle("/user/hand/left", &inputValue);
+    }
+
+    if (inputValue != vr::k_ulInvalidInputValueHandle)
+    {
+        char buffer[vr::k_unMaxPropertyStringSize];
+
+        m_System->GetStringTrackedDeviceProperty(vr::VRSystem()->GetTrackedDeviceIndexForControllerRole(controllerRole), vr::Prop_RenderModelName_String, 
+                                                 buffer, vr::k_unMaxPropertyStringSize);
+
+        vr::RenderModel_ControllerMode_State_t controllerState = {0};
+        vr::RenderModel_ComponentState_t componentState = {0};
+
+        if (vr::VRRenderModels()->GetComponentStateForDevicePath(buffer, vr::k_pch_Controller_Component_Tip, inputValue, &controllerState, &componentState))
+        {
+            return componentState.mTrackingToComponentLocal;
+        }
+    }
+
+    // Not a hand controller role or tip lookup failed, return identity
+    const vr::HmdMatrix34_t identity = 
+    {
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f
+    };
+
+    return identity;
+}
+
+bool VR::CheckOverlayIntersectionForController(vr::VROverlayHandle_t overlayHandle, vr::ETrackedControllerRole controllerRole)
+{
+    vr::TrackedDeviceIndex_t deviceIndex = m_System->GetTrackedDeviceIndexForControllerRole(controllerRole);
+
+    if (deviceIndex == vr::k_unTrackedDeviceIndexInvalid)
+        return false;
+
+    vr::TrackedDevicePose_t &controllerPose = m_Poses[deviceIndex];
+
+    if (!controllerPose.bPoseIsValid)
+        return false;
+
+    VMatrix controllerVMatrix = VMatrixToHmdMatrix(controllerPose.mDeviceToAbsoluteTracking);
+    VMatrix tipVMatrix        = VMatrixToHmdMatrix(GetControllerTipMatrix(controllerRole));
+    tipVMatrix.MatrixMul(controllerVMatrix, controllerVMatrix);
+
+    vr::VROverlayIntersectionParams_t  params  = {0};
+    vr::VROverlayIntersectionResults_t results = {0};
+
+    params.eOrigin    = vr::VRCompositor()->GetTrackingSpace();
+    params.vSource    = { controllerVMatrix.m[3][0],  controllerVMatrix.m[3][1],  controllerVMatrix.m[3][2]};
+    params.vDirection = {-controllerVMatrix.m[2][0], -controllerVMatrix.m[2][1], -controllerVMatrix.m[2][2]};
+
+    return m_Overlay->ComputeOverlayIntersection(overlayHandle, &params, &results);
 }
 
 QAngle VR::GetRightControllerAbsAngle()
