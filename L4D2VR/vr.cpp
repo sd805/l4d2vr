@@ -720,7 +720,7 @@ void VR::ProcessInput()
     }
 }
 
-VMatrix VR::VMatrixToHmdMatrix(const vr::HmdMatrix34_t &hmdMat)
+VMatrix VR::VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat)
 {
     // VMatrix has a different implicit coordinate system than HmdMatrix34_t, but this function does not convert between them
     VMatrix vMat(
@@ -733,7 +733,7 @@ VMatrix VR::VMatrixToHmdMatrix(const vr::HmdMatrix34_t &hmdMat)
     return vMat;
 }
 
-vr::HmdMatrix34_t VR::VMatrixFromHmdMatrix(const VMatrix &vMat)
+vr::HmdMatrix34_t VR::VMatrixToHmdMatrix(const VMatrix &vMat)
 {
     vr::HmdMatrix34_t hmdMat = {0};
 
@@ -808,8 +808,8 @@ bool VR::CheckOverlayIntersectionForController(vr::VROverlayHandle_t overlayHand
     if (!controllerPose.bPoseIsValid)
         return false;
 
-    VMatrix controllerVMatrix = VMatrixToHmdMatrix(controllerPose.mDeviceToAbsoluteTracking);
-    VMatrix tipVMatrix        = VMatrixToHmdMatrix(GetControllerTipMatrix(controllerRole));
+    VMatrix controllerVMatrix = VMatrixFromHmdMatrix(controllerPose.mDeviceToAbsoluteTracking);
+    VMatrix tipVMatrix        = VMatrixFromHmdMatrix(GetControllerTipMatrix(controllerRole));
     tipVMatrix.MatrixMul(controllerVMatrix, controllerVMatrix);
 
     vr::VROverlayIntersectionParams_t  params  = {0};
