@@ -196,6 +196,10 @@ public:
 	void GetViewParameters();
 	void ProcessMenuInput();
 	void ProcessInput();
+	VMatrix VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat);
+	vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
+	vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);
+	bool CheckOverlayIntersectionForController(vr::VROverlayHandle_t overlayHandle, vr::ETrackedControllerRole controllerRole);
 	QAngle GetRightControllerAbsAngle();
 	Vector GetRightControllerAbsPos();
 	Vector GetRecommendedViewmodelAbsPos();
