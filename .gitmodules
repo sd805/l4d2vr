@@ -1,4 +1,4 @@
 [submodule "dxvk"]
 	path = dxvk
-	url = https://github.com/sd805/dxvk.git
-	branch = dxvk-async
+	url = https://github.com/fholger/dxvk_l4d2vr.git
+	branch = msaa
