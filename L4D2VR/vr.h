@@ -34,9 +34,10 @@ class VR
 public:
 	Game *m_Game = nullptr;
 
-	vr::IVRSystem *m_System = nullptr;
-	vr::IVRInput *m_Input = nullptr;
-	vr::IVROverlay *m_Overlay = nullptr;
+        vr::IVRSystem *m_System = nullptr;
+        vr::IVRInput *m_Input = nullptr;
+        vr::IVROverlay *m_Overlay = nullptr;
+        vr::IVRCompositor *m_Compositor = nullptr;
 
 	vr::VROverlayHandle_t m_MainMenuHandle;
 	vr::VROverlayHandle_t m_HUDHandle;
@@ -142,11 +143,13 @@ public:
 	SharedTextureHolder m_VKHUD;
 	SharedTextureHolder m_VKBlankTexture;
 
-	bool m_IsVREnabled = false;
-	bool m_IsInitialized = false;
-	bool m_RenderedNewFrame = false;
-	bool m_RenderedHud = false;
-	bool m_CreatedVRTextures = false;
+        bool m_IsVREnabled = false;
+        bool m_IsInitialized = false;
+        bool m_RenderedNewFrame = false;
+        bool m_RenderedHud = false;
+        bool m_CreatedVRTextures = false;
+        bool m_CompositorExplicitTiming = false;
+        bool m_CompositorNeedsHandoff = false;
 	TextureID m_CreatingTextureID = Texture_None;
 
         bool m_PressedTurn = false;
@@ -209,16 +212,16 @@ public:
 	VR(Game *game);
 	int SetActionManifest(const char *fileName);
 	void InstallApplicationManifest(const char *fileName);
-	void Update();
-	void CreateVRTextures();
-	void HandleMissingRenderContext(const char* location);
-	void SubmitVRTextures();
-	void RepositionOverlays();
-	void GetPoses();
-	void UpdatePosesAndActions();
-	void GetViewParameters();
-	void ProcessMenuInput();
-	void ProcessInput();
+        void Update();
+        void CreateVRTextures();
+        void HandleMissingRenderContext(const char* location);
+        void SubmitVRTextures();
+        void RepositionOverlays();
+        void GetPoses();
+        bool UpdatePosesAndActions();
+        void GetViewParameters();
+        void ProcessMenuInput();
+        void ProcessInput();
 	VMatrix VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat);
 	vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
 	vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);
@@ -243,4 +246,6 @@ public:
         void UpdateAimingLaser(C_BasePlayer* localPlayer);
         bool ShouldShowAimLine(C_WeaponCSBase* weapon) const;
         void DrawAimLine(const Vector& start, const Vector& end);
+        void FinishFrame();
+        void ConfigureExplicitTiming();
 };

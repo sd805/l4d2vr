@@ -33,13 +33,14 @@ VR::VR(Game* game)
         return;
     }
 
-    vr::EVRInitError peError = vr::VRInitError_None;
-
-    if (!vr::VRCompositor())
+    m_Compositor = vr::VRCompositor();
+    if (!m_Compositor)
     {
         Game::errorMsg("Compositor initialization failed.");
         return;
     }
+
+    ConfigureExplicitTiming();
 
     m_Input = vr::VRInput();
     m_System = vr::OpenVRInternal_ModuleContext().VRSystem();
@@ -57,7 +58,7 @@ VR::VR(Game* game)
     tanHalfFov[0] = std::max({ -l_left, l_right, -r_left, r_right });
     tanHalfFov[1] = std::max({ -l_top, l_bottom, -r_top, r_bottom });
     // For some headsets, the driver provided texture size doesn't match the geometric aspect ratio of the lenses.
-    // In this case, we need to adjust the vertical tangent while still rendering to the recommended RT size. 
+    // In this case, we need to adjust the vertical tangent while still rendering to the recommended RT size.
     m_TextureBounds[0].uMin = 0.5f + 0.5f * l_left / tanHalfFov[0];
     m_TextureBounds[0].uMax = 0.5f + 0.5f * l_right / tanHalfFov[0];
     m_TextureBounds[0].vMin = 0.5f - 0.5f * l_bottom / tanHalfFov[1];
@@ -99,9 +100,21 @@ VR::VR(Game* game)
     m_Overlay->SetOverlayMouseScale(m_MainMenuHandle, &mouseScaleMenu);
 
     UpdatePosesAndActions();
+    FinishFrame();
 
     m_IsInitialized = true;
     m_IsVREnabled = true;
+}
+
+void VR::ConfigureExplicitTiming()
+{
+    if (!m_Compositor)
+        return;
+
+    m_Compositor->SetExplicitTimingMode(
+        vr::VRCompositorTimingMode_Explicit_ApplicationPerformsPostPresentHandoff);
+
+    m_CompositorExplicitTiming = true;
 }
 
 int VR::SetActionManifest(const char* fileName)
@@ -163,21 +176,42 @@ void VR::Update()
     if (!m_IsInitialized || !m_Game->m_Initialized)
         return;
 
+    struct FrameScope
+    {
+        VR* owner;
+        ~FrameScope()
+        {
+            if (owner)
+                owner->FinishFrame();
+        }
+    } frameScope{ this };
+
+    bool posesValid = UpdatePosesAndActions();
+
     if (m_IsVREnabled && g_D3DVR9)
     {
         // Prevents crashing at menu
         if (!m_Game->m_EngineClient->IsInGame())
         {
             IMatRenderContext* rndrContext = m_Game->m_MaterialSystem->GetRenderContext();
+            if (!rndrContext)
+            {
+                HandleMissingRenderContext("VR::Update");
+                return;
+            }
             rndrContext->SetRenderTarget(NULL);
             m_Game->m_CachedArmsModel = false;
             m_CreatedVRTextures = false; // Have to recreate textures otherwise some workshop maps won't render
         }
     }
 
-    SubmitVRTextures();
-    UpdatePosesAndActions();
+    if (!posesValid)
+    {
+        // Continue using the last known poses so smoothing and aim helpers stay active.
+    }
+
     UpdateTracking();
+    SubmitVRTextures();
 
 
     if (m_Game->m_VguiSurface->IsCursorVisible())
@@ -226,6 +260,11 @@ void VR::CreateVRTextures()
 
 void VR::SubmitVRTextures()
 {
+    if (!m_Compositor)
+        return;
+
+    bool submitted = false;
+
     // 若这帧没有新内容，就走菜单/Overlay 路径
     if (!m_RenderedNewFrame)
     {
@@ -241,9 +280,13 @@ void VR::SubmitVRTextures()
 
         if (!m_Game->m_EngineClient->IsInGame())
         {
-            vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
-            vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKBlankTexture.m_VRTexture, NULL, vr::Submit_Default);
+            m_Compositor->Submit(vr::Eye_Left, &m_VKBlankTexture.m_VRTexture, nullptr, vr::Submit_Default);
+            m_Compositor->Submit(vr::Eye_Right, &m_VKBlankTexture.m_VRTexture, nullptr, vr::Submit_Default);
+            submitted = true;
         }
+
+        if (submitted && m_CompositorExplicitTiming)
+            m_CompositorNeedsHandoff = true;
 
         return;
     }
@@ -256,8 +299,12 @@ void VR::SubmitVRTextures()
         vr::VROverlay()->ShowOverlay(m_HUDHandle);
     }
 
-    vr::VRCompositor()->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
-    vr::VRCompositor()->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
+    m_Compositor->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
+    m_Compositor->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
+    submitted = true;
+
+    if (submitted && m_CompositorExplicitTiming)
+        m_CompositorNeedsHandoff = true;
 
 
     m_RenderedNewFrame = false;
@@ -384,10 +431,26 @@ void VR::GetPoses()
     GetPoseData(rightControllerPose, m_RightControllerPose);
 }
 
-void VR::UpdatePosesAndActions()
+bool VR::UpdatePosesAndActions()
 {
-    vr::VRCompositor()->WaitGetPoses(m_Poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+    if (!m_Compositor)
+        return false;
+
+    vr::EVRCompositorError result = m_Compositor->WaitGetPoses(m_Poses, vr::k_unMaxTrackedDeviceCount, NULL, 0);
+    bool posesValid = (result == vr::VRCompositorError_None);
+
+    if (posesValid)
+    {
+        if (m_CompositorExplicitTiming)
+            m_CompositorNeedsHandoff = true;
+    }
+    else
+    {
+        m_CompositorNeedsHandoff = false;
+    }
+
     m_Input->UpdateActionState(&m_ActiveActionSet, sizeof(vr::VRActiveActionSet_t), 1);
+    return posesValid;
 }
 
 void VR::GetViewParameters()
@@ -931,6 +994,18 @@ void VR::HandleMissingRenderContext(const char* location)
     m_RenderedHud = false;
 }
 
+void VR::FinishFrame()
+{
+    if (!m_Compositor || !m_CompositorExplicitTiming)
+        return;
+
+    if (!m_CompositorNeedsHandoff)
+        return;
+
+    m_Compositor->PostPresentHandoff();
+    m_CompositorNeedsHandoff = false;
+}
+
 void VR::UpdateTracking()
 {
     GetPoses();
@@ -1210,7 +1285,7 @@ void VR::DrawAimLine(const Vector& start, const Vector& end)
     if (!m_AimLineEnabled)
         return;
 
-    const float duration = 0.0f;
+    const float duration = std::max(m_AimLinePersistence, 0.0f);
     m_Game->m_DebugOverlay->AddLineOverlay(start, end, m_AimLineColorR, m_AimLineColorG, m_AimLineColorB, false, duration);
 
     const float thickness = std::max(m_AimLineThickness, 0.0f);
