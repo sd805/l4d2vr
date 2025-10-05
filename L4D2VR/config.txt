@@ -10,6 +10,7 @@ HudAlwaysVisible=false
 HudSize=1.8
 HeadSmoothing=0
 ForceNonVRServerMovement=false
+RequireSecondaryAttackForItemSwitch=true
 AimLineEnabled=true
 AimLineThickness=0.3
 AimLinePersistence=0.02
