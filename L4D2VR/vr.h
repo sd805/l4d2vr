@@ -86,17 +86,21 @@ public:
         QAngle m_HmdAngSmoothed = { 0,0,0 };
 
         Vector m_SetupOrigin = { 0,0,0 };
+        QAngle m_SetupAngles = { 0,0,0 };
         Vector m_SetupOriginPrev = { 0,0,0 };
         Vector m_CameraAnchor = { 0,0,0 };
         Vector m_SetupOriginToHMD = { 0,0,0 };
 
-	float m_HeightOffset = 0.0;
-	bool m_RoomscaleActive = false;
+        float m_HeightOffset = 0.0;
+        bool m_RoomscaleActive = false;
+        bool m_IsThirdPersonCamera = false;
+        bool m_ObserverThirdPerson = false;
+        int m_ThirdPersonHoldFrames = 0;
 
-	Vector m_LeftControllerPosAbs;											
-	QAngle m_LeftControllerAngAbs;
-	Vector m_RightControllerPosAbs;											
-	QAngle m_RightControllerAngAbs;
+        Vector m_LeftControllerPosAbs;
+        QAngle m_LeftControllerAngAbs;
+        Vector m_RightControllerPosAbs;
+        QAngle m_RightControllerAngAbs;
 
         Vector m_ViewmodelPosOffset;
         QAngle m_ViewmodelAngOffset;
@@ -224,17 +228,20 @@ public:
         void ProcessMenuInput();
         void ProcessInput();
 	VMatrix VMatrixFromHmdMatrix(const vr::HmdMatrix34_t &hmdMat);
-	vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
-	vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);
+        vr::HmdMatrix34_t VMatrixToHmdMatrix(const VMatrix &vMat);
+        vr::HmdMatrix34_t GetControllerTipMatrix(vr::ETrackedControllerRole controllerRole);
+        vr::HmdMatrix34_t BuildThirdPersonSubmitPose() const;
 	bool CheckOverlayIntersectionForController(vr::VROverlayHandle_t overlayHandle, vr::ETrackedControllerRole controllerRole);
 	QAngle GetRightControllerAbsAngle();
 	Vector GetRightControllerAbsPos();
 	Vector GetRecommendedViewmodelAbsPos();
 	QAngle GetRecommendedViewmodelAbsAngle();
         void UpdateTracking();
+        bool UpdateThirdPersonViewState(const Vector& cameraOrigin);
         Vector GetViewAngle();
         Vector GetViewOriginLeft();
         Vector GetViewOriginRight();
+        bool IsThirdPersonCameraActive() const { return m_IsThirdPersonCamera; }
         bool PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfActionChanged = false);
         bool GetDigitalActionData(vr::VRActionHandle_t& actionHandle, vr::InputDigitalActionData_t& digitalDataOut);
         bool GetAnalogActionData(vr::VRActionHandle_t &actionHandle, vr::InputAnalogActionData_t &analogDataOut);
