@@ -27,7 +27,36 @@ DWORD WINAPI InitL4D2VR(HMODULE hModule)
     LocalFree(szArglist);
 
     if (!insecureEnabled)
-        ExitProcess(0);
+    {
+        const wchar_t *warningMessage =
+            L"L4D2VR was launched without the -insecure parameter.\n"
+            L"That launch option prevents VAC from starting.\n\n"
+            L"Without it, VAC may run as normal and could detect unsupported modifications,"
+            L" increasing your ban risk.\n\n"
+            L"Press OK to continue anyway or Cancel to exit.";
+        const wchar_t *warningTitle = L"L4D2VR Warning";
+
+        LANGID langId = GetUserDefaultUILanguage();
+        if (PRIMARYLANGID(langId) == LANG_CHINESE)
+        {
+            warningMessage =
+                L"L4D2VR 在未使用 -insecure 参数的情况下启动。\n"
+                L"该启动参数可以阻止 VAC 启动。\n\n"
+                L"如果继续不使用，VAC 可能照常运行并检测到不受支持的修改，"
+                L"从而提高被封禁的风险。\n\n"
+                L"按“确定”继续，或按“取消”退出。";
+            warningTitle = L"L4D2VR 警告";
+        }
+
+        int result = MessageBoxW(
+            NULL,
+            warningMessage,
+            warningTitle,
+            MB_ICONWARNING | MB_OKCANCEL | MB_DEFBUTTON2);
+
+        if (result != IDOK)
+            ExitProcess(0);
+    }
 
     g_Game = new Game();
 
