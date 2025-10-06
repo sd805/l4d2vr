@@ -783,7 +783,8 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("-reload");
     }
 
-    if (PressedDigitalAction(m_ActionSecondaryAttack))
+    bool secondaryAttackActive = PressedDigitalAction(m_ActionSecondaryAttack);
+    if (secondaryAttackActive)
     {
         m_Game->ClientCmd_Unrestricted("+attack2");
     }
@@ -792,7 +793,7 @@ void VR::ProcessInput()
         m_Game->ClientCmd_Unrestricted("-attack2");
     }
 
-    if (crouchButtonDown)
+    if (secondaryAttackActive || !m_RequireSecondaryAttackForItemSwitch)
     {
         if (PressedDigitalAction(m_ActionPrevItem, true))
         {
@@ -1501,6 +1502,7 @@ void VR::ParseConfigFile()
     m_AimLineColorA = aimColor[3];
     m_AimLinePersistence = std::max(0.0f, getFloat("AimLinePersistence", m_AimLinePersistence));
     m_ForceNonVRServerMovement = getBool("ForceNonVRServerMovement", m_ForceNonVRServerMovement);
+    m_RequireSecondaryAttackForItemSwitch = getBool("RequireSecondaryAttackForItemSwitch", m_RequireSecondaryAttackForItemSwitch);
 }
 
 void VR::WaitForConfigUpdate()

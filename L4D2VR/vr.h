@@ -207,6 +207,7 @@ public:
         bool m_HmdSmoothingInitialized = false;
 
         bool m_ForceNonVRServerMovement = false;
+        bool m_RequireSecondaryAttackForItemSwitch = true;
 
         VR() {};
 	VR(Game *game);
