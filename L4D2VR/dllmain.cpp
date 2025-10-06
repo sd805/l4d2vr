@@ -1,6 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include <Windows.h>
 #include <iostream>
+#include <string>
 #include "game.h"
 #include "hooks.h"
 #include "vr.h"
@@ -28,13 +29,13 @@ DWORD WINAPI InitL4D2VR(HMODULE hModule)
 
     if (!insecureEnabled)
     {
-        const wchar_t *warningMessage =
+        std::wstring warningMessage =
             L"L4D2VR was launched without the -insecure parameter.\n"
             L"That launch option prevents VAC from starting.\n\n"
             L"Without it, VAC may run as normal and could detect unsupported modifications,"
             L" increasing your ban risk.\n\n"
             L"Press OK to continue anyway or Cancel to exit.";
-        const wchar_t *warningTitle = L"L4D2VR Warning";
+        std::wstring warningTitle = L"L4D2VR Warning";
 
         LANGID langId = GetUserDefaultUILanguage();
         if (PRIMARYLANGID(langId) == LANG_CHINESE)
@@ -44,14 +45,14 @@ DWORD WINAPI InitL4D2VR(HMODULE hModule)
                 L"该启动参数可以阻止 VAC 启动。\n\n"
                 L"如果继续不使用，VAC 可能照常运行并检测到不受支持的修改，"
                 L"从而提高被封禁的风险。\n\n"
-                L"按“确定”继续，或按“取消”退出。";
+                L"按\"确定\"继续，或按\"取消\"退出。";
             warningTitle = L"L4D2VR 警告";
         }
 
         int result = MessageBoxW(
             NULL,
-            warningMessage,
-            warningTitle,
+            warningMessage.c_str(),
+            warningTitle.c_str(),
             MB_ICONWARNING | MB_OKCANCEL | MB_DEFBUTTON2);
 
         if (result != IDOK)
