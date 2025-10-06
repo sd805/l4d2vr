@@ -206,22 +206,25 @@ void __fastcall Hooks::dRenderView(void* ecx, void* edx, CViewSetup& setup, CVie
 
         CViewSetup leftEyeView = setup;
         CViewSetup rightEyeView = setup;
-        const bool thirdPersonCamera = m_VR->UpdateThirdPersonViewState(setup.origin);
+        const QAngle setupAngles(setup.angles.x, setup.angles.y, setup.angles.z);
+        const bool thirdPersonCamera = m_VR->UpdateThirdPersonViewState(setup.origin, setup.angles);
 
-	// Left eye CViewSetup
-	leftEyeView.x = 0;
-	leftEyeView.width = m_VR->m_RenderWidth;
-	leftEyeView.height = m_VR->m_RenderHeight;
-	leftEyeView.fov = m_VR->m_Fov;
-	leftEyeView.fovViewmodel = m_VR->m_Fov;
-	leftEyeView.m_flAspectRatio = m_VR->m_Aspect;
-	leftEyeView.zNear = 6;
-	leftEyeView.zNearViewmodel = 6;
-        QAngle renderAngles(setup.angles.x, setup.angles.y, setup.angles.z);
+        // Left eye CViewSetup
+        leftEyeView.x = 0;
+        leftEyeView.width = m_VR->m_RenderWidth;
+        leftEyeView.height = m_VR->m_RenderHeight;
+        leftEyeView.fov = m_VR->m_Fov;
+        leftEyeView.fovViewmodel = m_VR->m_Fov;
+        leftEyeView.m_flAspectRatio = m_VR->m_Aspect;
+        leftEyeView.zNear = 6;
+        leftEyeView.zNearViewmodel = 6;
+        QAngle renderAngles = setupAngles;
         if (thirdPersonCamera)
         {
-                leftEyeView.origin = setup.origin;
-                leftEyeView.angles = setup.angles;
+                leftEyeView.origin = m_VR->GetThirdPersonViewOrigin();
+                const QAngle thirdPersonAngles = m_VR->GetThirdPersonViewAngles();
+                leftEyeView.angles = Vector(thirdPersonAngles.x, thirdPersonAngles.y, thirdPersonAngles.z);
+                renderAngles = thirdPersonAngles;
         }
         else
         {
