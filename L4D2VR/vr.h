@@ -96,6 +96,10 @@ public:
         bool m_IsThirdPersonCamera = false;
         bool m_ObserverThirdPerson = false;
         int m_ThirdPersonHoldFrames = 0;
+        Vector m_ThirdPersonViewOrigin = { 0,0,0 };
+        QAngle m_ThirdPersonViewAngles = { 0,0,0 };
+        bool m_ThirdPersonPoseInitialized = false;
+        float m_ThirdPersonCameraSmoothing = 0.5f;
 
         Vector m_LeftControllerPosAbs;
         QAngle m_LeftControllerAngAbs;
@@ -237,10 +241,12 @@ public:
 	Vector GetRecommendedViewmodelAbsPos();
 	QAngle GetRecommendedViewmodelAbsAngle();
         void UpdateTracking();
-        bool UpdateThirdPersonViewState(const Vector& cameraOrigin);
+        bool UpdateThirdPersonViewState(const Vector& cameraOrigin, const Vector& cameraAngles);
         Vector GetViewAngle();
         Vector GetViewOriginLeft();
         Vector GetViewOriginRight();
+        Vector GetThirdPersonViewOrigin() const { return m_ThirdPersonViewOrigin; }
+        QAngle GetThirdPersonViewAngles() const { return m_ThirdPersonViewAngles; }
         bool IsThirdPersonCameraActive() const { return m_IsThirdPersonCamera; }
         bool PressedDigitalAction(vr::VRActionHandle_t &actionHandle, bool checkIfActionChanged = false);
         bool GetDigitalActionData(vr::VRActionHandle_t& actionHandle, vr::InputDigitalActionData_t& digitalDataOut);

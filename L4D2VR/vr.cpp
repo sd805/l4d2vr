@@ -413,7 +413,10 @@ vr::HmdMatrix34_t VR::BuildThirdPersonSubmitPose() const
                                       { 0.0f, 1.0f, 0.0f } } };
     const Matrix3x3 axisTransformT = MatrixTranspose(axisTransform);
 
-    Matrix3x3 cameraSource = BuildSourceRotationMatrix(m_SetupAngles);
+    const QAngle& thirdPersonAngles = m_ThirdPersonPoseInitialized ? m_ThirdPersonViewAngles : m_SetupAngles;
+    const Vector& thirdPersonOrigin = m_ThirdPersonPoseInitialized ? m_ThirdPersonViewOrigin : m_SetupOrigin;
+
+    Matrix3x3 cameraSource = BuildSourceRotationMatrix(thirdPersonAngles);
     Matrix3x3 hmdSource = BuildSourceRotationMatrix(m_HmdAngAbs);
 
     Matrix3x3 deltaSource = MatrixMultiply(cameraSource, MatrixTranspose(hmdSource));
@@ -441,7 +444,7 @@ vr::HmdMatrix34_t VR::BuildThirdPersonSubmitPose() const
 
     if (m_VRScale > 0.0f)
     {
-        Vector deltaSourcePos = m_SetupOrigin - m_HmdPosAbs;
+        Vector deltaSourcePos = thirdPersonOrigin - m_HmdPosAbs;
         Vector deltaMeters = deltaSourcePos * (1.0f / m_VRScale);
         Vector deltaVRPos = MatrixVectorMultiply(axisTransformT, deltaMeters);
 
@@ -1508,13 +1511,17 @@ void VR::DrawAimLine(const Vector& start, const Vector& end)
     }
 }
 
-bool VR::UpdateThirdPersonViewState(const Vector& cameraOrigin)
+bool VR::UpdateThirdPersonViewState(const Vector& cameraOrigin, const Vector& cameraAnglesVec)
 {
+    const QAngle cameraAngles(cameraAnglesVec.x, cameraAnglesVec.y, cameraAnglesVec.z);
     if (!m_IsVREnabled)
     {
         m_IsThirdPersonCamera = false;
         m_ObserverThirdPerson = false;
         m_ThirdPersonHoldFrames = 0;
+        m_ThirdPersonPoseInitialized = false;
+        m_ThirdPersonViewOrigin = cameraOrigin;
+        m_ThirdPersonViewAngles = cameraAngles;
         return false;
     }
 
@@ -1551,7 +1558,53 @@ bool VR::UpdateThirdPersonViewState(const Vector& cameraOrigin)
     if (!thirdPerson)
     {
         m_ObserverThirdPerson = false;
+        m_ThirdPersonPoseInitialized = false;
+        m_ThirdPersonViewOrigin = cameraOrigin;
+        m_ThirdPersonViewAngles = cameraAngles;
+        return thirdPerson;
     }
+
+    float smoothingStrength = std::clamp(m_ThirdPersonCameraSmoothing, 0.0f, 0.99f);
+    if (!m_ThirdPersonPoseInitialized)
+    {
+        m_ThirdPersonViewOrigin = cameraOrigin;
+        m_ThirdPersonViewAngles = cameraAngles;
+        m_ThirdPersonPoseInitialized = true;
+    }
+
+    if (smoothingStrength > 0.0f)
+    {
+        const float lerpFactor = 1.0f - smoothingStrength;
+
+        m_ThirdPersonViewOrigin.x += (cameraOrigin.x - m_ThirdPersonViewOrigin.x) * lerpFactor;
+        m_ThirdPersonViewOrigin.y += (cameraOrigin.y - m_ThirdPersonViewOrigin.y) * lerpFactor;
+        m_ThirdPersonViewOrigin.z += (cameraOrigin.z - m_ThirdPersonViewOrigin.z) * lerpFactor;
+
+        auto smoothAngle = [&](float target, float& current)
+            {
+                float diff = target - current;
+                diff -= 360.0f * std::floor((diff + 180.0f) / 360.0f);
+                current += diff * lerpFactor;
+            };
+
+        smoothAngle(cameraAngles.x, m_ThirdPersonViewAngles.x);
+        smoothAngle(cameraAngles.y, m_ThirdPersonViewAngles.y);
+        smoothAngle(cameraAngles.z, m_ThirdPersonViewAngles.z);
+    }
+    else
+    {
+        m_ThirdPersonViewOrigin = cameraOrigin;
+        m_ThirdPersonViewAngles = cameraAngles;
+    }
+
+    auto wrapAngle = [](float angle)
+        {
+            return angle - 360.0f * std::floor((angle + 180.0f) / 360.0f);
+        };
+
+    m_ThirdPersonViewAngles.x = wrapAngle(m_ThirdPersonViewAngles.x);
+    m_ThirdPersonViewAngles.y = wrapAngle(m_ThirdPersonViewAngles.y);
+    m_ThirdPersonViewAngles.z = wrapAngle(m_ThirdPersonViewAngles.z);
 
     return thirdPerson;
 }
@@ -1567,7 +1620,7 @@ Vector VR::GetViewOriginLeft()
 
     if (m_IsThirdPersonCamera)
     {
-        return m_SetupOrigin;
+        return m_ThirdPersonViewOrigin;
     }
 
     viewOriginLeft = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));
@@ -1582,7 +1635,7 @@ Vector VR::GetViewOriginRight()
 
     if (m_IsThirdPersonCamera)
     {
-        return m_SetupOrigin;
+        return m_ThirdPersonViewOrigin;
     }
 
     viewOriginRight = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));
@@ -1715,6 +1768,7 @@ void VR::ParseConfigFile()
     m_HudSize = getFloat("HudSize", m_HudSize);
     m_HudAlwaysVisible = getBool("HudAlwaysVisible", m_HudAlwaysVisible);
     m_HeadSmoothing = std::clamp(getFloat("HeadSmoothing", m_HeadSmoothing), 0.0f, 0.99f);
+    m_ThirdPersonCameraSmoothing = std::clamp(getFloat("ThirdPersonCameraSmoothing", m_ThirdPersonCameraSmoothing), 0.0f, 0.99f);
     m_AimLineThickness = std::max(0.0f, getFloat("AimLineThickness", m_AimLineThickness));
     m_AimLineEnabled = getBool("AimLineEnabled", m_AimLineEnabled);
     auto aimColor = getColor("AimLineColor", m_AimLineColorR, m_AimLineColorG, m_AimLineColorB, m_AimLineColorA);
