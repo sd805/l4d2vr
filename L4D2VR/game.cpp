@@ -225,4 +225,3 @@ void Game::ClientCmd_Unrestricted(const char* szCmdString)
     if (m_EngineClient)
         m_EngineClient->ClientCmd_Unrestricted(szCmdString);
 }
-
