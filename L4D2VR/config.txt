@@ -9,7 +9,6 @@ IPDScale=1.0
 HudAlwaysVisible=false
 HudSize=1.8
 HeadSmoothing=0
-ThirdPersonCameraSmoothing=0.5
 ForceNonVRServerMovement=false
 RequireSecondaryAttackForItemSwitch=true
 AimLineEnabled=true
