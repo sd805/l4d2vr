@@ -1,3 +1,4 @@
+
 #include "vr.h"
 #include <Windows.h>
 #include "sdk.h"
@@ -16,74 +17,6 @@
 #include <array>
 #include <cmath>
 #include <d3d9_vr.h>
-
-namespace
-{
-    struct Matrix3x3
-    {
-        float m[3][3];
-    };
-
-    Matrix3x3 MatrixTranspose(const Matrix3x3& mat)
-    {
-        Matrix3x3 result{};
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
-                result.m[i][j] = mat.m[j][i];
-            }
-        }
-        return result;
-    }
-
-    Matrix3x3 MatrixMultiply(const Matrix3x3& a, const Matrix3x3& b)
-    {
-        Matrix3x3 result{};
-        for (int i = 0; i < 3; ++i)
-        {
-            for (int j = 0; j < 3; ++j)
-            {
-                float value = 0.0f;
-                for (int k = 0; k < 3; ++k)
-                {
-                    value += a.m[i][k] * b.m[k][j];
-                }
-                result.m[i][j] = value;
-            }
-        }
-        return result;
-    }
-
-    Vector MatrixVectorMultiply(const Matrix3x3& mat, const Vector& vec)
-    {
-        return Vector(
-            mat.m[0][0] * vec.x + mat.m[0][1] * vec.y + mat.m[0][2] * vec.z,
-            mat.m[1][0] * vec.x + mat.m[1][1] * vec.y + mat.m[1][2] * vec.z,
-            mat.m[2][0] * vec.x + mat.m[2][1] * vec.y + mat.m[2][2] * vec.z);
-    }
-
-    Matrix3x3 BuildSourceRotationMatrix(const QAngle& angles)
-    {
-        Vector forward, right, up;
-        QAngle::AngleVectors(angles, &forward, &right, &up);
-
-        Matrix3x3 result{};
-        result.m[0][0] = forward.x;
-        result.m[0][1] = right.x;
-        result.m[0][2] = up.x;
-
-        result.m[1][0] = forward.y;
-        result.m[1][1] = right.y;
-        result.m[1][2] = up.y;
-
-        result.m[2][0] = forward.z;
-        result.m[2][1] = right.z;
-        result.m[2][2] = up.z;
-
-        return result;
-    }
-}
 
 VR::VR(Game* game)
 {
@@ -367,30 +300,8 @@ void VR::SubmitVRTextures()
         vr::VROverlay()->ShowOverlay(m_HUDHandle);
     }
 
-    if (m_IsThirdPersonCamera)
-    {
-        vr::HmdMatrix34_t submitPose = BuildThirdPersonSubmitPose();
-
-        vr::VRTextureWithPose_t leftTexture = {};
-        leftTexture.handle = m_VKLeftEye.m_VRTexture.handle;
-        leftTexture.eType = m_VKLeftEye.m_VRTexture.eType;
-        leftTexture.eColorSpace = m_VKLeftEye.m_VRTexture.eColorSpace;
-        leftTexture.mDeviceToAbsoluteTracking = submitPose;
-
-        vr::VRTextureWithPose_t rightTexture = {};
-        rightTexture.handle = m_VKRightEye.m_VRTexture.handle;
-        rightTexture.eType = m_VKRightEye.m_VRTexture.eType;
-        rightTexture.eColorSpace = m_VKRightEye.m_VRTexture.eColorSpace;
-        rightTexture.mDeviceToAbsoluteTracking = submitPose;
-
-        m_Compositor->Submit(vr::Eye_Left, &leftTexture, &(m_TextureBounds)[0], vr::Submit_TextureWithPose);
-        m_Compositor->Submit(vr::Eye_Right, &rightTexture, &(m_TextureBounds)[1], vr::Submit_TextureWithPose);
-    }
-    else
-    {
-        m_Compositor->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
-        m_Compositor->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
-    }
+    m_Compositor->Submit(vr::Eye_Left, &m_VKLeftEye.m_VRTexture, &(m_TextureBounds)[0], vr::Submit_Default);
+    m_Compositor->Submit(vr::Eye_Right, &m_VKRightEye.m_VRTexture, &(m_TextureBounds)[1], vr::Submit_Default);
     submitted = true;
 
     if (submitted && m_CompositorExplicitTiming)
@@ -398,62 +309,6 @@ void VR::SubmitVRTextures()
 
 
     m_RenderedNewFrame = false;
-}
-
-
-vr::HmdMatrix34_t VR::BuildThirdPersonSubmitPose() const
-{
-    const vr::TrackedDevicePose_t& hmdPose = m_Poses[vr::k_unTrackedDeviceIndex_Hmd];
-    vr::HmdMatrix34_t basePose = hmdPose.mDeviceToAbsoluteTracking;
-    if (!hmdPose.bPoseIsValid)
-        return basePose;
-
-    const Matrix3x3 axisTransform{ { { 0.0f, 0.0f, -1.0f },
-                                      { -1.0f, 0.0f, 0.0f },
-                                      { 0.0f, 1.0f, 0.0f } } };
-    const Matrix3x3 axisTransformT = MatrixTranspose(axisTransform);
-
-    const QAngle& thirdPersonAngles = m_ThirdPersonPoseInitialized ? m_ThirdPersonViewAngles : m_SetupAngles;
-    const Vector& thirdPersonOrigin = m_ThirdPersonPoseInitialized ? m_ThirdPersonViewOrigin : m_SetupOrigin;
-
-    Matrix3x3 cameraSource = BuildSourceRotationMatrix(thirdPersonAngles);
-    Matrix3x3 hmdSource = BuildSourceRotationMatrix(m_HmdAngAbs);
-
-    Matrix3x3 deltaSource = MatrixMultiply(cameraSource, MatrixTranspose(hmdSource));
-    Matrix3x3 deltaVR = MatrixMultiply(MatrixMultiply(axisTransformT, deltaSource), axisTransform);
-
-    Matrix3x3 baseRotation{};
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            baseRotation.m[i][j] = basePose.m[i][j];
-        }
-    }
-
-    Matrix3x3 finalRotation = MatrixMultiply(deltaVR, baseRotation);
-
-    vr::HmdMatrix34_t result = basePose;
-    for (int i = 0; i < 3; ++i)
-    {
-        for (int j = 0; j < 3; ++j)
-        {
-            result.m[i][j] = finalRotation.m[i][j];
-        }
-    }
-
-    if (m_VRScale > 0.0f)
-    {
-        Vector deltaSourcePos = thirdPersonOrigin - m_HmdPosAbs;
-        Vector deltaMeters = deltaSourcePos * (1.0f / m_VRScale);
-        Vector deltaVRPos = MatrixVectorMultiply(axisTransformT, deltaMeters);
-
-        result.m[0][3] = basePose.m[0][3] + deltaVRPos.x;
-        result.m[1][3] = basePose.m[1][3] + deltaVRPos.y;
-        result.m[2][3] = basePose.m[2][3] + deltaVRPos.z;
-    }
-
-    return result;
 }
 
 
@@ -1160,28 +1015,7 @@ void VR::UpdateTracking()
     int playerIndex = m_Game->m_EngineClient->GetLocalPlayer();
     C_BasePlayer* localPlayer = (C_BasePlayer*)m_Game->GetClientEntity(playerIndex);
     if (!localPlayer)
-    {
-        m_ObserverThirdPerson = false;
-        m_IsThirdPersonCamera = false;
-        m_ThirdPersonHoldFrames = 0;
         return;
-    }
-
-    bool thirdPerson = false;
-    if (m_Game->m_EngineClient->IsInGame())
-    {
-        int observerMode = localPlayer->m_iObserverMode;
-        if (observerMode != 0 && observerMode != 4)
-        {
-            thirdPerson = true;
-        }
-    }
-    m_ObserverThirdPerson = thirdPerson;
-    if (!thirdPerson && m_IsThirdPersonCamera)
-    {
-        // Allow the render hook to reevaluate third-person state next frame.
-        m_IsThirdPersonCamera = false;
-    }
 
     m_Game->m_IsMeleeWeaponActive = localPlayer->IsMeleeWeaponActive();
 
@@ -1511,104 +1345,6 @@ void VR::DrawAimLine(const Vector& start, const Vector& end)
     }
 }
 
-bool VR::UpdateThirdPersonViewState(const Vector& cameraOrigin, const Vector& cameraAnglesVec)
-{
-    const QAngle cameraAngles(cameraAnglesVec.x, cameraAnglesVec.y, cameraAnglesVec.z);
-    if (!m_IsVREnabled)
-    {
-        m_IsThirdPersonCamera = false;
-        m_ObserverThirdPerson = false;
-        m_ThirdPersonHoldFrames = 0;
-        m_ThirdPersonPoseInitialized = false;
-        m_ThirdPersonViewOrigin = cameraOrigin;
-        m_ThirdPersonViewAngles = cameraAngles;
-        return false;
-    }
-
-    bool thirdPersonByObserver = m_ObserverThirdPerson;
-    bool thirdPersonByDistance = false;
-
-    if (!m_RoomscaleActive)
-    {
-        Vector delta = cameraOrigin - m_HmdPosAbs;
-        const float horizontalDistance = std::sqrt((delta.x * delta.x) + (delta.y * delta.y));
-        const float verticalDistance = std::fabs(delta.z);
-
-        constexpr float horizontalThreshold = 36.0f;
-        constexpr float verticalThreshold = 24.0f;
-
-        if (horizontalDistance > horizontalThreshold || verticalDistance > verticalThreshold)
-        {
-            m_ThirdPersonHoldFrames = 6;
-            thirdPersonByDistance = true;
-        }
-        else if (m_ThirdPersonHoldFrames > 0)
-        {
-            --m_ThirdPersonHoldFrames;
-            thirdPersonByDistance = true;
-        }
-    }
-    else
-    {
-        m_ThirdPersonHoldFrames = 0;
-    }
-
-    const bool thirdPerson = thirdPersonByObserver || thirdPersonByDistance;
-    m_IsThirdPersonCamera = thirdPerson;
-    if (!thirdPerson)
-    {
-        m_ObserverThirdPerson = false;
-        m_ThirdPersonPoseInitialized = false;
-        m_ThirdPersonViewOrigin = cameraOrigin;
-        m_ThirdPersonViewAngles = cameraAngles;
-        return thirdPerson;
-    }
-
-    float smoothingStrength = std::clamp(m_ThirdPersonCameraSmoothing, 0.0f, 0.99f);
-    if (!m_ThirdPersonPoseInitialized)
-    {
-        m_ThirdPersonViewOrigin = cameraOrigin;
-        m_ThirdPersonViewAngles = cameraAngles;
-        m_ThirdPersonPoseInitialized = true;
-    }
-
-    if (smoothingStrength > 0.0f)
-    {
-        const float lerpFactor = 1.0f - smoothingStrength;
-
-        m_ThirdPersonViewOrigin.x += (cameraOrigin.x - m_ThirdPersonViewOrigin.x) * lerpFactor;
-        m_ThirdPersonViewOrigin.y += (cameraOrigin.y - m_ThirdPersonViewOrigin.y) * lerpFactor;
-        m_ThirdPersonViewOrigin.z += (cameraOrigin.z - m_ThirdPersonViewOrigin.z) * lerpFactor;
-
-        auto smoothAngle = [&](float target, float& current)
-            {
-                float diff = target - current;
-                diff -= 360.0f * std::floor((diff + 180.0f) / 360.0f);
-                current += diff * lerpFactor;
-            };
-
-        smoothAngle(cameraAngles.x, m_ThirdPersonViewAngles.x);
-        smoothAngle(cameraAngles.y, m_ThirdPersonViewAngles.y);
-        smoothAngle(cameraAngles.z, m_ThirdPersonViewAngles.z);
-    }
-    else
-    {
-        m_ThirdPersonViewOrigin = cameraOrigin;
-        m_ThirdPersonViewAngles = cameraAngles;
-    }
-
-    auto wrapAngle = [](float angle)
-        {
-            return angle - 360.0f * std::floor((angle + 180.0f) / 360.0f);
-        };
-
-    m_ThirdPersonViewAngles.x = wrapAngle(m_ThirdPersonViewAngles.x);
-    m_ThirdPersonViewAngles.y = wrapAngle(m_ThirdPersonViewAngles.y);
-    m_ThirdPersonViewAngles.z = wrapAngle(m_ThirdPersonViewAngles.z);
-
-    return thirdPerson;
-}
-
 Vector VR::GetViewAngle()
 {
     return Vector(m_HmdAngAbs.x, m_HmdAngAbs.y, m_HmdAngAbs.z);
@@ -1617,11 +1353,6 @@ Vector VR::GetViewAngle()
 Vector VR::GetViewOriginLeft()
 {
     Vector viewOriginLeft;
-
-    if (m_IsThirdPersonCamera)
-    {
-        return m_ThirdPersonViewOrigin;
-    }
 
     viewOriginLeft = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));
     viewOriginLeft = viewOriginLeft + (m_HmdRight * (-((m_Ipd * m_IpdScale * m_VRScale) / 2)));
@@ -1632,11 +1363,6 @@ Vector VR::GetViewOriginLeft()
 Vector VR::GetViewOriginRight()
 {
     Vector viewOriginRight;
-
-    if (m_IsThirdPersonCamera)
-    {
-        return m_ThirdPersonViewOrigin;
-    }
 
     viewOriginRight = m_HmdPosAbs + (m_HmdForward * (-(m_EyeZ * m_VRScale)));
     viewOriginRight = viewOriginRight + (m_HmdRight * (m_Ipd * m_IpdScale * m_VRScale) / 2);
@@ -1768,7 +1494,6 @@ void VR::ParseConfigFile()
     m_HudSize = getFloat("HudSize", m_HudSize);
     m_HudAlwaysVisible = getBool("HudAlwaysVisible", m_HudAlwaysVisible);
     m_HeadSmoothing = std::clamp(getFloat("HeadSmoothing", m_HeadSmoothing), 0.0f, 0.99f);
-    m_ThirdPersonCameraSmoothing = std::clamp(getFloat("ThirdPersonCameraSmoothing", m_ThirdPersonCameraSmoothing), 0.0f, 0.99f);
     m_AimLineThickness = std::max(0.0f, getFloat("AimLineThickness", m_AimLineThickness));
     m_AimLineEnabled = getBool("AimLineEnabled", m_AimLineEnabled);
     auto aimColor = getColor("AimLineColor", m_AimLineColorR, m_AimLineColorG, m_AimLineColorB, m_AimLineColorA);
