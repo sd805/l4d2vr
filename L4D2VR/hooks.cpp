@@ -204,44 +204,30 @@ void __fastcall Hooks::dRenderView(void* ecx, void* edx, CViewSetup& setup, CVie
 		return hkRenderView.fOriginal(ecx, setup, hudViewSetup, nClearFlags, whatToDraw);
 	}
 
-        CViewSetup leftEyeView = setup;
-        CViewSetup rightEyeView = setup;
-        const QAngle setupAngles(setup.angles.x, setup.angles.y, setup.angles.z);
-        const bool thirdPersonCamera = m_VR->UpdateThirdPersonViewState(setup.origin, setup.angles);
+	CViewSetup leftEyeView = setup;
+	CViewSetup rightEyeView = setup;
 
-        // Left eye CViewSetup
-        leftEyeView.x = 0;
-        leftEyeView.width = m_VR->m_RenderWidth;
-        leftEyeView.height = m_VR->m_RenderHeight;
-        leftEyeView.fov = m_VR->m_Fov;
-        leftEyeView.fovViewmodel = m_VR->m_Fov;
-        leftEyeView.m_flAspectRatio = m_VR->m_Aspect;
-        leftEyeView.zNear = 6;
-        leftEyeView.zNearViewmodel = 6;
-        QAngle renderAngles = setupAngles;
-        if (thirdPersonCamera)
-        {
-                leftEyeView.origin = m_VR->GetThirdPersonViewOrigin();
-                const QAngle thirdPersonAngles = m_VR->GetThirdPersonViewAngles();
-                leftEyeView.angles = Vector(thirdPersonAngles.x, thirdPersonAngles.y, thirdPersonAngles.z);
-                renderAngles = thirdPersonAngles;
-        }
-        else
-        {
-                leftEyeView.origin = m_VR->GetViewOriginLeft();
-                leftEyeView.angles = m_VR->GetViewAngle();
+	// Left eye CViewSetup
+	leftEyeView.x = 0;
+	leftEyeView.width = m_VR->m_RenderWidth;
+	leftEyeView.height = m_VR->m_RenderHeight;
+	leftEyeView.fov = m_VR->m_Fov;
+	leftEyeView.fovViewmodel = m_VR->m_Fov;
+	leftEyeView.m_flAspectRatio = m_VR->m_Aspect;
+	leftEyeView.zNear = 6;
+	leftEyeView.zNearViewmodel = 6;
+	leftEyeView.origin = m_VR->GetViewOriginLeft();
+	leftEyeView.angles = m_VR->GetViewAngle();
 
-                Vector hmdAngle = m_VR->GetViewAngle();
-                renderAngles = QAngle(hmdAngle.x, hmdAngle.y, hmdAngle.z);
-                m_Game->m_EngineClient->SetViewAngles(renderAngles);
-        }
+	m_VR->m_SetupOrigin = setup.origin;
 
-        m_VR->m_SetupOrigin = setup.origin;
-        m_VR->m_SetupAngles = renderAngles;
+	Vector hmdAngle = m_VR->GetViewAngle();
+	QAngle inGameAngle(hmdAngle.x, hmdAngle.y, hmdAngle.z);
+	m_Game->m_EngineClient->SetViewAngles(inGameAngle);
 
-        rndrContext->SetRenderTarget(m_VR->m_LeftEyeTexture);
-        hkRenderView.fOriginal(ecx, leftEyeView, hudViewSetup, nClearFlags, whatToDraw);
-        m_PushedHud = false;
+	rndrContext->SetRenderTarget(m_VR->m_LeftEyeTexture);
+	hkRenderView.fOriginal(ecx, leftEyeView, hudViewSetup, nClearFlags, whatToDraw);
+	m_PushedHud = false;
 
 	// Right eye CViewSetup
 	rightEyeView.x = 0;
@@ -252,15 +238,8 @@ void __fastcall Hooks::dRenderView(void* ecx, void* edx, CViewSetup& setup, CVie
 	rightEyeView.m_flAspectRatio = m_VR->m_Aspect;
 	rightEyeView.zNear = 6;
 	rightEyeView.zNearViewmodel = 6;
-        if (thirdPersonCamera)
-        {
-                rightEyeView = leftEyeView;
-        }
-        else
-        {
-                rightEyeView.origin = m_VR->GetViewOriginRight();
-                rightEyeView.angles = m_VR->GetViewAngle();
-        }
+	rightEyeView.origin = m_VR->GetViewOriginRight();
+	rightEyeView.angles = m_VR->GetViewAngle();
 
 	rndrContext->SetRenderTarget(m_VR->m_RightEyeTexture);
 	hkRenderView.fOriginal(ecx, rightEyeView, hudViewSetup, nClearFlags, whatToDraw);
